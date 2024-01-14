@@ -9,7 +9,6 @@ CLOSING_PAR = ")"
 user_inp = ""
 current_inp = ''
 index = 0
-results = []
 
 
 class Error:
@@ -24,14 +23,11 @@ class Error:
 def next_inp():
     global current_inp
     global index
-    global results
     current_inp = user_inp[index]
     index += 1
-    print("New token: ", current_inp)
 
 
 def E() -> int:
-    print("in E")
     res: int = T()
 
     while current_inp == PLUS:
@@ -42,7 +38,6 @@ def E() -> int:
 
 
 def T() -> int:
-    print("in T")
     res: int = F()
 
     while current_inp == TIMES:
@@ -53,7 +48,6 @@ def T() -> int:
 
 
 def F() -> int:
-    print("in F")
     res: int = 0
 
     if current_inp == OPEN_PAR:
@@ -76,11 +70,10 @@ def F() -> int:
 
 
 def parse() -> list[int]:
-    global results
+    results: list[int] = []
     while index < len(user_inp):
         next_inp()
         results.append(E())
-    print("result: ", results)
     return results
 
 

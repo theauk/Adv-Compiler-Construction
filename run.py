@@ -1,5 +1,4 @@
 import interpreter
-from typing import List
 
 
 def main() -> None:
@@ -9,10 +8,10 @@ def main() -> None:
         if user_input.lower() == 'exit':
             break
         else:
-            result: List[int] = interpreter.main(user_input)
+            result: list[int] = interpreter.main(user_input)
             print(result)
 
-        print(f"You entered: {user_input}")
+        print(*result, sep='\n')
 
 
 if __name__ == "__main__":

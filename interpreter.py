@@ -1,5 +1,3 @@
-from typing import List
-
 DIGITS = "0123456789"
 LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 DIGITS_LETTERS = DIGITS + LETTERS
@@ -11,6 +9,7 @@ CLOSING_PAR = ")"
 user_inp = ""
 current_inp = ''
 index = 0
+results = []
 
 
 class Error:
@@ -25,20 +24,19 @@ class Error:
 def next_inp():
     global current_inp
     global index
-    if index < len(user_inp):
-        current_inp = user_inp[index]
-        index += 1
-        print("New token: ", current_inp)
+    global results
+    current_inp = user_inp[index]
+    index += 1
+    print("New token: ", current_inp)
 
 
 def E() -> int:
     print("in E")
-    res: int = 0
-    T()
+    res: int = T()
 
     while current_inp == PLUS:
         next_inp()
-        res = T()
+        res += T()
 
     return res
 
@@ -77,10 +75,16 @@ def F() -> int:
     return res
 
 
-def main(inp) -> List[int]:
+def parse() -> list[int]:
+    global results
+    while index < len(user_inp):
+        next_inp()
+        results.append(E())
+    print("result: ", results)
+    return results
+
+
+def main(inp) -> list[int]:
     global user_inp
     user_inp = inp
-    next_inp()
-    print("result: ", E())
-    print("DONE")
-    return []
+    return parse()

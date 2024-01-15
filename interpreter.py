@@ -4,7 +4,9 @@ DIGITS = "0123456789"
 LETTERS = string.ascii_letters
 DIGITS_LETTERS = DIGITS + LETTERS
 PLUS = "+"
+MINUS = "-"
 TIMES = "*"
+DIVIDE = "/"
 OPEN_PAR = "("
 CLOSING_PAR = ")"
 
@@ -42,6 +44,10 @@ def E() -> int:
         next_inp()
         res += T()
 
+    while current_inp == MINUS:
+        next_inp()
+        res -= T()
+
     return res
 
 
@@ -51,6 +57,10 @@ def T() -> int:
     while current_inp == TIMES:
         next_inp()
         res *= F()
+
+    while current_inp == DIVIDE:
+        next_inp()
+        res /= F()
 
     return res
 
@@ -87,5 +97,7 @@ def parse() -> list[int]:
 
 def main(inp) -> list[int]:
     global user_inp
+    global index
+    index = 0
     user_inp = inp
     return parse()

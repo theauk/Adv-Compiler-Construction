@@ -9,6 +9,7 @@ def main() -> None:
             break
         else:
             result: list[int] = interpreter.main(user_input)
+            print(result)
 
         print(*result, sep='\n')
 

@@ -9,8 +9,7 @@ def main() -> None:
             break
         else:
             result: list[str] = interpreter.main(user_input)
-
-        print(*result, sep='\n')
+            print(*result, sep='\n')
 
 
 if __name__ == "__main__":

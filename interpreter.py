@@ -15,13 +15,11 @@ current_inp = ''
 index = 0
 
 
-class Error:
+class Error(Exception):
     def __init__(self, name: str, desc: str):
+        super().__init__(f"{name}: {desc}")
         self.name = name
         self.desc = desc
-
-    def get_error(self) -> str:
-        return f"{self.name}: {self.desc}"
 
 
 def next_inp():
@@ -74,7 +72,7 @@ def F() -> float:
         if current_inp == CLOSING_PAR:
             next_inp()
         else:
-            print("syntax_error")
+            raise Error("SyntaxError", "Unclosed parenthesis")
     elif current_inp in DIGITS:
         res = int(current_inp)
         next_inp()
@@ -82,7 +80,7 @@ def F() -> float:
             res = 10 * res + int(current_inp)
             next_inp()
     else:
-        print("syntax_error")
+        raise Error("SyntaxError", "Invalid character")
 
     return res
 
@@ -90,9 +88,12 @@ def F() -> float:
 def parse() -> list[str]:
     results: list[str] = []
     while index < len(user_inp):
-        next_inp()
-        result = E()
-        results.append(str(int(result)) if result == int(result) else str(result))
+        try:
+            next_inp()
+            result = E()
+            results.append(str(int(result)) if result == int(result) else str(result))
+        except Error as e:
+            results.append(str(e))
     return results
 
 

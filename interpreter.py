@@ -37,8 +37,8 @@ def next_inp():
         index += 1
 
 
-def E() -> int:
-    res: int = T()
+def E() -> float:
+    res: float = T()
 
     while current_inp == PLUS:
         next_inp()
@@ -51,8 +51,8 @@ def E() -> int:
     return res
 
 
-def T() -> int:
-    res: int = F()
+def T() -> float:
+    res: float = F()
 
     while current_inp == TIMES:
         next_inp()
@@ -65,8 +65,8 @@ def T() -> int:
     return res
 
 
-def F() -> int:
-    res: int = 0
+def F() -> float:
+    res: float = 0
 
     if current_inp == OPEN_PAR:
         next_inp()
@@ -87,15 +87,16 @@ def F() -> int:
     return res
 
 
-def parse() -> list[int]:
-    results: list[int] = []
+def parse() -> list[str]:
+    results: list[str] = []
     while index < len(user_inp):
         next_inp()
-        results.append(E())
+        result = E()
+        results.append(str(int(result)) if result == int(result) else str(result))
     return results
 
 
-def main(inp) -> list[int]:
+def main(inp) -> list[str]:
     global user_inp
     global index
     index = 0

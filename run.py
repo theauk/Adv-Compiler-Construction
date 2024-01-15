@@ -8,8 +8,7 @@ def main() -> None:
         if user_input.lower() == 'exit':
             break
         else:
-            result: list[int] = interpreter.main(user_input)
-            print(result)
+            result: list[str] = interpreter.main(user_input)
 
         print(*result, sep='\n')
 

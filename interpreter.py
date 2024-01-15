@@ -1,5 +1,7 @@
+import string
+
 DIGITS = "0123456789"
-LETTERS = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+LETTERS = string.ascii_letters
 DIGITS_LETTERS = DIGITS + LETTERS
 PLUS = "+"
 TIMES = "*"
@@ -23,8 +25,14 @@ class Error:
 def next_inp():
     global current_inp
     global index
-    current_inp = user_inp[index]
-    index += 1
+
+    # Skip spaces
+    while index < len(user_inp) and user_inp[index].isspace():
+        index += 1
+
+    if index < len(user_inp):
+        current_inp = user_inp[index]
+        index += 1
 
 
 def E() -> int:
@@ -57,10 +65,10 @@ def F() -> int:
             next_inp()
         else:
             print("syntax_error")
-    elif current_inp in DIGITS_LETTERS:
+    elif current_inp in DIGITS:
         res = int(current_inp)
         next_inp()
-        while current_inp in DIGITS_LETTERS:
+        while current_inp in DIGITS:
             res = 10 * res + int(current_inp)
             next_inp()
     else:

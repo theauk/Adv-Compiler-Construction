@@ -23,6 +23,7 @@ def next_inp() -> None:
     """
     Updates the next input character and index. Skips extra whitespace.
     :return: None
+    :raises: SyntaxError
     """
     global current_inp
     global index
@@ -34,6 +35,8 @@ def next_inp() -> None:
     if index < len(user_inp):
         current_inp = user_inp[index]
         index += 1
+    else:
+        raise Error("SyntaxError", "Missing end period")
 
 
 def expression() -> float:
@@ -43,13 +46,13 @@ def expression() -> float:
     """
     res: float = term()
 
-    while current_inp == PLUS:
-        next_inp()
-        res += term()
-
-    while current_inp == MINUS:
-        next_inp()
-        res -= term()
+    while current_inp == PLUS or current_inp == MINUS:
+        if current_inp == PLUS:
+            next_inp()
+            res += term()
+        elif current_inp == MINUS:
+            next_inp()
+            res -= term()
 
     return res
 
@@ -109,10 +112,16 @@ def parse() -> list[str]:
         try:
             next_inp()
             result = expression()
+
+            if current_inp != ".":
+                raise Error("SyntaxError", "Invalid character")
+
             # If applicable, convert float to int
             results.append(str(int(result)) if result == int(result) else str(result))
         except Error as e:
             results.append(str(e))
+            break
+
     return results
 
 

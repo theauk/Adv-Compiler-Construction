@@ -1,8 +1,5 @@
-import string
-
+# Global constants
 DIGITS = "0123456789"
-LETTERS = string.ascii_letters
-DIGITS_LETTERS = DIGITS + LETTERS
 PLUS = "+"
 MINUS = "-"
 TIMES = "*"
@@ -11,7 +8,7 @@ OPEN_PAR = "("
 CLOSING_PAR = ")"
 
 user_inp = ""
-current_inp = ''
+current_inp = ""
 index = 0
 
 
@@ -22,7 +19,11 @@ class Error(Exception):
         self.desc = desc
 
 
-def next_inp():
+def next_inp() -> None:
+    """
+    Updates the next input character and index. Skips extra whitespace.
+    :return: None
+    """
     global current_inp
     global index
 
@@ -35,40 +36,53 @@ def next_inp():
         index += 1
 
 
-def E() -> float:
-    res: float = T()
+def expression() -> float:
+    """
+    Parses and evaluates an expression.
+    :return: resulting value.
+    """
+    res: float = term()
 
     while current_inp == PLUS:
         next_inp()
-        res += T()
+        res += term()
 
     while current_inp == MINUS:
         next_inp()
-        res -= T()
+        res -= term()
 
     return res
 
 
-def T() -> float:
-    res: float = F()
+def term() -> float:
+    """
+    Parses and evaluates a term.
+    :return: resulting value
+    """
+    res: float = factor()
 
     while current_inp == TIMES:
         next_inp()
-        res *= F()
+        res *= factor()
 
     while current_inp == DIVIDE:
         next_inp()
-        res /= F()
+        res /= factor()
 
     return res
 
 
-def F() -> float:
+def factor() -> float:
+    """
+    Parses and evaluates a factor in the expression.
+    :return: resulting value
+    :raises: SyntaxError
+    """
     res: float = 0
 
     if current_inp == OPEN_PAR:
         next_inp()
-        res = E()
+        res = expression()
         if current_inp == CLOSING_PAR:
             next_inp()
         else:
@@ -86,11 +100,16 @@ def F() -> float:
 
 
 def parse() -> list[str]:
+    """
+    Parses each expression separated by "."
+    :return: list of computed results
+    """
     results: list[str] = []
     while index < len(user_inp):
         try:
             next_inp()
-            result = E()
+            result = expression()
+            # If applicable, convert float to int
             results.append(str(int(result)) if result == int(result) else str(result))
         except Error as e:
             results.append(str(e))

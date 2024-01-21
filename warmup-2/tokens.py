@@ -50,3 +50,5 @@ class TokenType(Enum):
 
     ASSIGN = 35
     COMPUTATION = 36
+
+    EOF = 37

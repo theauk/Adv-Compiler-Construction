@@ -1,9 +1,11 @@
+from reader import Reader
 from tokens import TokenType
 
 
 class Tokenizer:  # TODO: comment out vars not in the simpler warm up language
     def __init__(self, debug=False):
         self.debug = debug
+        self.reader = Reader()
 
         self.tokens = {
             'number': TokenType.NUMBER,
@@ -53,3 +55,35 @@ class Tokenizer:  # TODO: comment out vars not in the simpler warm up language
             '<-': TokenType.ASSIGN,
             'computation': TokenType.COMPUTATION
         }
+
+        self.identTable = {value: key for key, value in self.tokens}  # associate number with its corresponding string
+        self.idCount = max(self.identTable.values()) + 1
+        self.KEYWORDS = ['computation', 'var']
+        self.SYMBOLS = ['+', '-', '*', '/', '(', ')', ';', '.']
+        self.DIGITS = "0123456789"
+
+        self.lastNumber = ''
+        self.lastIdentifier = ''
+
+        self.inp = ''
+        self.get_next_inp()
+
+    def get_next_inp(self):
+        self.inp = self.reader.get_next_inp()
+
+    def get_next_token(self):
+
+        if not self.inp:
+            return TokenType.EOF
+
+        elif self.inp in self.DIGITS:
+            res = int(self.inp)
+            self.get_next_inp()
+            while self.inp in self.DIGITS:
+                res = 10 * res + int(self.inp)
+                self.get_next_inp()
+            self.lastNumber = res
+            return TokenType.NUMBER
+
+        # Handle variables check for reserved. If not place in table with id and update id counter
+

@@ -27,7 +27,7 @@ class Parser:
         else:
             self.get_next_token()
 
-            while self.token != TokenType.VAR:
+            while self.token == TokenType.VAR:
                 self.assignment()
 
             result = 0

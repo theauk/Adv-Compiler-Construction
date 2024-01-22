@@ -47,7 +47,7 @@ class Tokenizer:
         if self.inp != '' and self.inp in self.DIGITS:
             res = int(self.inp)
             self.get_next_inp()
-            while self.inp != '' in self.DIGITS:
+            while self.inp != '' and self.inp in self.DIGITS:
                 res = 10 * res + int(self.inp)
                 self.get_next_inp()
             self.lastNumber = res

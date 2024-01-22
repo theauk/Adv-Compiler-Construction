@@ -2,7 +2,7 @@ from reader import Reader
 from tokens import TokenType
 
 
-class Tokenizer:  # TODO: comment out vars not in the simpler warm up language
+class Tokenizer:
     def __init__(self, debug=False):
         self.debug = debug
         self.reader = Reader()
@@ -54,8 +54,7 @@ class Tokenizer:  # TODO: comment out vars not in the simpler warm up language
             if res in TokenType.KEYWORDS:
                 return TokenType.KEYWORDS[res]
             else:
-                index = self.add_identifier(res)
-                return self.indexToTokenTable[index]
+                return self.add_identifier(res)
 
         # Handle symbols
         else:
@@ -70,11 +69,3 @@ class Tokenizer:  # TODO: comment out vars not in the simpler warm up language
                 return TokenType.SYMBOLS[cur_inp]
             else:
                 return TokenType.INVALID
-
-
-
-
-
-
-
-

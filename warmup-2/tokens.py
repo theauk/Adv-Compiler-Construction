@@ -9,7 +9,7 @@ class TokenType:
     TIMES = 5
     DIVISION = 6
 
-    EQUAL = 7
+    EQUALS = 7
     NOT_EQUAL = 8
     LESS_THAN = 9
     GREATER_THAN = 10
@@ -56,7 +56,7 @@ class TokenType:
         '*': TIMES,
         '/': DIVISION,
 
-        '==': EQUAL,
+        '==': EQUALS,
         '!=': NOT_EQUAL,
         '<': LESS_THAN,
         '>': GREATER_THAN,
@@ -90,7 +90,7 @@ class TokenType:
 
         'return': RETURN,
 
-        'variable': VAR,
+        'var': VAR,
         'array': ARRAY,
         'void': VOID,
         'function': FUNCTION,

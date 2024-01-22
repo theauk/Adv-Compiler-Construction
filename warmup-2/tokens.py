@@ -1,7 +1,4 @@
-from enum import Enum
-
-
-class TokenType(Enum):
+class TokenType:
     INVALID = 0
 
     NUMBER = 1
@@ -52,3 +49,52 @@ class TokenType(Enum):
     COMPUTATION = 36
 
     EOF = 37
+
+    SYMBOLS = {
+        '+': PLUS,
+        '-': MINUS,
+        '*': TIMES,
+        '/': DIVISION,
+
+        '==': EQUAL,
+        '!=': NOT_EQUAL,
+        '<': LESS_THAN,
+        '>': GREATER_THAN,
+        '<=': LESS_THAN_OR_EQUAL,
+        '>=': GREATER_THAN_OR_EQUAL,
+
+        '.': PERIOD,
+        ',': COMMA,
+        ';': SEMICOLON,
+
+        '(': OPEN_PARENTHESIS,
+        ')': CLOSE_PARENTHESIS,
+        '[': OPEN_BRACKET,
+        ']': CLOSE_BRACKET,
+
+        '<-': ASSIGN,
+    }
+
+    KEYWORDS = {
+        'let': LET,
+        'call': CALL,
+
+        'if': IF,
+        'then': THEN,
+        'else': ELSE,
+        'fi': FI,
+
+        'while': WHILE,
+        'do': DO,
+        'od': OD,
+
+        'return': RETURN,
+
+        'variable': VAR,
+        'array': ARRAY,
+        'void': VOID,
+        'function': FUNCTION,
+        'main': MAIN,
+
+        'computation': COMPUTATION
+    }

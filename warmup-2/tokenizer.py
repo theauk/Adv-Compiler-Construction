@@ -7,59 +7,8 @@ class Tokenizer:  # TODO: comment out vars not in the simpler warm up language
         self.debug = debug
         self.reader = Reader()
 
-        self.tokensToIndexTable = {
-            'number': TokenType.NUMBER,
-            'identifier': TokenType.IDENTIFIER,
-
-            '+': TokenType.PLUS,
-            '-': TokenType.MINUS,
-            '*': TokenType.TIMES,
-            '/': TokenType.DIVISION,
-
-            '==': TokenType.EQUAL,
-            '!=': TokenType.NOT_EQUAL,
-            '<': TokenType.LESS_THAN,
-            '>': TokenType.GREATER_THAN,
-            '<=': TokenType.LESS_THAN_OR_EQUAL,
-            '>=': TokenType.GREATER_THAN_OR_EQUAL,
-
-            '.': TokenType.PERIOD,
-            ',': TokenType.COMMA,
-            ';': TokenType.SEMICOLON,
-
-            '(': TokenType.OPEN_PARENTHESIS,
-            ')': TokenType.CLOSE_PARENTHESIS,
-            '[': TokenType.OPEN_BRACKET,
-            ']': TokenType.CLOSE_BRACKET,
-
-            'let': TokenType.LET,
-            'call': TokenType.CALL,
-
-            'if': TokenType.IF,
-            'then': TokenType.THEN,
-            'else': TokenType.ELSE,
-            'fi': TokenType.FI,
-
-            'while': TokenType.WHILE,
-            'do': TokenType.DO,
-            'od': TokenType.OD,
-
-            'return': TokenType.RETURN,
-
-            'variable': TokenType.VAR,
-            'array': TokenType.ARRAY,
-            'void': TokenType.VOID,
-            'function': TokenType.FUNCTION,
-            'main': TokenType.MAIN,
-
-            '<-': TokenType.ASSIGN,
-            'computation': TokenType.COMPUTATION
-        }
-
-        self.indexToTokenTable = {value: key for key, value in self.tokensToIndexTable}  # associate number with its corresponding string
-        self.idCount = max(self.indexToTokenTable.values()) + 1
-        self.KEYWORDS = ['computation', 'var']
-        self.SYMBOLS = ['+', '-', '*', '/', '(', ')', ';', '.']
+        self.indexToTokenTable = {}
+        self.idCount = max(value for name, value in vars(TokenType).items() if isinstance(value, int)) + 1
         self.DIGITS = "0123456789"
 
         self.lastNumber = ''
@@ -72,9 +21,9 @@ class Tokenizer:  # TODO: comment out vars not in the simpler warm up language
         self.inp = self.reader.get_next_inp()
 
     def add_identifier(self, identifier):
-        self.tokensToIndexTable[identifier] = self.idCount
         self.indexToTokenTable[self.idCount] = identifier
         self.idCount += 1
+        return self.idCount - 1
 
     def get_next_token(self):
 
@@ -102,11 +51,16 @@ class Tokenizer:  # TODO: comment out vars not in the simpler warm up language
                 res += self.inp
                 self.get_next_inp()
 
-            if res not in self.KEYWORDS:
-                self.add_identifier(res)
-            return self.tokensToIndexTable[res]
+            if res in TokenType.KEYWORDS:
+                return TokenType.KEYWORDS[res]
+            else:
+                index = self.add_identifier(res)
+                return self.indexToTokenTable[index]
 
         # Handle symbols
+        else:
+            if self.inp in TokenType.SYMBOLS:
+                return
 
 
 

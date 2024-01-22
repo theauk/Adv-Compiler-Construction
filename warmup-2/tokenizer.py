@@ -7,7 +7,7 @@ class Tokenizer:  # TODO: comment out vars not in the simpler warm up language
         self.debug = debug
         self.reader = Reader()
 
-        self.tokens = {
+        self.tokensToIndexTable = {
             'number': TokenType.NUMBER,
             'identifier': TokenType.IDENTIFIER,
 
@@ -56,8 +56,8 @@ class Tokenizer:  # TODO: comment out vars not in the simpler warm up language
             'computation': TokenType.COMPUTATION
         }
 
-        self.identTable = {value: key for key, value in self.tokens}  # associate number with its corresponding string
-        self.idCount = max(self.identTable.values()) + 1
+        self.indexToTokenTable = {value: key for key, value in self.tokensToIndexTable}  # associate number with its corresponding string
+        self.idCount = max(self.indexToTokenTable.values()) + 1
         self.KEYWORDS = ['computation', 'var']
         self.SYMBOLS = ['+', '-', '*', '/', '(', ')', ';', '.']
         self.DIGITS = "0123456789"
@@ -71,12 +71,21 @@ class Tokenizer:  # TODO: comment out vars not in the simpler warm up language
     def get_next_inp(self):
         self.inp = self.reader.get_next_inp()
 
+    def add_identifier(self, identifier):
+        self.tokensToIndexTable[identifier] = self.idCount
+        self.indexToTokenTable[self.idCount] = identifier
+        self.idCount += 1
+
     def get_next_token(self):
 
         if not self.inp:
             return TokenType.EOF
 
-        elif self.inp in self.DIGITS:
+        while self.inp.isspace():
+            self.get_next_inp()
+
+        # Handle numbers
+        if self.inp in self.DIGITS:
             res = int(self.inp)
             self.get_next_inp()
             while self.inp in self.DIGITS:
@@ -85,5 +94,22 @@ class Tokenizer:  # TODO: comment out vars not in the simpler warm up language
             self.lastNumber = res
             return TokenType.NUMBER
 
-        # Handle variables check for reserved. If not place in table with id and update id counter
+        # Handle identifiers and reserved keywords
+        elif self.inp.isalpha():
+            res = self.inp
+            self.get_next_inp()
+            while self.inp.isalnum():
+                res += self.inp
+                self.get_next_inp()
+
+            if res not in self.KEYWORDS:
+                self.add_identifier(res)
+            return self.tokensToIndexTable[res]
+
+        # Handle symbols
+
+
+
+
+
 

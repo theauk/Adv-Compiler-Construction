@@ -9,7 +9,8 @@ class Tokenizer:
         self.indexToEnumTable = TokenType.get_index_to_enum_dict()
         self.indexToTokenTable = {}
         self.tokenToIndexTable = {}
-        self.idCount = max(value for name, value in vars(TokenType).items() if isinstance(value, int)) + 1
+        self.maxReservedId = max(value for name, value in vars(TokenType).items() if isinstance(value, int))
+        self.idCount = self.maxReservedId + 1
         self.DIGITS = '0123456789'
 
         self.lastNumber = ''
@@ -21,9 +22,6 @@ class Tokenizer:
 
     def get_next_inp(self):
         self.inp = self.reader.get_next_inp()
-
-    def close_reader(self):
-        self.reader.close()
 
     def add_identifier(self, identifier):
         self.indexToTokenTable[self.idCount] = identifier

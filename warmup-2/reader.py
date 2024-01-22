@@ -7,3 +7,6 @@ class Reader:
 
     def get_next_inp(self):
         return self.stdin.read(1)
+
+    def close(self):
+        self.stdin.close()

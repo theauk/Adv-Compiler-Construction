@@ -98,3 +98,8 @@ class TokenType:
 
         'computation': COMPUTATION
     }
+
+    @classmethod
+    def get_index_to_enum_dict(cls):
+        return {value: name for name, value in cls.__dict__.items() if
+                not name.startswith("__") and not callable(getattr(cls, name)) and not isinstance(value, dict)}

@@ -3,11 +3,12 @@ from tokens import TokenType
 
 
 class Tokenizer:
-    def __init__(self, debug=False):
-        self.debug = debug
+    def __init__(self):
         self.reader = Reader()
 
+        self.indexToEnumTable = TokenType.get_index_to_enum_dict()
         self.indexToTokenTable = {}
+        self.tokenToIndexTable = {}
         self.idCount = max(value for name, value in vars(TokenType).items() if isinstance(value, int)) + 1
         self.DIGITS = "0123456789"
 
@@ -20,10 +21,20 @@ class Tokenizer:
     def get_next_inp(self):
         self.inp = self.reader.get_next_inp()
 
+    def close_reader(self):
+        self.reader.close()
+
     def add_identifier(self, identifier):
         self.indexToTokenTable[self.idCount] = identifier
+        self.tokenToIndexTable[identifier] = self.idCount
         self.idCount += 1
         return self.idCount - 1
+
+    def get_identifier(self, index):
+        if index in self.indexToTokenTable:
+            return self.indexToTokenTable[index]
+        else:
+            return self.indexToEnumTable[index]
 
     def get_next_token(self):
 
@@ -51,9 +62,13 @@ class Tokenizer:
                 res += self.inp
                 self.get_next_inp()
 
-            if res in TokenType.KEYWORDS:
+            if res in TokenType.KEYWORDS:  # reserved keywords
                 return TokenType.KEYWORDS[res]
+            elif res in self.tokenToIndexTable:
+                self.lastIdentifier = res  # already seen id
+                return self.tokenToIndexTable[res]
             else:
+                self.lastIdentifier = res  # new id
                 return self.add_identifier(res)
 
         # Handle symbols

@@ -59,8 +59,19 @@ class Tokenizer:  # TODO: comment out vars not in the simpler warm up language
 
         # Handle symbols
         else:
-            if self.inp in TokenType.SYMBOLS:
-                return
+            cur_inp = self.inp
+            self.get_next_inp()
+            combined_inp = cur_inp + self.inp
+
+            if combined_inp in TokenType.SYMBOLS:
+                self.get_next_inp()
+                return TokenType.SYMBOLS[combined_inp]
+            elif cur_inp in TokenType.SYMBOLS:
+                return TokenType.SYMBOLS[cur_inp]
+            else:
+                return TokenType.INVALID
+
+
 
 
 

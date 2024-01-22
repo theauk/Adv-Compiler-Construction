@@ -10,12 +10,13 @@ class Tokenizer:
         self.indexToTokenTable = {}
         self.tokenToIndexTable = {}
         self.idCount = max(value for name, value in vars(TokenType).items() if isinstance(value, int)) + 1
-        self.DIGITS = "0123456789"
+        self.DIGITS = '0123456789'
 
         self.lastNumber = ''
         self.lastIdentifier = ''
 
         self.inp = ''
+        self.reader.start()
         self.get_next_inp()
 
     def get_next_inp(self):
@@ -45,10 +46,10 @@ class Tokenizer:
             self.get_next_inp()
 
         # Handle numbers
-        if self.inp in self.DIGITS:
+        if self.inp != '' and self.inp in self.DIGITS:
             res = int(self.inp)
             self.get_next_inp()
-            while self.inp in self.DIGITS:
+            while self.inp != '' in self.DIGITS:
                 res = 10 * res + int(self.inp)
                 self.get_next_inp()
             self.lastNumber = res
@@ -72,7 +73,7 @@ class Tokenizer:
                 return self.add_identifier(res)
 
         # Handle symbols
-        else:
+        elif self.inp != '':
             cur_inp = self.inp
             self.get_next_inp()
             combined_inp = cur_inp + self.inp
@@ -84,3 +85,6 @@ class Tokenizer:
                 return TokenType.SYMBOLS[cur_inp]
             else:
                 return TokenType.INVALID
+
+        else:
+            return TokenType.EOF

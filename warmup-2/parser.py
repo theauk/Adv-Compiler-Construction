@@ -11,10 +11,16 @@ class Error(Exception):
 
 def parse():
     tokenizer = Tokenizer()
-    first_inp = tokenizer.get_next_token()
+    inp = tokenizer.get_next_token()
 
-    if first_inp != TokenType.COMPUTATION:
-        raise Error("SyntaxError", f"expected computation but got {tokenizer.get_identifier(first_inp)}")
+    if inp != TokenType.COMPUTATION:
+        raise Error("SyntaxError", f"expected computation but got {tokenizer.get_identifier(inp)}")
+
+    while inp != TokenType.EOF:
+        inp = tokenizer.get_next_token()
+        print(inp)
+
+    #tokenizer.close_reader()
 
 
 if __name__ == "__main__":

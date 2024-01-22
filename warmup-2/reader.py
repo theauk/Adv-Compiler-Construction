@@ -1,12 +1,15 @@
-import sys
-
-
 class Reader:
     def __init__(self):
-        self.stdin = sys.stdin
+        self.text = ''
+        self.index = 0
+
+    def start(self):
+        self.text = input()
 
     def get_next_inp(self):
-        return self.stdin.read(1)
-
-    def close(self):
-        self.stdin.close()
+        if self.index < len(self.text):
+            inp = self.text[self.index]
+            self.index += 1
+            return inp
+        else:
+            return ''

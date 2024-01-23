@@ -29,21 +29,23 @@ class Parser:
 
             while self.token == TokenType.VAR:
                 self.assignment()
+                self.get_next_token()
 
             result = 0
 
-            while self.token != TokenType.PERIOD:
+            while True:
                 result = self.expression()
-                self.get_next_token()
 
-                if self.token != TokenType.PERIOD or self.token != TokenType.SEMICOLON:
+                if self.token != TokenType.PERIOD and self.token != TokenType.SEMICOLON:
                     raise Error("SyntaxError", f"expected . or ; got {self.tokenizer.get_identifier(self.token)}")
 
-            return result
+                print(result)
+                if self.token == TokenType.PERIOD:
+                    break
+                elif self.token == TokenType.SEMICOLON:
+                    self.get_next_token()
 
     def assignment(self):
-        self.get_next_token()
-
         if self.token <= self.tokenizer.maxReservedId:
             raise Error("SyntaxError", f"expected identifier got {self.tokenizer.get_identifier(self.token)}")
 
@@ -64,23 +66,21 @@ class Parser:
         self.get_next_token()
 
     def expression(self):
-        self.get_next_token()
-
         result = self.term()
 
         while self.token == TokenType.PLUS or self.token == TokenType.MINUS:
             if self.token == TokenType.PLUS:
+                self.get_next_token()
                 result += self.term()
-                self.get_next_token()
             elif self.token == TokenType.MINUS:
-                result -= self.term()
                 self.get_next_token()
+                result -= self.term()
 
         return result
 
     def term(self):
-        self.get_next_token()
         result = self.factor()
+        self.get_next_token()
 
         while self.token == TokenType.TIMES or self.token == TokenType.DIVISION:
             if self.token == TokenType.TIMES:
@@ -93,8 +93,6 @@ class Parser:
         return result
 
     def factor(self):
-        self.get_next_token()
-
         result = 0
 
         if self.token > self.tokenizer.maxReservedId:
@@ -106,9 +104,7 @@ class Parser:
         elif self.token == TokenType.OPEN_PARENTHESIS:
             self.get_next_token()
             result = self.expression()
-            if self.token == TokenType.CLOSE_PARENTHESIS:
-                self.get_next_token()
-            else:
+            if self.token != TokenType.CLOSE_PARENTHESIS:
                 raise Error("SyntaxError", f"expected ) got {self.tokenizer.get_identifier(self.token)}")
 
         else:

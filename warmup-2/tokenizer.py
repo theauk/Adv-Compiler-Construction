@@ -17,6 +17,8 @@ class Tokenizer:
         self.lastIdentifier = ''
 
         self.inp = ''
+
+    def start_reader(self):
         self.reader.start()
         self.get_next_inp()
 
@@ -36,7 +38,6 @@ class Tokenizer:
             return self.indexToEnumTable[index]
 
     def get_next_token(self):
-
         if not self.inp:
             return TokenType.EOF
 

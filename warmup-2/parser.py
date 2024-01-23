@@ -12,14 +12,20 @@ class Error(Exception):
 class Parser:
     def __init__(self):
         self.tokenizer = Tokenizer()
-        self.token = self.tokenizer.get_next_token()
+        self.token = None
         self.symbolTable = {}
+        self.results = []
+
+    def start_tokenizer(self):
+        self.tokenizer.start_reader()
+        self.get_next_token()
 
     def get_next_token(self):
         self.token = self.tokenizer.get_next_token()
 
     def parse(self):
         self.computation()
+        return self.results
 
     def computation(self):
         if self.token != TokenType.COMPUTATION:
@@ -39,7 +45,7 @@ class Parser:
                 if self.token != TokenType.PERIOD and self.token != TokenType.SEMICOLON:
                     raise Error("SyntaxError", f"expected . or ; got {self.tokenizer.get_identifier(self.token)}")
 
-                print(result)
+                self.results.append(str(result))
                 if self.token == TokenType.PERIOD:
                     break
                 elif self.token == TokenType.SEMICOLON:
@@ -116,4 +122,6 @@ class Parser:
 
 if __name__ == "__main__":
     parser = Parser()
-    parser.parse()
+    parser.start_tokenizer()  # to avoid unit tests hanging for input()
+    res = parser.parse()
+    print(*res, sep='\n')

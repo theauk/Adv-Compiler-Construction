@@ -34,8 +34,8 @@ class Parser:
             self.get_next_token()
 
             while self.token == TokenType.VAR:
-                self.assignment()
                 self.get_next_token()
+                self.assignment()
 
             result = 0
 
@@ -63,9 +63,7 @@ class Parser:
         self.get_next_token()
 
         expression = self.expression()
-
         self.symbolTable[identifier] = expression
-        self.get_next_token()
 
         if self.token != TokenType.SEMICOLON:
             raise Error("SyntaxError", f"expected ; got {self.tokenizer.get_identifier(self.token)}")
@@ -86,15 +84,14 @@ class Parser:
 
     def term(self):
         result = self.factor()
-        self.get_next_token()
 
         while self.token == TokenType.TIMES or self.token == TokenType.DIVISION:
             if self.token == TokenType.TIMES:
+                self.get_next_token()
                 result *= self.factor()
-                self.get_next_token()
             elif self.token == TokenType.DIVISION:
-                result /= self.factor()
                 self.get_next_token()
+                result /= self.factor()
 
         return result
 
@@ -102,16 +99,21 @@ class Parser:
         result = 0
 
         if self.token > self.tokenizer.maxReservedId:
-            return self.symbolTable[self.token]
+            current_token = self.token
+            self.get_next_token()
+            return self.symbolTable[current_token]
 
         elif self.token == TokenType.NUMBER:
-            return self.tokenizer.lastNumber
+            current_number = self.tokenizer.lastNumber
+            self.get_next_token()
+            return current_number
 
         elif self.token == TokenType.OPEN_PARENTHESIS:
             self.get_next_token()
             result = self.expression()
             if self.token != TokenType.CLOSE_PARENTHESIS:
                 raise Error("SyntaxError", f"expected ) got {self.tokenizer.get_identifier(self.token)}")
+            self.get_next_token()
 
         else:
             raise Error("SyntaxError",

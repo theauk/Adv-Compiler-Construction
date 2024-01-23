@@ -5,9 +5,13 @@ import interpreter
 
 class TestInterpreter(unittest.TestCase):
 
-    def test_parse(self):
+    def test_ints(self):
         result = interpreter.main("2+3.5*4.9-10.788.")
         self.assertEqual(result, ["5", "20", "-1", "788"])
+
+    def test_floats(self):
+        result = interpreter.main("5/2.10/8.")
+        self.assertEqual(result, ["2.5", "1.25"])
 
     def test_space(self):
         result = interpreter.main("2 +  3. 5*   4 .")

@@ -17,17 +17,30 @@ class Parser:
         self.results = []
 
     def start_tokenizer(self):
+        """
+        Starts the tokenizer by getting the input and finding the first token.
+        """
         self.tokenizer.start_reader()
         self.get_next_token()
 
     def get_next_token(self):
+        """
+        Sets the next token.
+        """
         self.token = self.tokenizer.get_next_token()
 
     def parse(self):
+        """
+        Starts the parsing and returns the results as an array.
+        :return: array of numbers.
+        """
         self.computation()
         return self.results
 
     def computation(self):
+        """
+        Parses each computation. Results are converted to ints if possible.
+        """
         if self.token != TokenType.COMPUTATION:
             raise Error("SyntaxError", f"expected computation got {self.tokenizer.get_identifier(self.token)}")
         else:
@@ -52,6 +65,9 @@ class Parser:
                     self.get_next_token()
 
     def assignment(self):
+        """
+        Parses each assignment.
+        """
         if self.token <= self.tokenizer.maxReservedId:
             raise Error("SyntaxError", f"expected identifier got {self.tokenizer.get_identifier(self.token)}")
 
@@ -70,6 +86,10 @@ class Parser:
         self.get_next_token()
 
     def expression(self):
+        """
+        Parses each expression.
+        :return: Result for the expression.
+        """
         result = self.term()
 
         while self.token == TokenType.PLUS or self.token == TokenType.MINUS:
@@ -83,6 +103,10 @@ class Parser:
         return result
 
     def term(self):
+        """
+        Parses each term.
+        :return: Result for the term.
+        """
         result = self.factor()
 
         while self.token == TokenType.TIMES or self.token == TokenType.DIVISION:
@@ -96,11 +120,17 @@ class Parser:
         return result
 
     def factor(self):
+        """
+        Parses each factor. If it is an identifier, it is found in the symbol table.
+        :return: Result for the factor.
+        """
         result = 0
 
         if self.token > self.tokenizer.maxReservedId:
             current_token = self.token
             self.get_next_token()
+            if current_token not in self.symbolTable:
+                raise Error("SyntaxError", f"{self.tokenizer.lastIdentifier} has not been defined")
             return self.symbolTable[current_token]
 
         elif self.token == TokenType.NUMBER:

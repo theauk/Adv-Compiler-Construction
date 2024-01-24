@@ -1,6 +1,6 @@
 import unittest
 
-from parser import Parser
+from parser import Parser, Error
 
 
 class TestInterpreter(unittest.TestCase):
@@ -36,6 +36,15 @@ class TestInterpreter(unittest.TestCase):
         expected_result = ['42', '0']
         result = self.parser.parse()
         self.assertEqual(result, expected_result)
+
+    def test_exceptions(self):
+        self.set_input('computation 2 + notDefined;.')
+
+        with self.assertRaises(Error) as context:
+            self.parser.parse()
+
+        expected_error_message = "SyntaxError: notDefined has not been defined"
+        self.assertIn(expected_error_message, str(context.exception))
 
 
 if __name__ == '__main__':

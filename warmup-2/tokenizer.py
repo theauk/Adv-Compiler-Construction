@@ -62,13 +62,13 @@ class Tokenizer:
                 res += self.inp
                 self.get_next_inp()
 
-            if res in TokenType.KEYWORDS:  # reserved keywords
+            if res in TokenType.KEYWORDS:  # Reserved keywords
                 return TokenType.KEYWORDS[res]
             elif res in self.tokenToIndexTable:
-                self.lastIdentifier = res  # already seen id
+                self.lastIdentifier = res  # Already seen id
                 return self.tokenToIndexTable[res]
             else:
-                self.lastIdentifier = res  # new id
+                self.lastIdentifier = res  # New id
                 return self.add_identifier(res)
 
         # Handle symbols

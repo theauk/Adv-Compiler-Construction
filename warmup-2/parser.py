@@ -45,7 +45,7 @@ class Parser:
                 if self.token != TokenType.PERIOD and self.token != TokenType.SEMICOLON:
                     raise Error("SyntaxError", f"expected . or ; got {self.tokenizer.get_identifier(self.token)}")
 
-                self.results.append(str(result))
+                self.results.append(str(int(result)) if result == int(result) else str(result))
                 if self.token == TokenType.PERIOD:
                     break
                 elif self.token == TokenType.SEMICOLON:

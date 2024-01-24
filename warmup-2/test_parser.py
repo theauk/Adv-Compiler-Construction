@@ -25,6 +25,12 @@ class TestInterpreter(unittest.TestCase):
         result = self.parser.parse()
         self.assertEqual(result, expected_result)
 
+    def test_with_paren(self):
+        self.set_input('computation var i <- 10 - (2 * 3); i/2.')
+        expected_result = ['2']
+        result = self.parser.parse()
+        self.assertEqual(result, expected_result)
+
     def test_with_multiple_vars(self):
         self.set_input('computation var i <- 2 * 3; var abracadabra <- 7; (((abracadabra * i))); i - 5 - 1 .')
         expected_result = ['42', '0']

@@ -7,9 +7,9 @@ class Tokenizer:
         self.my_file_reader = FileReader(filename)
         self.input_sym = self.my_file_reader.get_next()
 
-        self.index_to_token_table = {}
+        self.index_to_token_table = Tokens.get_index_to_id_dict()
         self.token_to_index_table = {}
-        self.max_reserved_id = max(member.value for member in Tokens)
+        self.max_reserved_id = max(value for name, value in vars(Tokens).items() if isinstance(value, int))
         self.id_count = self.max_reserved_id + 1
 
         self.last_number = ''
@@ -30,10 +30,7 @@ class Tokenizer:
         return self.id_count - 1
 
     def get_identifier(self, index):
-        if index in self.index_to_token_table:
-            return self.index_to_token_table[index]
-        else:
-            return self.index_to_token_table[index]
+        return self.index_to_token_table[index]
 
     def get_next_token(self):
         if not self.input_sym:
@@ -52,8 +49,7 @@ class Tokenizer:
                 self.last_number = res
                 return Tokens.NUMBER
 
-            # TODO: lav dict til alle de reserverede måske noget som før? Men genbrug den så de nye bare kommer ind i også
-            # TODO: lav de der dicts i tokens som holder SYMBOLS og KEYWORDS så du kan tjekke
+
             # TODO: færdiggør parseren ved at udvide det du havde før men tilføje det der mangler fra det nye sprog
             # TODO: start opg. 1 frontend parten ved at finde ud af hvordan du vil holde infoen (og tænk over grafopgaven samtidig)
 

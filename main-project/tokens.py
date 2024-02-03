@@ -1,7 +1,4 @@
-from enum import Enum
-
-
-class Tokens(Enum):
+class Tokens:
     ERROR_TOKEN = 0
 
     TIMES_TOKEN = 1
@@ -56,4 +53,59 @@ class Tokens(Enum):
     MAIN_TOKEN = 200
     EOF_TOKEN = 255
 
+    @classmethod
+    def get_index_to_id_dict(cls):
+        return {value: name for name, value in cls.__dict__.items() if
+                not name.startswith("__") and not callable(getattr(cls, name)) and not isinstance(value, dict)}
 
+
+class Strings:
+    SYMBOLS = {
+        '+': Tokens.PLUS_TOKEN,
+        '-': Tokens.MINUS_TOKEN,
+        '*': Tokens.TIMES_TOKEN,
+        '/': Tokens.DIV_TOKEN,
+
+        '==': Tokens.EQL_TOKEN,
+        '!=': Tokens.NEQ_TOKEN,
+        '<': Tokens.LSS_TOKEN,
+        '>': Tokens.GTR_TOKEN,
+        '<=': Tokens.LEQ_TOKEN,
+        '>=': Tokens.GEQ_TOKEN,
+
+        '.': Tokens.PERIOD_TOKEN,
+        ',': Tokens.COMMA_TOKEN,
+        ';': Tokens.SEMI_TOKEN,
+
+        '(': Tokens.OPEN_PAREN_TOKEN,
+        ')': Tokens.CLOSE_PAREN_TOKEN,
+        '[': Tokens.OPEN_BRACKET_TOKEN,
+        ']': Tokens.CLOSE_BRACKET_TOKEN,
+        '}': Tokens.END_TOKEN,
+        '{': Tokens.BEGIN_TOKEN,
+
+        '<-': Tokens.BECOMES_TOKEN,
+    }
+
+    KEYWORDS = {
+        'let': Tokens.LET_TOKEN,
+        'call': Tokens.CALL_TOKEN,
+
+        'if': Tokens.IF_TOKEN,
+        'then': Tokens.THEN_TOKEN,
+        'else': Tokens.ELSE_TOKEN,
+        'fi': Tokens.FI_TOKEN,
+
+        'while': Tokens.WHILE_TOKEN,
+        'do': Tokens.DO_TOKEN,
+        'od': Tokens.OD_TOKEN,
+
+        'return': Tokens.RETURN_TOKEN,
+
+        'var': Tokens.VAR_TOKEN,
+        'array': Tokens.ARR_TOKEN,
+        'void': Tokens.VOID_TOKEN,
+        'function': Tokens.FUNC_TOKEN,
+        'procedure': Tokens.PROC_TOKEN,
+        'computation': Tokens.MAIN_TOKEN,
+    }

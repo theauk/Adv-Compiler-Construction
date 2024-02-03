@@ -51,6 +51,11 @@ class Tokens:
 
     BEGIN_TOKEN = 150
     MAIN_TOKEN = 200
+
+    INPUT_NUM_TOKEN = 220
+    OUTPUT_NUM_TOKEN = 221
+    OUTPUT_NEW_LINE_TOKEN = 222
+
     EOF_TOKEN = 255
 
     @classmethod
@@ -107,5 +112,9 @@ class Strings:
         'void': Tokens.VOID_TOKEN,
         'function': Tokens.FUNC_TOKEN,
         'procedure': Tokens.PROC_TOKEN,
-        'computation': Tokens.MAIN_TOKEN,
+        'main': Tokens.MAIN_TOKEN,
+
+        'InputNum': Tokens.INPUT_NUM_TOKEN,
+        'OutputNum': Tokens.OUTPUT_NUM_TOKEN,
+        'OutputNewLine': Tokens.OUTPUT_NEW_LINE_TOKEN
     }

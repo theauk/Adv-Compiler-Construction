@@ -1,10 +1,29 @@
+x Tilføje constanter til basic block
+
+_________
+
+- Lav instruction block class
+- Lav BB class -> se billede
+- Få de forskellige der skal lave ny BB til at lave dem
+- Lav noget main metode der kører noget
+- Få instr ind i BBs
+- Lav graph class der laver graph baseret på din BB struktur
+
+THEN
+
+- phis
+- copy propagation
+- common subexpression elemination
+- der der løbende linked list halløj (?)
+
+_________
+
 1. Check om func navnet er et af de allerede definerede √
     Du skal også tjekke videre med i parenteserne for at tjekke at de kalder den gyldigt. √
+2. Opdater symbol tabel når der laves vars √
+    Skip arrays og user defined funcs for nu √
+3. Check for uninitialized variables (se beskrivelse om at = 0 men warning) √
 
-2. Opdater symbol tabel når der laves vars
-    Skip arrays og user defined funcs for nu
-3. Check for uninitialized variables (se beskrivelse om at = 0 men warning)
-4. Kør det og se alle fejlene - husk at udelade funcs og arrays
 5. Få den til at give instructions tilbage i stedet for det nuværende return
 
 THEN
@@ -25,6 +44,3 @@ Lav noget der kan konvertere din data struktur træ til det der graf halløj
 THEN
 - copy propagation
 - common subexpression elemination
-
-THEN
-alt mulig andet

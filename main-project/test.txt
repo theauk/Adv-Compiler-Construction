@@ -1,0 +1,13 @@
+main
+    var a, b; {
+    let a <- 2;
+    let b <- 3;
+
+    if a > 0
+    then
+        let a <- a + 1;
+    else
+        let b <- b + 1;
+    fi;
+
+    }.

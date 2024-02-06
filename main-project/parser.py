@@ -1,3 +1,5 @@
+from blocks import Blocks, BasicBlock
+from ssa import BaseSSA
 from tokenizer import Tokenizer
 from tokens import Tokens
 
@@ -8,34 +10,41 @@ class Parser:
         self.token: int = 0
         self.symbolTable = {}
         self.arrayTable = {}
+        self.blocks = Blocks()
+        self.baseSSA = BaseSSA()
         self.next_token()
 
     def next_token(self):
         self.token = self.tokenizer.get_next_token()
 
-    def check_identifier(self):
-        if self.token != Tokens.IDENT:
+    def reserved_identifier(self):
+        if self.token <= self.tokenizer.max_reserved_id:
             self.tokenizer.error(
                 f"SyntaxError: expected ident got {self.tokenizer.get_token_from_index(self.token)}")
-            return False
-        elif self.token <= self.tokenizer.max_reserved_id:
-            self.tokenizer.error(
-                f"SyntaxError: got the reserved keyword {self.tokenizer.get_token_from_index(self.token)}")
-            return False
-        elif self.token not in self.symbolTable:
-            self.tokenizer.error(
-                f"SyntaxError: the {self.tokenizer.last_id} has not been initialized. It is now initialized to 0")
-            self.symbolTable[self.token] = 0
-            self.next_token()
             return True
         else:
-            self.next_token()
-            return True
+            return False
+
+    def check_identifier(self):
+        reserved = self.reserved_identifier()
+        if not reserved:
+            if self.token not in self.symbolTable:
+                self.tokenizer.error(
+                    f"SyntaxError: the {self.tokenizer.last_id} has not been initialized. It is now initialized to 0")
+                self.symbolTable[self.token] = 0
+                self.next_token()
+                return True
+            else:
+                self.next_token()
+                return True
+        else:
+            return False
 
     def check_token(self, token_type):
         if self.token != token_type:
             self.tokenizer.error(
-                f"SyntaxError: expected {self.tokenizer.get_token_from_index(token_type)} got {self.tokenizer.get_token_from_index(self.token)}")
+                f"SyntaxError: expected {self.tokenizer.get_token_from_index(token_type)} "
+                f"got {self.tokenizer.get_token_from_index(self.token)}")
             return False
         else:
             self.next_token()
@@ -48,8 +57,7 @@ class Parser:
             self.next_token()
 
             # { varDecl } which starts with typeDecl starting with either "var" or "array"
-            while self.token == Tokens.VAR_TOKEN or self.token == Tokens.ARR_TOKEN:
-                self.next_token()
+            while self.token > self.tokenizer.max_reserved_id or self.token == Tokens.ARR_TOKEN:
                 result += self.var_declaration()
 
             # { funcDecl } -> [ "void" ] "function"...
@@ -60,14 +68,9 @@ class Parser:
                 result += self.func_declaration()
 
             # "{" statSequence
-            check_end_token = False
-            while self.token == Tokens.BEGIN_TOKEN:
+            if self.token == Tokens.BEGIN_TOKEN:
                 self.next_token()
                 result += self.stat_sequence()
-                check_end_token = True
-
-            if check_end_token:
-                # "}"
                 self.check_token(Tokens.END_TOKEN)
 
             # final "."
@@ -75,19 +78,22 @@ class Parser:
 
         return 'COMPUTATION ' + result
 
-    def var_declaration(self):
+    def var_declaration(self):  # TODO should it return anything/make table with variables as None?
         result = ''
         # Handle arrays
-        if self.token == Tokens.OPEN_BRACKET_TOKEN:
+        if self.token == Tokens.OPEN_BRACKET_TOKEN:  # TODO Array stuff
             self.next_token()
             result += self.array_declaration()
 
         # Check if valid ident
-        self.check_identifier()
+        self.reserved_identifier()
+        self.next_token()
 
         # Check for additional idents seperated by ","
         while self.token == Tokens.COMMA_TOKEN:
-            self.check_identifier()
+            self.next_token()
+            self.reserved_identifier()
+            self.next_token()
 
         # Check for ";"
         self.check_token(Tokens.SEMI_TOKEN)
@@ -181,12 +187,14 @@ class Parser:
         return 'SOMETHING'
 
     def assignment(self):
-        designator = self.designator()
-        # "<-"
-        self.check_token(Tokens.BECOMES_TOKEN)
-        expression = self.expression()
+        if not self.reserved_identifier():
+            designator = self.token  # TODO ARRAY distinguish
+            self.next_token()
+            # "<-"
+            self.check_token(Tokens.BECOMES_TOKEN)
+            expression = self.expression()
 
-        self.symbolTable[designator] = expression
+            self.symbolTable[designator] = expression
 
         return 'SOMETHING'
 
@@ -218,12 +226,24 @@ class Parser:
         return 'SOMETHING'
 
     def if_statement(self):
+        # if part
+        if_block = BasicBlock(parent=self.blocks.get_current_block())
+        self.blocks.add_block(if_block)
         left_side, rel_op, right_side = self.relation()
+
+        # then part
         self.check_token(Tokens.THEN_TOKEN)
+        then_block = BasicBlock(parent=if_block)
+        self.blocks.add_block(then_block)
+        if_block.add_fall_through(then_block)
         stat_sequence_then = self.stat_sequence()
 
+        # else part
         if self.token == Tokens.ELSE_TOKEN:
             self.next_token()
+            else_block = BasicBlock(parent=if_block)
+            self.blocks.add_block(else_block)
+            if_block.add_branch(else_block)
             stat_sequence_else = self.stat_sequence()
 
         self.check_token(Tokens.FI_TOKEN)
@@ -239,14 +259,14 @@ class Parser:
     def return_statement(self):
         return self.expression()
 
-    def designator(self):  # returns the value for the identifier (not the ID num)
+    def designator(self):
         designator = self.token
         if self.check_identifier():
             while self.token == Tokens.OPEN_BRACKET_TOKEN:  # TODO fix for arrays later
                 self.next_token()
                 designator += self.expression()
                 self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
-            return self.symbolTable[self.token]
+            return designator
         else:
             return 0  # TODO what to return in this case - like do we stop or continue?
 
@@ -277,10 +297,11 @@ class Parser:
         return result
 
     def factor(self):  # returns the number from either designator, number, ( expression ), or funcCall
-        if self.token == Tokens.IDENT:
+        if self.token > self.tokenizer.max_reserved_id:
             result = self.designator()
         elif self.token == Tokens.NUMBER:
             result = self.tokenizer.last_number
+            self.blocks.add_constant(self.baseSSA.get_new_instr_id(), result)
             self.next_token()
         elif self.token == Tokens.OPEN_PAREN_TOKEN:
             self.next_token()
@@ -297,7 +318,6 @@ class Parser:
 
     def relation(self):
         left_side = self.expression()
-        self.next_token()
         if self.token > 25 or self.token < 20:
             self.tokenizer.error(
                 f"SyntaxError: expected relOp got {self.tokenizer.get_token_from_index(self.token)}")

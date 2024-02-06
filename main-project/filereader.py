@@ -12,9 +12,9 @@ class FileReader:
             self.close()
             return ''
 
-        current_char = self.current_char
+        return_char = self.current_char
         self.current_char = self.file.read(1)
-        return current_char
+        return return_char
 
     def error(self, error_msg):
         print(f"Error: {error_msg}")

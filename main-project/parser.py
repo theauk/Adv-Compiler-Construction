@@ -7,6 +7,7 @@ class Parser:
         self.tokenizer = Tokenizer(file_name)
         self.token: int = 0
         self.symbolTable = {}
+        self.arrayTable = {}
         self.next_token()
 
     def next_token(self):
@@ -21,6 +22,12 @@ class Parser:
             self.tokenizer.error(
                 f"SyntaxError: got the reserved keyword {self.tokenizer.get_token_from_index(self.token)}")
             return False
+        elif self.token not in self.symbolTable:
+            self.tokenizer.error(
+                f"SyntaxError: the {self.tokenizer.last_id} has not been initialized. It is now initialized to 0")
+            self.symbolTable[self.token] = 0
+            self.next_token()
+            return True
         else:
             self.next_token()
             return True
@@ -142,147 +149,161 @@ class Parser:
         # Check for "}"
         self.check_token(Tokens.END_TOKEN)
 
-        return 'FUNC_BODY ' + result
+        return 'SOMETHING'
 
     def stat_sequence(self):
-        result = ''
         # statement
-        result += self.statement()
+        result = self.statement()
         # Check for additional statements
         while self.token == Tokens.SEMI_TOKEN:
             self.next_token()
-            result += self.statement()
+            result = self.statement()
 
-        return 'STAT_SEQUENCE ' + result
+        return 'SOMETHING'
 
     def statement(self):
-        result = ''
         if self.token == Tokens.LET_TOKEN:
             self.next_token()
-            result += self.assignment()
+            result = self.assignment()
         elif self.token == Tokens.FUNC_TOKEN:
             self.next_token()
-            result += self.func_call()
+            result = self.func_call()
         elif self.token == Tokens.IF_TOKEN:
             self.next_token()
-            result += self.if_statement()
+            result = self.if_statement()
         elif self.token == Tokens.WHILE_TOKEN:
             self.next_token()
-            result += self.while_statement()
+            result = self.while_statement()
         elif self.token == Tokens.RETURN_TOKEN:
             self.next_token()
-            result += self.return_statement()
+            result = self.return_statement()
 
-        return 'STATEMENT ' + result
+        return 'SOMETHING'
 
-    def assignment(self):  # TODO update symbol table
-        result = ''
-        result += self.designator()
+    def assignment(self):
+        designator = self.designator()
         # "<-"
         self.check_token(Tokens.BECOMES_TOKEN)
-        result += self.expression()
-        return 'ASSIGNMENT ' + result
+        expression = self.expression()
+
+        self.symbolTable[designator] = expression
+
+        return 'SOMETHING'
 
     def func_call(self):
-        result = ''
-
-        self.check_identifier()
-
-        if self.check_token(Tokens.OPEN_PAREN_TOKEN):
-            result += self.expression()
-            while self.token == Tokens.COMMA_TOKEN:
-                self.next_token()
-                result += self.expression()
+        # Predefined functions
+        if self.token == Tokens.INPUT_NUM_TOKEN:
+            self.next_token()
+            self.check_token(Tokens.OPEN_PAREN_TOKEN)
             self.check_token(Tokens.CLOSE_PAREN_TOKEN)
+        elif self.token == Tokens.OUTPUT_NUM_TOKEN:
+            self.next_token()
+            self.check_token(Tokens.OPEN_PAREN_TOKEN)
+            result = self.expression()
+            self.check_token(Tokens.CLOSE_PAREN_TOKEN)
+        elif self.token == Tokens.OUTPUT_NEW_LINE_TOKEN:
+            self.next_token()
+            self.check_token(Tokens.OPEN_PAREN_TOKEN)
+            self.check_token(Tokens.CLOSE_PAREN_TOKEN)
+        else:  # TODO: add later for user defined funcs
+            self.check_identifier()
 
-        return 'FUNC_CALL ' + result
+            if self.check_token(Tokens.OPEN_PAREN_TOKEN):
+                result = self.expression()
+                while self.token == Tokens.COMMA_TOKEN:
+                    self.next_token()
+                    result = self.expression()
+                self.check_token(Tokens.CLOSE_PAREN_TOKEN)
+
+        return 'SOMETHING'
 
     def if_statement(self):
-        result = ''
-
-        result += self.relation()
+        left_side, rel_op, right_side = self.relation()
         self.check_token(Tokens.THEN_TOKEN)
-        result += self.stat_sequence()
+        stat_sequence_then = self.stat_sequence()
 
         if self.token == Tokens.ELSE_TOKEN:
             self.next_token()
-            result += self.stat_sequence()
+            stat_sequence_else = self.stat_sequence()
 
         self.check_token(Tokens.FI_TOKEN)
-        return 'IF_STATEMENT ' + result
+        return 'SOMETHING'
 
     def while_statement(self):
-        result = ''
-        result += self.relation()
+        left_side, rel_op, right_side = self.relation()
         self.check_token(Tokens.DO_TOKEN)
-        result += self.stat_sequence()
+        stat_sequence = self.stat_sequence()
         self.check_token(Tokens.OD_TOKEN)
+        return 'SOMETHING'
 
     def return_statement(self):
-        result = ''
-        result += self.expression()
-        return 'RETURN_STATEMENT ' + result
+        return self.expression()
 
-    def designator(self):
-        result = ''
-        self.check_identifier()
-        while self.token == Tokens.OPEN_BRACKET_TOKEN:
-            self.next_token()
-            result += self.expression()
-            self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
-        return 'DESIGNATOR ' + result
+    def designator(self):  # returns the value for the identifier (not the ID num)
+        designator = self.token
+        if self.check_identifier():
+            while self.token == Tokens.OPEN_BRACKET_TOKEN:  # TODO fix for arrays later
+                self.next_token()
+                designator += self.expression()
+                self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
+            return self.symbolTable[self.token]
+        else:
+            return 0  # TODO what to return in this case - like do we stop or continue?
 
     def expression(self):  # TODO else clause should return nothing FOR sel.return [] can be blank
-        result = ''
-        result += self.term()
+        result = self.term()
 
         while self.token == Tokens.PLUS_TOKEN or self.token == Tokens.MINUS_TOKEN:
             if self.token == Tokens.PLUS_TOKEN:
                 self.next_token()
-                result += self.term()  # TODO change to += something
+                result += self.term()
             elif self.token == Tokens.MINUS_TOKEN:
                 self.next_token()
-                result += self.term()  # TODO change to -= something
+                result -= self.term()
 
-        return 'EXPRESSION ' + result
+        return result
 
     def term(self):
-        result = ''
-        result += self.factor()
+        result = self.factor()
 
         while self.token == Tokens.TIMES_TOKEN or self.token == Tokens.DIV_TOKEN:
             if self.token == Tokens.TIMES_TOKEN:
                 self.next_token()
-                result += self.factor()  # TODO change to *= something
+                result *= self.factor()
             elif self.token == Tokens.DIV_TOKEN:
                 self.next_token()
-                result += self.factor()  # TODO change to /= something
+                result /= self.factor()
 
-        return 'TERM ' + result
+        return result
 
-    def factor(self):
-        result = ''
+    def factor(self):  # returns the number from either designator, number, ( expression ), or funcCall
         if self.token == Tokens.IDENT:
-            result += self.designator()
+            result = self.designator()
         elif self.token == Tokens.NUMBER:
-            result += self.tokenizer.last_number
+            result = self.tokenizer.last_number
             self.next_token()
         elif self.token == Tokens.OPEN_PAREN_TOKEN:
             self.next_token()
-            result += self.expression()
+            result = self.expression()
+            self.check_token(Tokens.CLOSE_PAREN_TOKEN)
+            self.next_token()
         elif self.token == Tokens.CALL_TOKEN:
             self.next_token()
-            self.func_call()
+            result = self.func_call()
+        else:
+            return ''
 
-        return 'FACTOR ' + result
+        return result
 
     def relation(self):
-        result = ''
-        result += self.expression()
+        left_side = self.expression()
+        self.next_token()
         if self.token > 25 or self.token < 20:
             self.tokenizer.error(
                 f"SyntaxError: expected relOp got {self.tokenizer.get_token_from_index(self.token)}")
+            return False  # TODO what to return in this case???
         else:
-            result += self.expression()
-
-        return 'RELATION ' + result
+            rel_op = self.token
+            self.next_token()
+            right_side = self.expression()
+            return left_side, rel_op, right_side

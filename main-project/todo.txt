@@ -1,5 +1,6 @@
-1. Check om func navnet er et af de allerede definerede
-    Du skal også tjekke videre med i parenteserne for at tjekke at de kalder den gyldigt.
+1. Check om func navnet er et af de allerede definerede √
+    Du skal også tjekke videre med i parenteserne for at tjekke at de kalder den gyldigt. √
+
 2. Opdater symbol tabel når der laves vars
     Skip arrays og user defined funcs for nu
 3. Check for uninitialized variables (se beskrivelse om at = 0 men warning)

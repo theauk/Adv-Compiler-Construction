@@ -56,6 +56,10 @@ class Parser:
         if self.check_token(Tokens.MAIN_TOKEN):
             self.next_token()
 
+            # Initial block
+            initial_block = BasicBlock(parent_block=self.blocks.get_current_block(), parent_type=ParentType.NORMAL)
+            self.blocks.add_block(initial_block)
+
             # { varDecl } which starts with typeDecl starting with either "var" or "array"
             while self.token > self.tokenizer.max_reserved_id or self.token == Tokens.ARR_TOKEN:
                 result += self.var_declaration()
@@ -76,7 +80,7 @@ class Parser:
             # final "."
             self.check_token(Tokens.PERIOD_TOKEN)
 
-        return 'COMPUTATION ' + result
+        return result
 
     def var_declaration(self):  # TODO should it return anything/make table with variables as None?
         result = ''
@@ -98,7 +102,7 @@ class Parser:
         # Check for ";"
         self.check_token(Tokens.SEMI_TOKEN)
 
-        return 'VAR_DECLARATION ' + result
+        return result
 
     def array_declaration(self):
         result = ''
@@ -109,7 +113,7 @@ class Parser:
             # "]"
             self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
 
-        return 'ARRAY_DECLARATION '
+        return
 
     def func_declaration(self):
         result = ''
@@ -124,7 +128,7 @@ class Parser:
         # Check for ";"
         self.check_token(Tokens.SEMI_TOKEN)
 
-        return 'FUNC_DECLARATION ' + result
+        return result
 
     def formal_parameter(self):
         result = ''
@@ -139,7 +143,7 @@ class Parser:
                 self.check_identifier()
         # Check for ")"
         self.check_token(Tokens.CLOSE_PAREN_TOKEN)
-        return 'FORMAL_PARAMETER ' + result
+        return result
 
     def func_body(self):
         result = ''
@@ -155,7 +159,7 @@ class Parser:
         # Check for "}"
         self.check_token(Tokens.END_TOKEN)
 
-        return 'SOMETHING'
+        return
 
     def stat_sequence(self):
         # statement
@@ -165,7 +169,7 @@ class Parser:
             self.next_token()
             result = self.statement()
 
-        return 'SOMETHING'
+        return result
 
     def statement(self):
         if self.token == Tokens.LET_TOKEN:
@@ -183,8 +187,10 @@ class Parser:
         elif self.token == Tokens.RETURN_TOKEN:
             self.next_token()
             result = self.return_statement()
+        else:
+            result = ''
 
-        return 'SOMETHING'
+        return result
 
     def assignment(self):
         if not self.reserved_identifier():
@@ -196,9 +202,10 @@ class Parser:
 
             self.symbolTable[designator] = expression
 
-        return 'SOMETHING'
+        return
 
     def func_call(self):
+        result = ''
         # Predefined functions
         if self.token == Tokens.INPUT_NUM_TOKEN:
             self.next_token()
@@ -223,38 +230,49 @@ class Parser:
                     result = self.expression()
                 self.check_token(Tokens.CLOSE_PAREN_TOKEN)
 
-        return 'SOMETHING'
+        return result
 
     def if_statement(self):
         # if part
-        if_block = BasicBlock(parent_block=self.blocks.get_current_block(), parent_type=ParentType.NORMAL)
-        self.blocks.add_block(if_block)
         left_side, rel_op, right_side = self.relation()
+
+        current_block = self.blocks.get_current_block()
 
         # then part
         self.check_token(Tokens.THEN_TOKEN)
-        then_block = BasicBlock(parent_block=if_block, parent_type=ParentType.FALL_THROUGH)
+        then_block = BasicBlock(parent_block=current_block, parent_type=ParentType.FALL_THROUGH)
         self.blocks.add_block(then_block)
-        if_block.add_fall_through(then_block)
-        stat_sequence_then = self.stat_sequence()
+        current_block.add_fall_through(then_block)
+        self.stat_sequence()
 
         # else part
         if self.token == Tokens.ELSE_TOKEN:
             self.next_token()
-            else_block = BasicBlock(parent_block=if_block, parent_type=ParentType.BRANCH)
+            else_block = BasicBlock(parent_block=current_block, parent_type=ParentType.BRANCH)
             self.blocks.add_block(else_block)
-            if_block.add_branch(else_block)
-            stat_sequence_else = self.stat_sequence()
+            current_block.add_branch(else_block)
+            self.stat_sequence()
 
         self.check_token(Tokens.FI_TOKEN)
-        return 'SOMETHING'
+        return
 
     def while_statement(self):
         left_side, rel_op, right_side = self.relation()
         self.check_token(Tokens.DO_TOKEN)
-        stat_sequence = self.stat_sequence()
+        current_block = self.blocks.get_current_block()
+
+        then_block = BasicBlock(parent_block=self.blocks.get_current_block(), parent_type=ParentType.FALL_THROUGH)
+        self.blocks.add_block(then_block)
+        current_block.add_fall_through(then_block)
+
+        self.stat_sequence()
         self.check_token(Tokens.OD_TOKEN)
-        return 'SOMETHING'
+
+        else_block = BasicBlock(parent_block=self.blocks.get_current_block(), parent_type=ParentType.BRANCH)
+        self.blocks.add_block(else_block)
+        current_block.add_branch(else_block)
+
+        return
 
     def return_statement(self):
         return self.expression()

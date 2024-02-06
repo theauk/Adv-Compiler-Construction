@@ -6,18 +6,31 @@ ______
 - der der løbende linked list halløj (?)
 - doms (også i graf)
 
+OVERVEJELSER:
+______
+- Skal der også være next/children inde i en block? Er der brug for det for at traverse senere?
+
 
 NEXTS:
 ____
 
-- Fortsæt graf class for BB:
-    - Få den til bare at lave blocks med tomme instr.
-    - Husk at se om join block ift text på blokken
-    - Få den til at lave pile mellem blokke.
-    - lav skelet til dom i graf men gem halløjet selv
+- Lav BB med andre steder
+- Lav tabel til at holde var assignments/instr navne. Det er nok noget med deres token nr -> instr nr.
+    - Når der laves ny BB så skal den kopiere parent table ned
+- Create SSA og indsæt i BB (opdater instr counts)
+
+- Create dom data structure (only dom instr appear)
+
+____
+
+x Fortsæt graf class for BB:
+    x Få den til bare at lave blocks med tomme instr.
+    x Husk at se om join block ift text på blokken
+    x Få den til at lave pile mellem blokke.
+    x lav skelet til dom i graf men gem halløjet selv
 - begynd at kigge på SSA instr'erne
     - du skal tænke over hvordan du vil holde styr på variable numre. Du har den der genererer i SSA, men kan du bruge deres id numre minus noget
-    - der er også det at hvis det bare bliver assigned så er det ikke en instr, så måske skal hver block have den der tabel med variabel -> (instr_værdi)
+    - der er også det at hvis det bare bliver assigned så er det ikke en instr men join), så måske skal hver block have den der tabel med variabel -> (instr_værdi)
 - så bliver det nok join block + phi bagefter
 
 _________

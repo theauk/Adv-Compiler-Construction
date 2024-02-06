@@ -1,6 +1,7 @@
 import unittest
 
 from parser import Parser
+from visualizer import Visualizer
 
 
 class TestInterpreter(unittest.TestCase):
@@ -8,7 +9,11 @@ class TestInterpreter(unittest.TestCase):
     def test_something(self):
         parser = Parser('test.txt')
         parser.computation()
-        print("test")
+
+        visualizer = Visualizer(parser.blocks)
+        text = visualizer.make_graph()
+        print(text)
+        print("end")
 
 
 if __name__ == '__main__':

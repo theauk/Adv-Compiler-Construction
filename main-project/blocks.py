@@ -41,7 +41,7 @@ class Blocks:
     def __init__(self):
         self.id_count = 0
         self.constant_block = ConstantBlock(0)
-        self.blocks = [self.constant_block]
+        self.blocks_list = [self.constant_block]
         self.current_block = self.constant_block
 
     def get_current_block(self):
@@ -49,7 +49,7 @@ class Blocks:
 
     def add_block(self, block):
         block.update_id(self.get_new_block_id())
-        self.blocks.append(block)
+        self.blocks_list.append(block)
         self.current_block = block
 
     def get_new_block_id(self):

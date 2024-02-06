@@ -13,7 +13,6 @@ class TestInterpreter(unittest.TestCase):
         visualizer = Visualizer(parser.blocks)
         text = visualizer.make_graph()
         print(text)
-        print("end")
 
 
 if __name__ == '__main__':

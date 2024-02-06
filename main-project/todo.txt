@@ -13,7 +13,7 @@ ____
 - Fortsæt graf class for BB:
     - Få den til bare at lave blocks med tomme instr.
     - Husk at se om join block ift text på blokken
-    - Få den til at lave pile mellem blokke. Du skal nok opdatere så i stedet for fall/branch i parent så lav et label på hvad en blok er self
+    - Få den til at lave pile mellem blokke.
     - lav skelet til dom i graf men gem halløjet selv
 - begynd at kigge på SSA instr'erne
     - du skal tænke over hvordan du vil holde styr på variable numre. Du har den der genererer i SSA, men kan du bruge deres id numre minus noget

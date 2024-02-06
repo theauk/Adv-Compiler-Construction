@@ -1,4 +1,4 @@
-from blocks import Blocks, BasicBlock
+from blocks import Blocks, BasicBlock, ParentType
 from ssa import BaseSSA
 from tokenizer import Tokenizer
 from tokens import Tokens
@@ -227,13 +227,13 @@ class Parser:
 
     def if_statement(self):
         # if part
-        if_block = BasicBlock(parent=self.blocks.get_current_block())
+        if_block = BasicBlock(parent_block=self.blocks.get_current_block(), parent_type=ParentType.NORMAL)
         self.blocks.add_block(if_block)
         left_side, rel_op, right_side = self.relation()
 
         # then part
         self.check_token(Tokens.THEN_TOKEN)
-        then_block = BasicBlock(parent=if_block)
+        then_block = BasicBlock(parent_block=if_block, parent_type=ParentType.FALL_THROUGH)
         self.blocks.add_block(then_block)
         if_block.add_fall_through(then_block)
         stat_sequence_then = self.stat_sequence()
@@ -241,7 +241,7 @@ class Parser:
         # else part
         if self.token == Tokens.ELSE_TOKEN:
             self.next_token()
-            else_block = BasicBlock(parent=if_block)
+            else_block = BasicBlock(parent_block=if_block, parent_type=ParentType.BRANCH)
             self.blocks.add_block(else_block)
             if_block.add_branch(else_block)
             stat_sequence_else = self.stat_sequence()

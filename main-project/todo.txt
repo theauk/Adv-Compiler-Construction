@@ -1,4 +1,24 @@
-x Tilføje constanter til basic block
+HUSKS:
+______
+- phis
+- copy propagation
+- common subexpression elemination
+- der der løbende linked list halløj (?)
+- doms (også i graf)
+
+
+NEXTS:
+____
+
+- Fortsæt graf class for BB:
+    - Få den til bare at lave blocks med tomme instr.
+    - Husk at se om join block ift text på blokken
+    - Få den til at lave pile mellem blokke. Du skal nok opdatere så i stedet for fall/branch i parent så lav et label på hvad en blok er self
+    - lav skelet til dom i graf men gem halløjet selv
+- begynd at kigge på SSA instr'erne
+    - du skal tænke over hvordan du vil holde styr på variable numre. Du har den der genererer i SSA, men kan du bruge deres id numre minus noget
+    - der er også det at hvis det bare bliver assigned så er det ikke en instr, så måske skal hver block have den der tabel med variabel -> (instr_værdi)
+- så bliver det nok join block + phi bagefter
 
 _________
 
@@ -8,13 +28,6 @@ _________
 - Lav noget main metode der kører noget
 - Få instr ind i BBs
 - Lav graph class der laver graph baseret på din BB struktur
-
-THEN
-
-- phis
-- copy propagation
-- common subexpression elemination
-- der der løbende linked list halløj (?)
 
 _________
 

@@ -17,7 +17,7 @@ class ParentType(Enum):
 
 
 class Block:
-    def __init__(self, id_count=None):
+    def __init__(self, id_count=None, parent_block=None, parent_type=None):
         self.id = id_count
 
     def __str__(self):
@@ -31,37 +31,26 @@ class Block:
 
 
 class ConstantBlock(Block):
-    def __init__(self, id_count):
-        super().__init__(id_count)
-        self.id = id_count
+    def __init__(self, idn):
+        super().__init__(idn)
+        self.id = idn
         self.constants = {}
 
-    def add_constant(self, instruction_id, constant):
-        if constant not in self.constants:
-            self.constants[constant] = instruction_id
+    def add_constant(self, idn, constant):
+        self.constants[constant] = idn
+
+    def get_constant_id(self, constant):
+        return self.constants[constant]
 
 
 class BasicBlock(Block):
     def __init__(self, id_count=None, parent_block=None, parent_type=None):
-        super().__init__(id_count)
+        super().__init__(id_count, parent_block, parent_type)
         self.dom = []
-        self.branch = None
-        self.fall_through = None
         self.join = False
         self.instructions = {}
-        self.parents: dict = {parent_block: parent_type}
-
-    def add_fall_through(self, then_block):
-        self.fall_through = then_block
-
-    def add_branch(self, else_block):
-        self.branch = else_block
-
-    def add_parent(self, parent_block: 'BasicBlock', parent_type: ParentType):
-        self.parents[parent_block] = parent_type
-
-    def get_parents(self):
-        return self.parents
+        self.vars: dict = {}
+        self.parents: dict = {parent_block: parent_type} if parent_block else {}
 
     def add_instruction(self, instruction_id, instruction: Instruction):
         self.instructions[instruction_id] = instruction
@@ -69,13 +58,26 @@ class BasicBlock(Block):
     def get_instructions(self):
         return self.instructions
 
+    def get_vars(self):
+        return self.vars
+
+    def update_var_assignment(self, var, instruction_number):
+        self.vars[var] = instruction_number
+
+    def add_parent(self, parent_block: 'BasicBlock', parent_type: ParentType):
+        self.parents[parent_block] = parent_type
+
+    def get_parents(self):
+        return self.parents
+
 
 class Blocks:
-    def __init__(self):
+    def __init__(self, baseSSA, initial_block):
+        self.baseSSA = baseSSA
         self.id_count = 0
         self.constant_block = ConstantBlock(0)
         self.blocks_list: list[BasicBlock] = []
-        self.current_block = self.constant_block
+        self.current_block: BasicBlock = initial_block
 
     def get_current_block(self):
         return self.current_block
@@ -95,5 +97,27 @@ class Blocks:
         self.id_count += 1
         return self.id_count
 
-    def add_constant(self, id_count, constant):
-        self.constant_block.add_constant(id_count, constant)
+    def add_constant(self, constant):
+        if constant not in self.constant_block.constants:
+            self.constant_block.add_constant(self.baseSSA.get_new_instr_id(), constant)
+
+    def get_constant_id(self, constant):
+        return self.constant_block.get_constant_id(constant)
+
+    def add_var_to_current_block(self, var, instruction_number):
+        self.current_block.update_var_assignment(var, instruction_number)
+
+    def find_var_idn(self, var):
+        # TODO we need to consider join/dominating. Since a var could have two idn in then/else so need the join one
+        def find_var_idn_helper(var_inside, cur_block):
+            if var_inside in cur_block.get_vars():
+                return cur_block.get_vars()[var_inside]
+
+            parents = cur_block.get_parents()
+            if parents:
+                for p in parents:
+                    find_var_idn_helper(var_inside, p)
+            else:
+                return
+
+        return find_var_idn_helper(var, self.current_block)

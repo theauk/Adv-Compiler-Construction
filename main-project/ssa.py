@@ -1,4 +1,4 @@
-from operations import Operation
+from operations import Operations
 
 
 class BaseSSA:
@@ -11,7 +11,7 @@ class BaseSSA:
 
 
 class Instruction:
-    def __init__(self, id_count, op: Operation, x=None, y=None):
+    def __init__(self, id_count, op: Operations, x=None, y=None):
         self.id = id_count
         self.op = op
         self.x = x

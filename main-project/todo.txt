@@ -9,13 +9,33 @@ ______
 OVERVEJELSER:
 ______
 - Skal der også være next/children inde i en block? Er der brug for det for at traverse senere?
+- Arrays
 
 
 NEXTS:
 ____
 
-- Lav BB med andre steder
-- Lav tabel til at holde var assignments/instr navne. Det er nok noget med deres token nr -> instr nr.
+- Gør det samme du har gjort med * and / med + og -
+- tilføj andre steder der skal laves SSA
+    - write
+    - read
+    - cpm
+    - end???
+    - branches various types
+- take out stuff related to user funcs fordi du kun er en person
+    - eller bare pass keyword
+- prøv at kør på basic program og se om det er helt væk/ret fejl for at få nogenlunde graf
+- så join blokke og hvad der hører med ift dom og phi
+- når du så har graf med de ting, så kan vi begynde at tænke i optimering
+
+
+____
+
+x Forstæt med id op fra designator. Så du kan bruge det i factor -> term -> exp. Der skal der så genereres SSA og indsættes i current BB.
+x Der skal også opdateres i var tabellen ved assignment
+
+x Lav BB med andre steder
+x Lav tabel til at holde var assignments/instr navne. Det er nok noget med deres token nr -> instr nr.
     - Når der laves ny BB så skal den kopiere parent table ned
 - Create SSA og indsæt i BB (opdater instr counts)
 

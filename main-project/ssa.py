@@ -1,4 +1,3 @@
-from blocks import BasicBlock
 from operations import Operations
 
 
@@ -17,12 +16,6 @@ class BaseSSA:
     def get_new_instr_id(self):
         self.id_count += 1
         return self.id_count
-
-    def add_new_instr(self, current_block: BasicBlock, op=None, idn_left=None, idn_right=None):
-        instr_id = self.get_new_instr_id()
-        inst = Instruction(instr_id, op, idn_left, idn_right)
-        current_block.add_instruction(instr_id, inst)
-        return instr_id
 
     def rel_op_to_instruction(self, rel_op):
         return self.rel_op_to_instr[rel_op]

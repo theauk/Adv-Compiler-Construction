@@ -15,9 +15,10 @@ ______
 
 NEXTS:
 ____
+- den blok der kommer if/then/else skal samle dem alle (så skal nok et level op for at kunne lave den)
 - then branch instruction id (don't know when created)
 - else block branch label/block
-- then block branch label/block (don't know the next instr yet and there might not be more code)
+- then block branch label/block (don't know the next instr yet and there might not be more code, kan nok take id_count +1 uden at opdatere den?)
 
 ____
 
@@ -25,12 +26,10 @@ x Gør det samme du har gjort med * and / med + og -
 - tilføj andre steder der skal laves SSA
     x write
     x read
-    - cpm
-    - end???
+    x cpm
     - branches various types
-- take out stuff related to user funcs fordi du kun er en person
-    - eller bare pass keyword
 - prøv at kør på basic program og se om det er helt væk/ret fejl for at få nogenlunde graf
+- take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword
 - så join blokke og hvad der hører med ift dom og phi
 - når du så har graf med de ting, så kan vi begynde at tænke i optimering og det med traversing igen for while/if
 

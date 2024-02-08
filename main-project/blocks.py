@@ -55,6 +55,11 @@ class BasicBlock(Block):
     def add_instruction(self, instruction_id, instruction: Instruction):
         self.instructions[instruction_id] = instruction
 
+    def add_new_instr(self, instr_id, op=None, idn_left=None, idn_right=None):
+        inst = Instruction(instr_id, op, idn_left, idn_right)
+        self.add_instruction(instr_id, inst)
+        return instr_id
+
     def get_instructions(self):
         return self.instructions
 

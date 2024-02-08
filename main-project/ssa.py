@@ -1,16 +1,17 @@
 from operations import Operations
+from tokens import Tokens
 
 
 class BaseSSA:
     def __init__(self):
-        self.id_count = -1
+        self.id_count = 0
         self.rel_op_to_instr = {
-            '==': Operations.BEQ,
-            '!=': Operations.BNE,
-            '<': Operations.BGE,
-            '>': Operations.BLE,
-            '<=': Operations.BGT,
-            '>=': Operations.BLT,
+            Tokens.EQL_TOKEN: Operations.BEQ,
+            Tokens.NEQ_TOKEN: Operations.BNE,
+            Tokens.LSS_TOKEN: Operations.BGE,
+            Tokens.GTR_TOKEN: Operations.BLE,
+            Tokens.LEQ_TOKEN: Operations.BGT,
+            Tokens.GEQ_TOKEN: Operations.BLT,
         }
 
     def get_new_instr_id(self):

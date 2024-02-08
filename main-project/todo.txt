@@ -16,7 +16,7 @@ ______
 NEXTS:
 ____
 - den blok der kommer if/then/else skal samle dem alle (så skal nok et level op for at kunne lave den)
-- then branch instruction id (don't know when created)
+- then branch instruction id (don't know when created) - branch id skal være før der arbejdes på else i.e. det nr skal være før den første else ting
 - else block branch label/block
 - then block branch label/block (don't know the next instr yet and there might not be more code, kan nok take id_count +1 uden at opdatere den?)
 

@@ -52,12 +52,9 @@ class BasicBlock(Block):
         self.vars: dict = {}
         self.parents: dict = {first_parent_block: first_parent_type} if first_parent_block else {}
 
-    def add_instruction(self, instruction_id, instruction: Instruction):
-        self.instructions[instruction_id] = instruction
-
     def add_new_instr(self, instr_id, op=None, idn_left=None, idn_right=None):
         inst = Instruction(instr_id, op, idn_left, idn_right)
-        self.add_instruction(instr_id, inst)
+        self.instructions[instr_id] = inst
         return instr_id
 
     def get_instructions(self):
@@ -123,6 +120,7 @@ class Blocks:
         self.current_block.update_var_assignment(var, instruction_number)
 
     def find_var_idn(self, var):
+        # find the instr id for a var
         # TODO we need to consider join/dominating. Since a var could have two idn in then/else so need the join one
         def find_var_idn_helper(var_inside, cur_block):
             if var_inside in cur_block.get_vars():
@@ -131,7 +129,7 @@ class Blocks:
             parents = cur_block.get_parents()
             if parents:
                 for p in parents:
-                    find_var_idn_helper(var_inside, p)
+                    return find_var_idn_helper(var_inside, p)
             else:
                 return
 

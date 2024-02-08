@@ -245,13 +245,11 @@ class Parser:
         self.check_token(Tokens.THEN_TOKEN)
         then_block = BasicBlock(first_parent_block=if_block, first_parent_type=ParentType.FALL_THROUGH)
         self.blocks.add_block(then_block)
-        if_block.add_fall_through(then_block)
         self.stat_sequence()
 
         # else part (might be empty)
         else_block = BasicBlock(first_parent_block=if_block, first_parent_type=ParentType.BRANCH)
         self.blocks.add_block(else_block)
-        if_block.add_branch(else_block)
         if self.token == Tokens.ELSE_TOKEN:
             self.next_token()
             self.stat_sequence()
@@ -311,13 +309,13 @@ class Parser:
                 self.next_token()
                 idn_right = self.factor()
                 # = idn_left so that if we e.g. have 2 + 2 + 2 then the id for the first 2 * 2 becomes the next left
-                idn_left = self.blocks.get_current_block()(self.baseSSA.get_new_instr_id(), Operations.ADD, idn_left,
-                                                           idn_right)
+                idn_left = self.blocks.get_current_block().add_new_instr(self.baseSSA.get_new_instr_id(),
+                                                                         Operations.ADD, idn_left, idn_right)
             elif self.token == Tokens.MINUS_TOKEN:
                 self.next_token()
                 idn_right = self.factor()
-                idn_left = self.blocks.get_current_block()(self.baseSSA.get_new_instr_id(), Operations.SUB, idn_left,
-                                                           idn_right)
+                idn_left = self.blocks.get_current_block().add_new_instr(self.baseSSA.get_new_instr_id(),
+                                                                         Operations.SUB, idn_left, idn_right)
 
         return idn_left
 
@@ -328,19 +326,19 @@ class Parser:
             if self.token == Tokens.TIMES_TOKEN:
                 self.next_token()
                 idn_right = self.factor()
-                idn_left = self.blocks.get_current_block()(self.baseSSA.get_new_instr_id(), Operations.MUL, idn_left,
-                                                           idn_right)
+                idn_left = self.blocks.get_current_block().add_new_instr(self.baseSSA.get_new_instr_id(),
+                                                                         Operations.MUL, idn_left, idn_right)
             elif self.token == Tokens.DIV_TOKEN:
                 self.next_token()
                 idn_right = self.factor()
-                idn_left = self.blocks.get_current_block()(self.baseSSA.get_new_instr_id(), Operations.DIV, idn_left,
-                                                           idn_right)
+                idn_left = self.blocks.get_current_block().add_new_instr(self.baseSSA.get_new_instr_id(),
+                                                                         Operations.DIV, idn_left, idn_right)
 
         return idn_left
 
     def factor(self):  # returns the number from either designator, number, ( expression ), or funcCall
         if self.token > self.tokenizer.max_reserved_id:
-            designator, designator_var_name, array = self.designator()
+            designator, array = self.designator()
             if array:
                 pass  # TODO Handle when array
             else:
@@ -372,7 +370,7 @@ class Parser:
             return False  # TODO return what?
         else:
             rel_op = self.token
-            rel_op_instr = self.baseSSA.rel_op_to_instr(rel_op)
+            rel_op_instr = self.baseSSA.rel_op_to_instruction(rel_op)
             self.next_token()
             right_side = self.expression()
             return left_side, rel_op_instr, right_side

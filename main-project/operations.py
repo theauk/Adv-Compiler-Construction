@@ -13,16 +13,16 @@ class Operations(Enum):
     STORE = 8
     PHI = 9
 
-    END = 10
-    BRA = 11
-    BNE = 12
-    BEQ = 13
-    BLE = 14
-    BLT = 15
-    BGE = 16
-    BGT = 17
-    JSR = 18
-    RET = 19
+    END = 10  # end of program
+    BRA = 11  # branch to y
+    BNE = 12  # branch to y on x not equal
+    BEQ = 13  # branch to y on x equal
+    BLE = 14  # branch to y on x less or equal
+    BLT = 15  # branch to y on x less
+    BGE = 16  # branch to y on x greater than or equal
+    BGT = 17  # branch to y on x greater
+    JSR = 18  # jump to subroutine x
+    RET = 19  # return from subroutine
 
     READ = 20
     WRITE = 21

@@ -44,13 +44,13 @@ class ConstantBlock(Block):
 
 
 class BasicBlock(Block):
-    def __init__(self, id_count=None, parent_block=None, parent_type=None):
-        super().__init__(id_count, parent_block, parent_type)
+    def __init__(self, id_count=None, first_parent_block=None, first_parent_type=None):
+        super().__init__(id_count, first_parent_block, first_parent_type)
         self.dom = []
         self.join = False
         self.instructions = {}
         self.vars: dict = {}
-        self.parents: dict = {parent_block: parent_type} if parent_block else {}
+        self.parents: dict = {first_parent_block: first_parent_type} if first_parent_block else {}
 
     def add_instruction(self, instruction_id, instruction: Instruction):
         self.instructions[instruction_id] = instruction
@@ -69,6 +69,16 @@ class BasicBlock(Block):
 
     def get_parents(self):
         return self.parents
+
+    def find_first_instr(self):
+        return min(self.instructions)
+
+    def update_instruction(self, instr_idn, idn_left=None, idn_right=None):
+        instr = self.instructions[instr_idn]
+        if idn_left:
+            instr.id_left = idn_left
+        if idn_right:
+            instr.id_right = idn_right
 
 
 class Blocks:

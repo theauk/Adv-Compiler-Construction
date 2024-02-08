@@ -5,16 +5,27 @@ from operations import Operations
 class BaseSSA:
     def __init__(self):
         self.id_count = -1
+        self.rel_op_to_instr = {
+            '==': Operations.BEQ,
+            '!=': Operations.BNE,
+            '<': Operations.BGE,
+            '>': Operations.BLE,
+            '<=': Operations.BGT,
+            '>=': Operations.BLT,
+        }
 
     def get_new_instr_id(self):
         self.id_count += 1
         return self.id_count
 
-    def add_new_instr_id(self, current_block: BasicBlock, op, idn_left, idn_right=None):
+    def add_new_instr(self, current_block: BasicBlock, op=None, idn_left=None, idn_right=None):
         instr_id = self.get_new_instr_id()
         inst = Instruction(instr_id, op, idn_left, idn_right)
         current_block.add_instruction(instr_id, inst)
         return instr_id
+
+    def rel_op_to_instruction(self, rel_op):
+        return self.rel_op_to_instr[rel_op]
 
 
 class Instruction:
@@ -25,4 +36,11 @@ class Instruction:
         self.y = y
 
     def __str__(self):
-        return f"{self.id}: {self.op} ({self.x}) ({self.y})"
+        if not self.x and not self.y and not self.op:
+            return f"{self.id}: <empty>"
+        elif not self.x and not self.y:
+            return f"{self.id}: {self.op}"
+        elif not self.y:
+            return f"{self.id}: {self.op} ({self.x})"
+        else:
+            return f"{self.id}: {self.op} ({self.x}) ({self.y})"

@@ -1,6 +1,6 @@
 from blocks import Blocks, BasicBlock, ParentType
 from operations import Operations
-from ssa import BaseSSA, Instruction
+from ssa import BaseSSA
 from tokenizer import Tokenizer
 from tokens import Tokens
 
@@ -203,20 +203,20 @@ class Parser:
     def func_call(self):
         result = ''
         # Predefined functions
-        if self.token == Tokens.INPUT_NUM_TOKEN:
+        if self.token == Tokens.INPUT_NUM_TOKEN:  # InputNum()
             self.next_token()
             self.check_token(Tokens.OPEN_PAREN_TOKEN)
             self.check_token(Tokens.CLOSE_PAREN_TOKEN)
-        elif self.token == Tokens.OUTPUT_NUM_TOKEN:
+        elif self.token == Tokens.OUTPUT_NUM_TOKEN:  # OutputNum(x)
             self.next_token()
             self.check_token(Tokens.OPEN_PAREN_TOKEN)
             result = self.expression()
             self.check_token(Tokens.CLOSE_PAREN_TOKEN)
-        elif self.token == Tokens.OUTPUT_NEW_LINE_TOKEN:
+        elif self.token == Tokens.OUTPUT_NEW_LINE_TOKEN:  # OutputNewLine()
             self.next_token()
             self.check_token(Tokens.OPEN_PAREN_TOKEN)
             self.check_token(Tokens.CLOSE_PAREN_TOKEN)
-        else:  # TODO: nok bare pass fordi user funcs
+        else:  # TODO: user funcs
             self.check_identifier()
 
             if self.check_token(Tokens.OPEN_PAREN_TOKEN):
@@ -270,7 +270,7 @@ class Parser:
 
         return
 
-    def return_statement(self):
+    def return_statement(self):  # TODO user func ?
         return self.expression()
 
     def designator(self):
@@ -289,17 +289,22 @@ class Parser:
             return
 
     def expression(self):  # TODO else clause should return nothing FOR sel.return [] can be blank
-        result = self.term()
+        idn_left = self.term()
 
         while self.token == Tokens.PLUS_TOKEN or self.token == Tokens.MINUS_TOKEN:
             if self.token == Tokens.PLUS_TOKEN:
                 self.next_token()
-                result += self.term()
+                idn_right = self.factor()
+                # = idn_left so that if we e.g. have 2 + 2 + 2 then the id for the first 2 * 2 becomes the next left
+                idn_left = self.baseSSA.add_new_instr_id(self.blocks.get_current_block(), Operations.ADD, idn_left,
+                                                         idn_right)
             elif self.token == Tokens.MINUS_TOKEN:
                 self.next_token()
-                result -= self.term()
+                idn_right = self.factor()
+                idn_left = self.baseSSA.add_new_instr_id(self.blocks.get_current_block(), Operations.SUB, idn_left,
+                                                         idn_right)
 
-        return result
+        return idn_left
 
     def term(self):
         idn_left = self.factor()
@@ -308,18 +313,13 @@ class Parser:
             if self.token == Tokens.TIMES_TOKEN:
                 self.next_token()
                 idn_right = self.factor()
-                instr_id = self.baseSSA.get_new_instr_id()
-                inst = Instruction(instr_id, Operations.MUL, idn_left, idn_right)
-                self.blocks.get_current_block().add_instruction(instr_id, inst)
-                # so that if we e.g. have 2 * 2 * 2 then the id for the first 2 * 2 becomes the next left
-                idn_left = instr_id
+                idn_left = self.baseSSA.add_new_instr_id(self.blocks.get_current_block(), Operations.MUL, idn_left,
+                                                         idn_right)
             elif self.token == Tokens.DIV_TOKEN:
                 self.next_token()
                 idn_right = self.factor()
-                instr_id = self.baseSSA.get_new_instr_id()
-                inst = Instruction(instr_id, Operations.DIV, idn_left, idn_right)
-                self.blocks.get_current_block().add_instruction(instr_id, inst)
-                idn_left = instr_id
+                idn_left = self.baseSSA.add_new_instr_id(self.blocks.get_current_block(), Operations.DIV, idn_left,
+                                                         idn_right)
 
         return idn_left
 
@@ -354,7 +354,7 @@ class Parser:
         if self.token > 25 or self.token < 20:
             self.tokenizer.error(
                 f"SyntaxError: expected relOp got {self.tokenizer.get_token_from_index(self.token)}")
-            return False  # TODO what to return in this case???
+            return False  # TODO return what?
         else:
             rel_op = self.token
             self.next_token()

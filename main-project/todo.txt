@@ -15,7 +15,7 @@ ______
 NEXTS:
 ____
 
-- Gør det samme du har gjort med * and / med + og -
+x Gør det samme du har gjort med * and / med + og -
 - tilføj andre steder der skal laves SSA
     - write
     - read
@@ -26,7 +26,7 @@ ____
     - eller bare pass keyword
 - prøv at kør på basic program og se om det er helt væk/ret fejl for at få nogenlunde graf
 - så join blokke og hvad der hører med ift dom og phi
-- når du så har graf med de ting, så kan vi begynde at tænke i optimering
+- når du så har graf med de ting, så kan vi begynde at tænke i optimering og det med traversing igen for while/if
 
 
 ____

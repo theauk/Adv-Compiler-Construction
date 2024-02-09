@@ -179,6 +179,7 @@ class Parser:
         elif self.token == Tokens.IF_TOKEN:
             self.next_token()
             self.if_statement()
+            self.blocks.update_leaf_joins(self.blocks.current_block)
         elif self.token == Tokens.WHILE_TOKEN:
             self.next_token()
             self.while_statement()
@@ -286,6 +287,12 @@ class Parser:
             self.blocks.add_relationship(parent_block=self.blocks.get_current_join_block(), child_block=join_block,
                                          relationship=Block_Relation.BRANCH)
             self.blocks.add_relationship(parent_block=else_block, child_block=join_block,
+                                         relationship=Block_Relation.FALL_THROUGH)
+        else:
+            leaf_left, leaf_right = self.blocks.get_lowest_leaf_join_block()
+            self.blocks.add_relationship(parent_block=leaf_left, child_block=join_block,
+                                         relationship=Block_Relation.BRANCH)
+            self.blocks.add_relationship(parent_block=leaf_right, child_block=join_block,
                                          relationship=Block_Relation.FALL_THROUGH)
 
         return

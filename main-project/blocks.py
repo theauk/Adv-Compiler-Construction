@@ -102,6 +102,7 @@ class Blocks:
         self.blocks_list: list[BasicBlock] = []
         self.current_block: BasicBlock = initial_block
         self.current_join_block: BasicBlock = BasicBlock(join=True)
+        self.leaf_joins = []
 
     def get_current_block(self):
         return self.current_block
@@ -163,3 +164,13 @@ class Blocks:
     def add_relationship(self, parent_block: 'BasicBlock', child_block: 'BasicBlock', relationship: Block_Relation):
         parent_block.add_child(child_block, relationship)
         child_block.add_parent(parent_block, relationship)
+
+    def get_lowest_leaf_join_block(self):
+        return self.leaf_joins[-2], self.leaf_joins[-1]
+
+    def update_leaf_joins(self, join_block):
+        # Check if a new join is a leaf join, i.e., whether it is not a child of another join block
+        if self.leaf_joins and self.leaf_joins[-1] in join_block.get_parents():
+            self.leaf_joins[-1] = join_block
+        else:
+            self.leaf_joins.append(join_block)

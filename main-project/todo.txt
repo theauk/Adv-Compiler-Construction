@@ -7,9 +7,13 @@ ______
 - doms (også i graf)
 - Arrays
 
+QUESTIONS:
+______
+Joiner man to join blokke? Fx if then (if then else) else (if then else) - så kommer der join i de to () og joiner
+man så de to join blokke i en ny join blok?
+
 OVERVEJELSER:
 ______
-- Skal der også være next/children inde i en block? Er der brug for det for at traverse senere?
 - error handling. Like hvad hvis der er noget i check token der ikke passer. Skal det så fortsætte?
 - skal jeg copy table over med var instr id i stedet for at lave recursion method?
 

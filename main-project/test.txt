@@ -1,14 +1,20 @@
 main
-    var a, b; {
+    var a; {
     let a <- 2;
-    let b <- 3;
 
     if a > 0
     then
-        let a <- a + 1;
+        if a > 0
+        then
+            let a <- a + 2;
+        else
+            let a <- a + 2;
+        fi;
     else
         if a > 0
         then
+            let a <- a + 2;
+        else
             let a <- a + 2;
         fi;
     fi;

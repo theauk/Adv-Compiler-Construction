@@ -87,7 +87,7 @@ class Parser:
 
     def var_declaration(self):
         # Handle arrays
-        if self.token == Tokens.OPEN_BRACKET_TOKEN:  # TODO Array
+        if self.token == Tokens.OPEN_BRACKET_TOKEN:  # TODO array
             self.next_token()
             self.array_declaration()
 

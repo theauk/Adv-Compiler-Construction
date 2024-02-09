@@ -1,4 +1,4 @@
-from blocks import Blocks, BasicBlock, ParentType
+from blocks import Blocks, BasicBlock, Block_Relation
 from operations import Operations
 from ssa import BaseSSA
 from tokenizer import Tokenizer
@@ -17,8 +17,8 @@ class Parser:
         self.next_token()
 
     def setup_blocks(self):
-        initial_block = BasicBlock(first_parent_block=self.blocks.get_constant_block(),
-                                   first_parent_type=ParentType.NORMAL)
+        initial_block = BasicBlock()
+        initial_block.add_parent(parent_block=self.blocks.get_constant_block(), parent_type=Block_Relation.NORMAL)
         self.blocks.add_block(initial_block)
 
     def next_token(self):
@@ -232,6 +232,9 @@ class Parser:
         return result
 
     def if_statement(self):
+        # join block
+        join_block = self.blocks.new_join_block()
+
         # if part
         left_side, rel_op_instr, right_side = self.relation()
         if_block = self.blocks.get_current_block()
@@ -243,12 +246,16 @@ class Parser:
 
         # then part
         self.check_token(Tokens.THEN_TOKEN)
-        then_block = BasicBlock(first_parent_block=if_block, first_parent_type=ParentType.FALL_THROUGH)
+        then_block = BasicBlock()
+        self.blocks.add_relationship(parent_block=if_block, child_block=then_block,
+                                     relationship=Block_Relation.FALL_THROUGH)
         self.blocks.add_block(then_block)
         self.stat_sequence()
 
         # else part (might be empty)
-        else_block = BasicBlock(first_parent_block=if_block, first_parent_type=ParentType.BRANCH)
+        else_block = BasicBlock()
+        self.blocks.add_relationship(parent_block=if_block, child_block=else_block,
+                                     relationship=Block_Relation.BRANCH)
         self.blocks.add_block(else_block)
         if self.token == Tokens.ELSE_TOKEN:
             self.next_token()
@@ -257,29 +264,51 @@ class Parser:
             else_block.add_new_instr(self.baseSSA.get_new_instr_id())
 
         self.check_token(Tokens.FI_TOKEN)
+        # update the "branch" instruction/arrow for if so that it points to the first instruction in else
         if_block.update_instruction(branch_instr_idn, idn_right=else_block.find_first_instr())
+
+        # add join block number, set it as the current block, and update its parents
+        join_block.update_id(self.blocks.get_new_block_id())
+        self.blocks.update_current_block(join_block)
+
+        # update parents and children
+        if not then_block.get_children() and not else_block.get_children():
+            self.blocks.add_relationship(parent_block=then_block, child_block=join_block,
+                                         relationship=Block_Relation.BRANCH)
+            self.blocks.add_relationship(parent_block=else_block, child_block=join_block,
+                                         relationship=Block_Relation.FALL_THROUGH)
+        elif not then_block.get_children():
+            self.blocks.add_relationship(parent_block=then_block, child_block=join_block,
+                                         relationship=Block_Relation.BRANCH)
+            self.blocks.add_relationship(parent_block=self.blocks.get_current_join_block(), child_block=join_block,
+                                         relationship=Block_Relation.FALL_THROUGH)
+        elif not else_block.get_children():
+            self.blocks.add_relationship(parent_block=self.blocks.get_current_join_block(), child_block=join_block,
+                                         relationship=Block_Relation.BRANCH)
+            self.blocks.add_relationship(parent_block=else_block, child_block=join_block,
+                                         relationship=Block_Relation.FALL_THROUGH)
 
         return
 
     def while_statement(self):
+        current_block = self.blocks.get_current_block()
         left_side, rel_op, right_side = self.relation()
-        self.blocks.get_current_block().add_new_instr(self.baseSSA.get_new_instr_id(), Operations.CMP, left_side,
-                                                      right_side)
+        current_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.CMP, left_side, right_side)
 
         self.check_token(Tokens.DO_TOKEN)
-        current_block = self.blocks.get_current_block()
 
-        then_block = BasicBlock(first_parent_block=self.blocks.get_current_block(),
-                                first_parent_type=ParentType.FALL_THROUGH)
+        then_block = BasicBlock()
+        self.blocks.add_relationship(parent_block=current_block, child_block=then_block,
+                                     relationship=Block_Relation.FALL_THROUGH)
         self.blocks.add_block(then_block)
-        current_block.add_fall_through(then_block)
 
         self.stat_sequence()
         self.check_token(Tokens.OD_TOKEN)
 
-        else_block = BasicBlock(first_parent_block=self.blocks.get_current_block(), first_parent_type=ParentType.BRANCH)
+        else_block = BasicBlock()  # TODO maybe should not be there
+        self.blocks.add_relationship(parent_block=current_block, child_block=else_block,
+                                     relationship=Block_Relation.BRANCH)
         self.blocks.add_block(else_block)
-        current_block.add_branch(else_block)
 
         return
 

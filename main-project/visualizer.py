@@ -1,4 +1,4 @@
-from blocks import Blocks, BasicBlock, ParentType
+from blocks import Blocks, BasicBlock, Block_Relation
 
 
 class Visualizer:
@@ -23,11 +23,11 @@ class Visualizer:
 
         for block in other_blocks:
             text += f'bb{block.get_id()} [shape=record, label="<b>'
-            text += f'join\nBB{block.get_id()} |' if block.join else f'BB{block.get_id()} | {{'
+            text += f'join BB{block.get_id()} |' if block.join else f'BB{block.get_id()} | {{'
             block_texts = []
             for instruction_id in sorted(block.get_instructions().keys()):
-                cur_instr = block.get_instructions()[instruction_id]
-                block_texts.append(f'{str(cur_instr)}')
+                    cur_instr = block.get_instructions()[instruction_id]
+                    block_texts.append(f'{str(cur_instr)}')
             text += '|'.join(block_texts)
             text += '}"];\n'
 
@@ -40,7 +40,7 @@ class Visualizer:
         for block in other_blocks:
             parents = block.get_parents()
             for parent_block, parent_type in parents.items():
-                if parent_type != ParentType.NORMAL:
+                if parent_type != Block_Relation.NORMAL:
                     texts.append(f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n [label="{str(parent_type)}"];')
                 else:
                     texts.append(f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n ;')

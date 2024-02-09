@@ -3,7 +3,7 @@ from enum import Enum
 from ssa import Instruction
 
 
-class ParentType(Enum):
+class Block_Relation(Enum):
     NORMAL = 1
     BRANCH = 2
     FALL_THROUGH = 3
@@ -17,8 +17,9 @@ class ParentType(Enum):
 
 
 class Block:
-    def __init__(self, id_count=None, parent_block=None, parent_type=None):
+    def __init__(self, id_count=None):
         self.id = id_count
+        self.children = {}
 
     def __str__(self):
         return f"BB{self.id}"
@@ -44,13 +45,17 @@ class ConstantBlock(Block):
 
 
 class BasicBlock(Block):
-    def __init__(self, id_count=None, first_parent_block=None, first_parent_type=None):
-        super().__init__(id_count, first_parent_block, first_parent_type)
+    def __init__(self, idn=None, join=False):
+        super().__init__(idn)
         self.dom = []
-        self.join = False
+        self.join = join
         self.instructions = {}
         self.vars: dict = {}
-        self.parents: dict = {first_parent_block: first_parent_type} if first_parent_block else {}
+        self.parents: dict = {}
+        self.children: {}
+
+    def update_id(self, idn):
+        self.id = idn
 
     def add_new_instr(self, instr_id, op=None, idn_left=None, idn_right=None):
         inst = Instruction(instr_id, op, idn_left, idn_right)
@@ -66,11 +71,17 @@ class BasicBlock(Block):
     def update_var_assignment(self, var, instruction_number):
         self.vars[var] = instruction_number
 
-    def add_parent(self, parent_block: 'BasicBlock', parent_type: ParentType):
+    def add_parent(self, parent_block: 'BasicBlock', parent_type: Block_Relation):
         self.parents[parent_block] = parent_type
 
     def get_parents(self):
         return self.parents
+
+    def add_child(self, child_block: 'BasicBlock', child_type: Block_Relation):
+        self.children[child_block] = child_type
+
+    def get_children(self):
+        return self.children
 
     def find_first_instr(self):
         return min(self.instructions)
@@ -90,6 +101,7 @@ class Blocks:
         self.constant_block = ConstantBlock(0)
         self.blocks_list: list[BasicBlock] = []
         self.current_block: BasicBlock = initial_block
+        self.current_join_block: BasicBlock = BasicBlock(join=True)
 
     def get_current_block(self):
         return self.current_block
@@ -116,12 +128,16 @@ class Blocks:
     def get_constant_id(self, constant):
         return self.constant_block.get_constant_id(constant)
 
+    def update_current_block(self, new_current_block):
+        self.current_block = new_current_block
+
     def add_var_to_current_block(self, var, instruction_number):
         self.current_block.update_var_assignment(var, instruction_number)
 
     def find_var_idn(self, var):
         # find the instr id for a var
         # TODO we need to consider join/dominating. Since a var could have two idn in then/else so need the join one
+        # TODO might be better to just copy table over from parent when making new block instead of recursion
         def find_var_idn_helper(var_inside, cur_block):
             if var_inside in cur_block.get_vars():
                 return cur_block.get_vars()[var_inside]
@@ -134,3 +150,16 @@ class Blocks:
                 return
 
         return find_var_idn_helper(var, self.current_block)
+
+    def get_current_join_block(self):
+        return self.current_join_block
+
+    def new_join_block(self):
+        join_block = BasicBlock(join=True)
+        self.blocks_list.append(join_block)
+        self.current_join_block = join_block
+        return join_block
+
+    def add_relationship(self, parent_block: 'BasicBlock', child_block: 'BasicBlock', relationship: Block_Relation):
+        parent_block.add_child(child_block, relationship)
+        child_block.add_parent(parent_block, relationship)

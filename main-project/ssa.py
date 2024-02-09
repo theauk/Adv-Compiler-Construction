@@ -31,7 +31,7 @@ class Instruction:
 
     def __str__(self):
         if not self.x and not self.y and not self.op:
-            return f"{self.id}: <empty>"
+            return f"{self.id}: \<empty\>"
         elif not self.x and not self.y:
             return f"{self.id}: {self.op}"
         elif not self.y:

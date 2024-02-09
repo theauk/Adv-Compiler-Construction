@@ -3,7 +3,7 @@ from enum import Enum
 from ssa import Instruction
 
 
-class Block_Relation(Enum):
+class BlockRelation(Enum):
     NORMAL = 1
     BRANCH = 2
     FALL_THROUGH = 3
@@ -71,13 +71,13 @@ class BasicBlock(Block):
     def update_var_assignment(self, var, instruction_number):
         self.vars[var] = instruction_number
 
-    def add_parent(self, parent_block: 'BasicBlock', parent_type: Block_Relation):
+    def add_parent(self, parent_block: 'BasicBlock', parent_type: BlockRelation):
         self.parents[parent_block] = parent_type
 
     def get_parents(self):
         return self.parents
 
-    def add_child(self, child_block: 'BasicBlock', child_type: Block_Relation):
+    def add_child(self, child_block: 'BasicBlock', child_type: BlockRelation):
         self.children[child_block] = child_type
 
     def get_children(self):
@@ -137,7 +137,7 @@ class Blocks:
 
     def find_var_idn(self, var):
         # find the instr id for a var
-        # TODO we need to consider join/dominating. Since a var could have two idn in then/else so need the join one
+        # TODO consider join/dominating. Since a var could have two idn in then/else so need the join one
         # TODO might be better to just copy table over from parent when making new block instead of recursion
         def find_var_idn_helper(var_inside, cur_block):
             if var_inside in cur_block.get_vars():
@@ -161,7 +161,7 @@ class Blocks:
         self.current_join_block = join_block
         return join_block
 
-    def add_relationship(self, parent_block: 'BasicBlock', child_block: 'BasicBlock', relationship: Block_Relation):
+    def add_relationship(self, parent_block: 'BasicBlock', child_block: 'BasicBlock', relationship: BlockRelation):
         parent_block.add_child(child_block, relationship)
         child_block.add_parent(parent_block, relationship)
 
@@ -169,7 +169,7 @@ class Blocks:
         return self.leaf_joins[-2], self.leaf_joins[-1]
 
     def update_leaf_joins(self, join_block):
-        # Check if a new join is a leaf join, i.e., whether it is not a child of another join block
+        # Check if a new join is a leaf join block, i.e., whether it is not a child of another join block.
         if self.leaf_joins and self.leaf_joins[-1] in join_block.get_parents():
             self.leaf_joins[-1] = join_block
         else:

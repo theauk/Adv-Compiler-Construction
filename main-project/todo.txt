@@ -17,28 +17,32 @@ ______
 - error handling. Like hvad hvis der er noget i check token der ikke passer. Skal det så fortsætte?
 - skal jeg copy table over med var instr id i stedet for at lave recursion method?
 
-LØBEOVERVEJELSER:
+
+NEXTS:
+______
+- implement det samme for while ift branches (like if)
+- add var værdier til grafen for debugging purposes
+- phis (måde at holde styr på hvad der skal samles -> kan også være at kopierer var tabeller med og så se hvad der skal sammenholdes/ikke er det samme længere fra de to sider)
+    - du skal nok kopierer tabeller ned
+    - phi'en skal tilføjes så snart der er en assignment (så den tæller instr id correct)
+        - du har join blokken fra starten så burde være fint. Bare tjek at den correct join den putter ind i er rigtig
+- add bra instruction number. Skal tilføjes så snart phi er færdig (altså før andet i den blok - se papir)
+- take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword
+- dom
+- du skal nok opdatere visul. så at den laver [] med de forskellige tre typer og så sætter dem sammen til sidst, så de samme kommer i samme rækkefølge
+
 ______
 x Alle while og if ender ud i en assignment, i.e. der skal være en join blok for enden af den tråd.
 x Så når du støder på den første assignment så laver du en join blok og opdaterer var "cur_join_block" til den blok
     - du kigger så opad for at finde den nuværende instr for den variabel og så sætter du den nye og den du har fundet længere oppe ind i phi i cur_join_block
-        - !!!BUT: hvad hvis der er if -> then -> if med fx a der bliver assignet tre gange? hvad skal der så lige phis???
-            - spørgsmålet er om der kommer en eller to join blokke
 x ift branching ud af if eller else ->
     - hvis der er else branch og det næste ikke er if/while så bliver den else blok en af parent til cur_join_block
     - hvis der ikke er else branch så bliver den blok hvor if er i en af parent til cur_join_block
-- tjek forskellige kombinationer af if-stmt ift branches
-- tilføj branch instruction til end of then blok (du skal finde ud af at få nr på der hvor der skal branches hen)
-- implement det samme for while
-
-
-
-NEXTS:
-______
-- den blok der kommer if/then/else skal samle dem alle (så skal nok et level op for at kunne lave den)
-- then branch instruction id - branch id skal være før der arbejdes på else i.e. det nr skal være før den første else ting
-    (don't know the next instr yet and there might not be more code, kan nok take id_count +1 uden at opdatere den?)
-- else block branch label/block
+x tjek forskellige kombinationer af if-stmt ift branches
+x tilføj branch instruction til end of then blok (du skal finde ud af at få nr på der hvor der skal branches hen)
+x den blok der kommer if/then/else skal samle dem alle (så skal nok et level op for at kunne lave den)
+x then branch instruction id - branch id skal være før der arbejdes på else i.e. det nr skal være før den første else ting
+x else block branch label/block
 
 ____
 
@@ -47,12 +51,9 @@ x Gør det samme du har gjort med * and / med + og -
     x write
     x read
     x cpm
-    - branches various types
-- prøv at kør på basic program og se om det er helt væk/ret fejl for at få nogenlunde graf
-- take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword
+    x branches various types
 - så join blokke og hvad der hører med ift dom og phi
 - når du så har graf med de ting, så kan vi begynde at tænke i optimering og det med traversing igen for while/if
-
 
 ____
 

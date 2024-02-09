@@ -1,4 +1,4 @@
-from blocks import Blocks, BasicBlock, Block_Relation
+from blocks import Blocks, BasicBlock, BlockRelation
 
 
 class Visualizer:
@@ -26,33 +26,32 @@ class Visualizer:
             text += f'join BB{block.get_id()} |' if block.join else f'BB{block.get_id()} | {{'
             block_texts = []
             for instruction_id in sorted(block.get_instructions().keys()):
-                    cur_instr = block.get_instructions()[instruction_id]
-                    block_texts.append(f'{str(cur_instr)}')
+                cur_instr = block.get_instructions()[instruction_id]
+                block_texts.append(f'{str(cur_instr)}')
             text += '|'.join(block_texts)
             text += '}"];\n'
 
         return text
 
-    def make_solid_arrows(self):
+    def make_arrows(self):
         other_blocks: list[BasicBlock] = self.blocks.get_blocks_list()
         texts = []
 
         for block in other_blocks:
             parents = block.get_parents()
             for parent_block, parent_type in parents.items():
-                if parent_type != Block_Relation.NORMAL:
-                    texts.append(f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n [label="{str(parent_type)}"];')
-                else:
+                if parent_type == BlockRelation.NORMAL:
                     texts.append(f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n ;')
+                elif parent_type == BlockRelation.DOM:
+                    texts.append(
+                        f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n [color=blue, style=dotted, label="{str(parent_type)}"];')
+                else:
+                    texts.append(f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n [label="{str(parent_type)}"];')
 
         return '\n'.join(texts)
-
-    def make_dom_arrows(self):
-        return '\n'
 
     def make_graph(self):
         constants = self.make_constants()
         other_blocks_text = self.make_other_blocks()
-        solid_arrows = self.make_solid_arrows()
-        dom_arrows = self.make_dom_arrows()
-        return 'digraph G {\n' + constants + other_blocks_text + solid_arrows + dom_arrows + '}'
+        solid_arrows = self.make_arrows()
+        return 'digraph G {\n' + constants + other_blocks_text + solid_arrows + '\n}'

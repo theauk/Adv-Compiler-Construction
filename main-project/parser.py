@@ -1,4 +1,4 @@
-from blocks import Blocks, BasicBlock, Block_Relation
+from blocks import Blocks, BasicBlock, BlockRelation
 from operations import Operations
 from ssa import BaseSSA
 from tokenizer import Tokenizer
@@ -18,7 +18,7 @@ class Parser:
 
     def setup_blocks(self):
         initial_block = BasicBlock()
-        initial_block.add_parent(parent_block=self.blocks.get_constant_block(), parent_type=Block_Relation.NORMAL)
+        initial_block.add_parent(parent_block=self.blocks.get_constant_block(), parent_type=BlockRelation.NORMAL)
         self.blocks.add_block(initial_block)
 
     def next_token(self):
@@ -87,7 +87,7 @@ class Parser:
 
     def var_declaration(self):
         # Handle arrays
-        if self.token == Tokens.OPEN_BRACKET_TOKEN:  # TODO Array stuff
+        if self.token == Tokens.OPEN_BRACKET_TOKEN:  # TODO Array
             self.next_token()
             self.array_declaration()
 
@@ -249,14 +249,14 @@ class Parser:
         self.check_token(Tokens.THEN_TOKEN)
         then_block = BasicBlock()
         self.blocks.add_relationship(parent_block=if_block, child_block=then_block,
-                                     relationship=Block_Relation.FALL_THROUGH)
+                                     relationship=BlockRelation.FALL_THROUGH)
         self.blocks.add_block(then_block)
         self.stat_sequence()
 
         # else part (might be empty)
         else_block = BasicBlock()
         self.blocks.add_relationship(parent_block=if_block, child_block=else_block,
-                                     relationship=Block_Relation.BRANCH)
+                                     relationship=BlockRelation.BRANCH)
         self.blocks.add_block(else_block)
         if self.token == Tokens.ELSE_TOKEN:
             self.next_token()
@@ -274,30 +274,37 @@ class Parser:
 
         # update parents and children
         if not then_block.get_children() and not else_block.get_children():
+            branch_block = then_block
             self.blocks.add_relationship(parent_block=then_block, child_block=join_block,
-                                         relationship=Block_Relation.BRANCH)
+                                         relationship=BlockRelation.BRANCH)
             self.blocks.add_relationship(parent_block=else_block, child_block=join_block,
-                                         relationship=Block_Relation.FALL_THROUGH)
+                                         relationship=BlockRelation.FALL_THROUGH)
         elif not then_block.get_children():
+            branch_block = then_block
             self.blocks.add_relationship(parent_block=then_block, child_block=join_block,
-                                         relationship=Block_Relation.BRANCH)
+                                         relationship=BlockRelation.BRANCH)
             self.blocks.add_relationship(parent_block=self.blocks.get_current_join_block(), child_block=join_block,
-                                         relationship=Block_Relation.FALL_THROUGH)
+                                         relationship=BlockRelation.FALL_THROUGH)
         elif not else_block.get_children():
+            branch_block = self.blocks.get_current_join_block()
             self.blocks.add_relationship(parent_block=self.blocks.get_current_join_block(), child_block=join_block,
-                                         relationship=Block_Relation.BRANCH)
+                                         relationship=BlockRelation.BRANCH)
             self.blocks.add_relationship(parent_block=else_block, child_block=join_block,
-                                         relationship=Block_Relation.FALL_THROUGH)
+                                         relationship=BlockRelation.FALL_THROUGH)
         else:
             leaf_left, leaf_right = self.blocks.get_lowest_leaf_join_block()
+            branch_block = leaf_left
             self.blocks.add_relationship(parent_block=leaf_left, child_block=join_block,
-                                         relationship=Block_Relation.BRANCH)
+                                         relationship=BlockRelation.BRANCH)
             self.blocks.add_relationship(parent_block=leaf_right, child_block=join_block,
-                                         relationship=Block_Relation.FALL_THROUGH)
+                                         relationship=BlockRelation.FALL_THROUGH)
+
+        # TODO update bra id after phi implementation -> take the first instr_id in the join block
+        branch_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA, -1)
 
         return
 
-    def while_statement(self):
+    def while_statement(self):  # TODO: fix arrow/branch structure similar to if + handle loops
         current_block = self.blocks.get_current_block()
         left_side, rel_op, right_side = self.relation()
         current_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.CMP, left_side, right_side)
@@ -306,20 +313,20 @@ class Parser:
 
         then_block = BasicBlock()
         self.blocks.add_relationship(parent_block=current_block, child_block=then_block,
-                                     relationship=Block_Relation.FALL_THROUGH)
+                                     relationship=BlockRelation.FALL_THROUGH)
         self.blocks.add_block(then_block)
 
         self.stat_sequence()
         self.check_token(Tokens.OD_TOKEN)
 
-        else_block = BasicBlock()  # TODO maybe should not be there
+        else_block = BasicBlock()  # TODO might have to delete
         self.blocks.add_relationship(parent_block=current_block, child_block=else_block,
-                                     relationship=Block_Relation.BRANCH)
+                                     relationship=BlockRelation.BRANCH)
         self.blocks.add_block(else_block)
 
         return
 
-    def return_statement(self):  # TODO user func ?
+    def return_statement(self):  # TODO user func
         return self.expression()
 
     def designator(self):
@@ -327,7 +334,7 @@ class Parser:
 
         if self.check_identifier():
             if self.token == Tokens.OPEN_BRACKET_TOKEN:  # array
-                while self.token == Tokens.OPEN_BRACKET_TOKEN:  # TODO fix for arrays later
+                while self.token == Tokens.OPEN_BRACKET_TOKEN:  # TODO arrays
                     self.next_token()
                     designator += self.expression()
                     self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
@@ -337,7 +344,7 @@ class Parser:
         else:
             return
 
-    def expression(self):  # TODO else clause should return nothing FOR sel.return [] can be blank
+    def expression(self):
         idn_left = self.term()
 
         while self.token == Tokens.PLUS_TOKEN or self.token == Tokens.MINUS_TOKEN:
@@ -376,7 +383,7 @@ class Parser:
         if self.token > self.tokenizer.max_reserved_id:
             designator, array = self.designator()
             if array:
-                pass  # TODO Handle when array
+                pass  # TODO array
             else:
                 return self.blocks.find_var_idn(designator)
         elif self.token == Tokens.NUMBER:
@@ -396,14 +403,14 @@ class Parser:
             result = self.func_call()
             return result  # return what func call gives
         else:
-            return ''  # TODO handle this case
+            return ''  # TODO consider return
 
     def relation(self):
         left_side = self.expression()
         if self.token > 25 or self.token < 20:
             self.tokenizer.error(
                 f"SyntaxError: expected relOp got {self.tokenizer.get_token_from_index(self.token)}")
-            return False  # TODO return what?
+            return False  # TODO consider return
         else:
             rel_op = self.token
             rel_op_instr = self.baseSSA.rel_op_to_instruction(rel_op)

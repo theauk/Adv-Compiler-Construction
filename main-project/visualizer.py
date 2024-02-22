@@ -2,8 +2,10 @@ from blocks import Blocks, BasicBlock, BlockRelation
 
 
 class Visualizer:
-    def __init__(self, blocks):
+    def __init__(self, blocks, symbol_table, show_vars=False):
         self.blocks: Blocks = blocks
+        self.symbol_table = symbol_table
+        self.show_vars = show_vars
 
     def make_constants(self):
         constant_complete_text = 'bb0 [shape=record, label="<b>BB0 | {'
@@ -17,7 +19,7 @@ class Visualizer:
         constant_complete_text += '}"];\n'
         return constant_complete_text
 
-    def make_other_blocks(self):
+    def make_main_blocks(self):
         other_blocks: list[BasicBlock] = self.blocks.get_blocks_list()
         text = ''
 
@@ -29,29 +31,40 @@ class Visualizer:
                 cur_instr = block.get_instructions()[instruction_id]
                 block_texts.append(f'{str(cur_instr)}')
             text += '|'.join(block_texts)
-            text += '}"];\n'
+            text += '}'
+
+            block_vars = block.get_vars()
+            if self.show_vars and block_vars:
+                text += '| {'
+                formatted_strings = [f"{self.symbol_table[key]}: {value}" for key, value in block_vars.items()]
+                text += ' | '.join(formatted_strings)
+                text += '}'
+
+            text += '"];\n'
 
         return text
 
     def make_arrows(self):
         other_blocks: list[BasicBlock] = self.blocks.get_blocks_list()
-        texts = []
+        instrs = []
+        branches = []
+        doms = []
 
         for block in other_blocks:
             parents = block.get_parents()
             for parent_block, parent_type in parents.items():
                 if parent_type == BlockRelation.NORMAL:
-                    texts.append(f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n ;')
+                    instrs.append(f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n ;')
                 elif parent_type == BlockRelation.DOM:
-                    texts.append(
+                    doms.append(
                         f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n [color=blue, style=dotted, label="{str(parent_type)}"];')
                 else:
-                    texts.append(f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n [label="{str(parent_type)}"];')
+                    instrs.append(f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n [label="{str(parent_type)}"];')
 
-        return '\n'.join(texts)
+        return '\n'.join(instrs) + '\n'.join(branches) + '\n'.join(doms)
 
     def make_graph(self):
         constants = self.make_constants()
-        other_blocks_text = self.make_other_blocks()
+        other_blocks_text = self.make_main_blocks()
         solid_arrows = self.make_arrows()
         return 'digraph G {\n' + constants + other_blocks_text + solid_arrows + '\n}'

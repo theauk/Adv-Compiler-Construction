@@ -10,7 +10,7 @@ class TestInterpreter(unittest.TestCase):
         parser = Parser('test.txt')
         parser.computation()
 
-        visualizer = Visualizer(parser.blocks)
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True)
         text = visualizer.make_graph()
         print(text)
 

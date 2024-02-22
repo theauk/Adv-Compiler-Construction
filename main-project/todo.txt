@@ -21,7 +21,7 @@ ______
 NEXTS:
 ______
 x implement det samme for while ift branches (like if)
-- tjek SSA for built-in funcs
+x tjek SSA for built-in funcs
 - add var værdier til grafen for debugging purposes
 - phis (måde at holde styr på hvad der skal samles -> kan også være at kopierer var tabeller med og så se hvad der skal sammenholdes/ikke er det samme længere fra de to sider)
     - du skal nok kopierer tabeller ned

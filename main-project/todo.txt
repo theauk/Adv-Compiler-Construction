@@ -6,11 +6,11 @@ ______
 - der der løbende linked list halløj (?)
 - doms (også i graf)
 - Arrays
+- end instr? exit block?
 
 QUESTIONS:
 ______
-Joiner man to join blokke? Fx if then (if then else) else (if then else) - så kommer der join i de to () og joiner
-man så de to join blokke i en ny join blok?
+- Skal jeg dække return stm?
 
 OVERVEJELSER:
 ______
@@ -20,7 +20,8 @@ ______
 
 NEXTS:
 ______
-- implement det samme for while ift branches (like if)
+x implement det samme for while ift branches (like if)
+- tjek SSA for built-in funcs
 - add var værdier til grafen for debugging purposes
 - phis (måde at holde styr på hvad der skal samles -> kan også være at kopierer var tabeller med og så se hvad der skal sammenholdes/ikke er det samme længere fra de to sider)
     - du skal nok kopierer tabeller ned
@@ -30,6 +31,7 @@ ______
 - take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword
 - dom
 - du skal nok opdatere visul. så at den laver [] med de forskellige tre typer og så sætter dem sammen til sidst, så de samme kommer i samme rækkefølge
+- fix så hvis det er if then return og noget efter if så har den branch blok ikke en empty men det der kommer efter
 
 ______
 x Alle while og if ender ud i en assignment, i.e. der skal være en join blok for enden af den tråd.

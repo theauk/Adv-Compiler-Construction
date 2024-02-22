@@ -173,7 +173,7 @@ class Parser:
         if self.token == Tokens.LET_TOKEN:
             self.next_token()
             self.assignment()
-        elif self.token == Tokens.FUNC_TOKEN:
+        elif self.token == Tokens.CALL_TOKEN:
             self.next_token()
             self.func_call()
         elif self.token == Tokens.IF_TOKEN:
@@ -203,13 +203,14 @@ class Parser:
         return
 
     def func_call(self):
-        result = ''
         # Predefined functions
         if self.token == Tokens.INPUT_NUM_TOKEN:  # InputNum()
             self.next_token()
             self.check_token(Tokens.OPEN_PAREN_TOKEN)
             self.check_token(Tokens.CLOSE_PAREN_TOKEN)
-            self.blocks.get_current_block().add_new_instr(self.baseSSA.get_new_instr_id(), Operations.READ)
+            idn = self.baseSSA.get_new_instr_id()
+            self.blocks.get_current_block().add_new_instr(idn, Operations.READ)
+            return idn
         elif self.token == Tokens.OUTPUT_NUM_TOKEN:  # OutputNum(x)
             self.next_token()
             self.check_token(Tokens.OPEN_PAREN_TOKEN)
@@ -224,16 +225,16 @@ class Parser:
         else:  # TODO: user funcs
             self.check_identifier()
             if self.check_token(Tokens.OPEN_PAREN_TOKEN):
-                result = self.expression()
+                self.expression()
                 while self.token == Tokens.COMMA_TOKEN:
                     self.next_token()
-                    result = self.expression()
+                    self.expression()
                 self.check_token(Tokens.CLOSE_PAREN_TOKEN)
 
-        return result
+        return
 
     def if_statement(self):
-        # join block
+        # new join block
         join_block = self.blocks.new_join_block()
 
         # if part
@@ -243,7 +244,7 @@ class Parser:
         cmp_instr_idn = if_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.CMP, left_side, right_side)
         # add the branch instr (branch instr added when known below)
         branch_instr_idn = if_block.add_new_instr(self.baseSSA.get_new_instr_id(), op=rel_op_instr,
-                                                  idn_left=cmp_instr_idn)
+                                                  x=cmp_instr_idn)
 
         # then part
         self.check_token(Tokens.THEN_TOKEN)
@@ -266,7 +267,7 @@ class Parser:
 
         self.check_token(Tokens.FI_TOKEN)
         # update the "branch" instruction/arrow for if so that it points to the first instruction in else
-        if_block.update_instruction(branch_instr_idn, idn_right=else_block.find_first_instr())
+        if_block.update_instruction(branch_instr_idn, y=else_block.find_first_instr())
 
         # add join block number, set it as the current block, and update its parents
         join_block.update_id(self.blocks.get_new_block_id())
@@ -306,8 +307,14 @@ class Parser:
 
     def while_statement(self):  # TODO: fix arrow/branch structure similar to if + handle loops
         current_block = self.blocks.get_current_block()
-        left_side, rel_op, right_side = self.relation()
-        current_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.CMP, left_side, right_side)
+        left_side, rel_op_instr, right_side = self.relation()
+
+        # make comparison instr
+        cmp_instr_idn = current_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.CMP, left_side,
+                                                    right_side)
+        # add the branch instr (branch instr added when known below)
+        branch_instr_idn = current_block.add_new_instr(self.baseSSA.get_new_instr_id(), op=rel_op_instr,
+                                                       x=cmp_instr_idn)
 
         self.check_token(Tokens.DO_TOKEN)
 
@@ -319,10 +326,13 @@ class Parser:
         self.stat_sequence()
         self.check_token(Tokens.OD_TOKEN)
 
-        else_block = BasicBlock()  # TODO might have to delete
-        self.blocks.add_relationship(parent_block=current_block, child_block=else_block,
+        # new BB for branch
+        branch_block = BasicBlock()
+        self.blocks.add_relationship(parent_block=current_block, child_block=branch_block,
                                      relationship=BlockRelation.BRANCH)
-        self.blocks.add_block(else_block)
+        self.blocks.add_block(branch_block)
+        new_instr = branch_block.add_new_instr(self.baseSSA.get_new_instr_id())
+        current_block.update_instruction(branch_instr_idn, y=new_instr)
 
         return
 

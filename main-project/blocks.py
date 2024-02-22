@@ -57,8 +57,8 @@ class BasicBlock(Block):
     def update_id(self, idn):
         self.id = idn
 
-    def add_new_instr(self, instr_id, op=None, idn_left=None, idn_right=None):
-        inst = Instruction(instr_id, op, idn_left, idn_right)
+    def add_new_instr(self, instr_id, op=None, x=None, y=None):
+        inst = Instruction(instr_id, op, x, y)
         self.instructions[instr_id] = inst
         return instr_id
 
@@ -86,12 +86,12 @@ class BasicBlock(Block):
     def find_first_instr(self):
         return min(self.instructions)
 
-    def update_instruction(self, instr_idn, idn_left=None, idn_right=None):
-        instr = self.instructions[instr_idn]
-        if idn_left:
-            instr.id_left = idn_left
-        if idn_right:
-            instr.id_right = idn_right
+    def update_instruction(self, instr_idn, x=None, y=None):
+        instr: Instruction = self.instructions[instr_idn]
+        if x:
+            instr.x = x
+        if y:
+            instr.y = y
 
 
 class Blocks:

@@ -51,6 +51,7 @@ class BasicBlock(Block):
         self.join = join
         self.instructions = {}
         self.vars: dict = {}
+        self.updated_vars = set()
         self.parents: dict = {}
         self.children: {}
 
@@ -70,6 +71,7 @@ class BasicBlock(Block):
 
     def update_var_assignment(self, var, instruction_number):
         self.vars[var] = instruction_number
+        self.updated_vars.add(var)
 
     def add_parent(self, parent_block: 'BasicBlock', parent_type: BlockRelation):
         self.parents[parent_block] = parent_type
@@ -164,6 +166,7 @@ class Blocks:
     def add_relationship(self, parent_block: 'BasicBlock', child_block: 'BasicBlock', relationship: BlockRelation):
         parent_block.add_child(child_block, relationship)
         child_block.add_parent(parent_block, relationship)
+        child_block.vars = parent_block.vars.copy()
 
     def get_lowest_leaf_join_block(self):
         return self.leaf_joins[-2], self.leaf_joins[-1]

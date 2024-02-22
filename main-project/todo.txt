@@ -22,7 +22,7 @@ NEXTS:
 ______
 x implement det samme for while ift branches (like if)
 x tjek SSA for built-in funcs
-- add var værdier til grafen for debugging purposes
+x add var værdier til grafen for debugging purposes
 - phis (måde at holde styr på hvad der skal samles -> kan også være at kopierer var tabeller med og så se hvad der skal sammenholdes/ikke er det samme længere fra de to sider)
     - du skal nok kopierer tabeller ned
     - phi'en skal tilføjes så snart der er en assignment (så den tæller instr id correct)
@@ -30,7 +30,7 @@ x tjek SSA for built-in funcs
 - add bra instruction number. Skal tilføjes så snart phi er færdig (altså før andet i den blok - se papir)
 - take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword
 - dom
-- du skal nok opdatere visul. så at den laver [] med de forskellige tre typer og så sætter dem sammen til sidst, så de samme kommer i samme rækkefølge
+x du skal nok opdatere visul. så at den laver [] med de forskellige tre typer og så sætter dem sammen til sidst, så de samme kommer i samme rækkefølge
 - fix så hvis det er if then return og noget efter if så har den branch blok ikke en empty men det der kommer efter
 
 ______

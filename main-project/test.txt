@@ -2,11 +2,15 @@ main
     var a; {
     let a <- call InputNum();
 
-    while a > 0 do
+    if a > 0 then
+        call OutputNewLine();
+        else
+        let a <- a + 2;
+        call OutputNewLine();
         let a <- a + 5;
-    od;
 
-    call OutputNum(a);
+    fi;
+
     call OutputNewLine();
 
     }.

@@ -3,6 +3,7 @@ from operations import Operations
 from ssa import BaseSSA
 from tokenizer import Tokenizer
 from tokens import Tokens
+from utils import Utils
 
 
 class Parser:
@@ -14,6 +15,7 @@ class Parser:
         self.baseSSA = BaseSSA()
         self.blocks = Blocks(self.baseSSA, None)
         self.setup_blocks()
+        self.utils = Utils(self.blocks, self.baseSSA)
         self.next_token()
 
     def setup_blocks(self):
@@ -234,9 +236,6 @@ class Parser:
         return
 
     def if_statement(self):
-        # new join block
-        join_block = self.blocks.new_join_block()
-
         # if part
         left_side, rel_op_instr, right_side = self.relation()
         if_block = self.blocks.get_current_block()
@@ -249,15 +248,15 @@ class Parser:
         # then part
         self.check_token(Tokens.THEN_TOKEN)
         then_block = BasicBlock()
-        self.blocks.add_relationship(parent_block=if_block, child_block=then_block,
-                                     relationship=BlockRelation.FALL_THROUGH)
+        self.utils.add_relationship(parent_block=if_block, child_block=then_block,
+                                    relationship=BlockRelation.FALL_THROUGH)
         self.blocks.add_block(then_block)
         self.stat_sequence()
 
         # else part (might be empty)
         else_block = BasicBlock()
-        self.blocks.add_relationship(parent_block=if_block, child_block=else_block,
-                                     relationship=BlockRelation.BRANCH)
+        self.utils.add_relationship(parent_block=if_block, child_block=else_block,
+                                    relationship=BlockRelation.BRANCH)
         self.blocks.add_block(else_block)
         if self.token == Tokens.ELSE_TOKEN:
             self.next_token()
@@ -269,36 +268,41 @@ class Parser:
         # update the "branch" instruction/arrow for if so that it points to the first instruction in else
         if_block.update_instruction(branch_instr_idn, y=else_block.find_first_instr())
 
+        # new block below (potentially a join block)
+        child_block = BasicBlock(idn=self.blocks.get_new_block_id())
+        self.blocks.add_block(child_block)
         # add join block number, set it as the current block, and update its parents
-        join_block.update_id(self.blocks.get_new_block_id())
-        self.blocks.update_current_block(join_block)
+        self.blocks.update_current_block(child_block)
+        self.blocks.update_current_join_block(child_block)
 
         # update parents and children
         if not then_block.get_children() and not else_block.get_children():
             branch_block = then_block
-            self.blocks.add_relationship(parent_block=then_block, child_block=join_block,
-                                         relationship=BlockRelation.BRANCH)
-            self.blocks.add_relationship(parent_block=else_block, child_block=join_block,
-                                         relationship=BlockRelation.FALL_THROUGH)
+            self.utils.add_relationship(parent_block=then_block, child_block=child_block,
+                                        relationship=BlockRelation.BRANCH)
+            self.utils.add_relationship(parent_block=else_block, child_block=child_block,
+                                        relationship=BlockRelation.FALL_THROUGH)
         elif not then_block.get_children():
             branch_block = then_block
-            self.blocks.add_relationship(parent_block=then_block, child_block=join_block,
-                                         relationship=BlockRelation.BRANCH)
-            self.blocks.add_relationship(parent_block=self.blocks.get_current_join_block(), child_block=join_block,
-                                         relationship=BlockRelation.FALL_THROUGH)
+            self.utils.add_relationship(parent_block=then_block, child_block=child_block,
+                                        relationship=BlockRelation.BRANCH)
+            self.utils.add_relationship(parent_block=self.blocks.get_current_join_block(), child_block=child_block,
+                                        relationship=BlockRelation.FALL_THROUGH)
         elif not else_block.get_children():
             branch_block = self.blocks.get_current_join_block()
-            self.blocks.add_relationship(parent_block=self.blocks.get_current_join_block(), child_block=join_block,
-                                         relationship=BlockRelation.BRANCH)
-            self.blocks.add_relationship(parent_block=else_block, child_block=join_block,
-                                         relationship=BlockRelation.FALL_THROUGH)
+            self.utils.add_relationship(parent_block=self.blocks.get_current_join_block(), child_block=child_block,
+                                        relationship=BlockRelation.BRANCH)
+            self.utils.add_relationship(parent_block=else_block, child_block=child_block,
+                                        relationship=BlockRelation.FALL_THROUGH)
         else:
             leaf_left, leaf_right = self.blocks.get_lowest_leaf_join_block()
             branch_block = leaf_left
-            self.blocks.add_relationship(parent_block=leaf_left, child_block=join_block,
-                                         relationship=BlockRelation.BRANCH)
-            self.blocks.add_relationship(parent_block=leaf_right, child_block=join_block,
-                                         relationship=BlockRelation.FALL_THROUGH)
+            self.utils.add_relationship(parent_block=leaf_left, child_block=child_block,
+                                        relationship=BlockRelation.BRANCH)
+            self.utils.add_relationship(parent_block=leaf_right, child_block=child_block,
+                                        relationship=BlockRelation.FALL_THROUGH)
+
+        self.utils.add_phis_if(if_block, then_block, else_block)
 
         # TODO update bra id after phi implementation -> take the first instr_id in the join block
         branch_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA, -1)
@@ -307,6 +311,7 @@ class Parser:
 
     def while_statement(self):  # TODO: fix arrow/branch structure similar to if + handle loops
         current_block = self.blocks.get_current_block()
+        self.blocks.update_current_join_block(current_block)
         left_side, rel_op_instr, right_side = self.relation()
 
         # make comparison instr
@@ -319,8 +324,8 @@ class Parser:
         self.check_token(Tokens.DO_TOKEN)
 
         then_block = BasicBlock()
-        self.blocks.add_relationship(parent_block=current_block, child_block=then_block,
-                                     relationship=BlockRelation.FALL_THROUGH)
+        self.utils.add_relationship(parent_block=current_block, child_block=then_block,
+                                    relationship=BlockRelation.FALL_THROUGH)
         self.blocks.add_block(then_block)
 
         self.stat_sequence()
@@ -328,8 +333,8 @@ class Parser:
 
         # new BB for branch
         branch_block = BasicBlock()
-        self.blocks.add_relationship(parent_block=current_block, child_block=branch_block,
-                                     relationship=BlockRelation.BRANCH)
+        self.utils.add_relationship(parent_block=current_block, child_block=branch_block,
+                                    relationship=BlockRelation.BRANCH)
         self.blocks.add_block(branch_block)
         new_instr = branch_block.add_new_instr(self.baseSSA.get_new_instr_id())
         current_block.update_instruction(branch_instr_idn, y=new_instr)

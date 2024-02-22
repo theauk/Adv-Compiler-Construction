@@ -58,6 +58,9 @@ class BasicBlock(Block):
     def update_id(self, idn):
         self.id = idn
 
+    def update_join(self, join):
+        self.join = join
+
     def add_new_instr(self, instr_id, op=None, x=None, y=None):
         inst = Instruction(instr_id, op, x, y)
         self.instructions[instr_id] = inst
@@ -68,6 +71,9 @@ class BasicBlock(Block):
 
     def get_vars(self):
         return self.vars
+
+    def get_updated_vars(self):
+        return self.updated_vars
 
     def update_var_assignment(self, var, instruction_number):
         self.vars[var] = instruction_number
@@ -139,34 +145,19 @@ class Blocks:
 
     def find_var_idn(self, var):
         # find the instr id for a var
-        # TODO consider join/dominating. Since a var could have two idn in then/else so need the join one
-        # TODO might be better to just copy table over from parent when making new block instead of recursion
-        def find_var_idn_helper(var_inside, cur_block):
-            if var_inside in cur_block.get_vars():
-                return cur_block.get_vars()[var_inside]
+        return self.current_block.get_vars()[var]
 
-            parents = cur_block.get_parents()
-            if parents:
-                for p in parents:
-                    return find_var_idn_helper(var_inside, p)
-            else:
-                return
-
-        return find_var_idn_helper(var, self.current_block)
+    def update_current_join_block(self, block):
+        self.current_join_block = block
 
     def get_current_join_block(self):
         return self.current_join_block
 
-    def new_join_block(self):
-        join_block = BasicBlock(join=True)
-        self.blocks_list.append(join_block)
-        self.current_join_block = join_block
-        return join_block
-
-    def add_relationship(self, parent_block: 'BasicBlock', child_block: 'BasicBlock', relationship: BlockRelation):
-        parent_block.add_child(child_block, relationship)
-        child_block.add_parent(parent_block, relationship)
-        child_block.vars = parent_block.vars.copy()
+    # def new_join_block(self):
+    #    join_block = BasicBlock(join=True)
+    #    self.blocks_list.append(join_block)
+    #    self.current_join_block = join_block
+    #    return join_block
 
     def get_lowest_leaf_join_block(self):
         return self.leaf_joins[-2], self.leaf_joins[-1]

@@ -24,9 +24,9 @@ x implement det samme for while ift branches (like if)
 x tjek SSA for built-in funcs
 x add var værdier til grafen for debugging purposes
 - phis (måde at holde styr på hvad der skal samles -> kan også være at kopierer var tabeller med og så se hvad der skal sammenholdes/ikke er det samme længere fra de to sider)
-    - du skal nok kopierer tabeller ned
+    x du skal nok kopierer tabeller ned
     - phi'en skal tilføjes så snart der er en assignment (så den tæller instr id correct)
-        - du har join blokken fra starten så burde være fint. Bare tjek at den correct join den putter ind i er rigtig
+- check what happens in phi when variable is declared first time inside then and else (altså ikke ovenover)
 - add bra instruction number. Skal tilføjes så snart phi er færdig (altså før andet i den blok - se papir)
 - take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword
 - dom
@@ -118,3 +118,52 @@ Lav noget der kan konvertere din data struktur træ til det der graf halløj
 THEN
 - copy propagation
 - common subexpression elemination
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def add_phis_if(self, if_block: BasicBlock, then_block: BasicBlock, else_block: BasicBlock):
+        already_added_vars = set()
+        join_block: BasicBlock = self.blocks.get_current_join_block()
+
+        # Joining var that has been updated both in then and else
+        intersection_then_else = then_block.get_updated_vars().intersection(else_block.get_updated_vars())
+        for child in intersection_then_else:
+            if child not in already_added_vars:
+                then_instr_child = then_block.get_vars()[child]
+                else_instr_child = else_block.get_vars()[child]
+                join_block.add_new_instr(instr_id=self.baseSSA.get_new_instr_id(), op=Operations.PHI, x=else_instr_child,
+                                         y=then_instr_child)
+                already_added_vars.add(child)
+
+        intersection_if_then = if_block.get_updated_vars().intersection(then_block.get_updated_vars())
+        for child in intersection_if_then:
+            if child not in already_added_vars:
+                if_instr_child = if_block.get_vars()[child]
+                then_instr_child = then_block.get_vars()[child]
+                join_block.add_new_instr(instr_id=self.baseSSA.get_new_instr_id(), op=Operations.PHI,
+                                         x=then_instr_child,
+                                         y=if_instr_child)
+                already_added_vars.add(child)
+
+        intersection_if_else = if_block.get_updated_vars().intersection(else_block.get_updated_vars())
+        for child in intersection_if_else:
+            if child not in already_added_vars:
+                if_instr_child = if_block.get_vars()[child]
+                else_instr_child = then_block.get_vars()[child]
+                join_block.add_new_instr(instr_id=self.baseSSA.get_new_instr_id(), op=Operations.PHI,
+                                         x=else_instr_child,
+                                         y=if_instr_child)
+                already_added_vars.add(child)
+
+        if already_added_vars:
+            join_block.update_join(True)

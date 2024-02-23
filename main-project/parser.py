@@ -368,17 +368,12 @@ class Parser:
         then_block = BasicBlock()
         self.utils.add_relationship(parent_block=while_block, child_block=then_block,
                                     relationship=BlockRelation.FALL_THROUGH)
-        self.utils.add_relationship(parent_block=then_block, child_block=while_block,
-                                    relationship=BlockRelation.NORMAL)
         self.blocks.add_block(then_block)
         self.utils.copy_vars(parent_block=while_block, child_block=then_block)
 
         self.stat_sequence()
 
         self.utils.add_phis_while(while_block, then_block)
-
-        # Add branch instruction
-        then_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA, while_block.find_first_instr())
 
         self.check_token(Tokens.OD_TOKEN)
 
@@ -390,18 +385,28 @@ class Parser:
             self.utils.copy_vars(parent_block=while_block, child_block=branch_block)
             self.blocks.add_block(branch_block)
 
-        self.utils.add_relationship(parent_block=while_block, child_block=branch_block,
-                                    relationship=BlockRelation.BRANCH)
+        # Check if bra instruction should be inserted
+        if len(branch_block.get_parents()) == 0:
+            bra_instr = self.baseSSA.get_new_instr_id()
+            then_block.add_new_instr(bra_instr, Operations.BRA, while_block.find_first_instr())
+            self.utils.add_relationship(parent_block=then_block, child_block=while_block,
+                                        relationship=BlockRelation.BRANCH)
 
-        cur_block_first_instr = self.blocks.get_current_block().find_first_instr()
-        if cur_block_first_instr is not None:
-            while_block.update_instruction(cmp_branch_to_instr, y=cur_block_first_instr)
-        elif branch_block.is_first_hidden_instr():
-            while_block.update_instruction(cmp_branch_to_instr, y=branch_block.get_hidden_first_instr())
+        if len(branch_block.get_parents()) == 0:
+            self.utils.add_relationship(parent_block=while_block, child_block=branch_block,
+                                        relationship=BlockRelation.BRANCH)
         else:
-            # If there are no phi instructions needed then take what will be the next instr number but do not update it
-            while_block.update_instruction(cmp_branch_to_instr, y=self.baseSSA.get_cur_instr_id() + 1)
-            self.blocks.get_current_block().set_hidden_first_instr(self.baseSSA.get_cur_instr_id() + 1)
+            branch_block_parents = branch_block.get_parents()
+            parent_block = list(branch_block_parents.keys())[0]
+            self.utils.remove_relationship(parent_block, branch_block)
+            self.utils.add_relationship(parent_block=parent_block, child_block=while_block,
+                                        relationship=BlockRelation.BRANCH)
+
+        if BlockRelation.BRANCH not in while_block.get_children().values():
+            self.utils.add_relationship(parent_block=while_block, child_block=branch_block,
+                                        relationship=BlockRelation.BRANCH)
+
+        while_block.update_instruction(cmp_branch_to_instr, y=self.baseSSA.get_cur_instr_id() + 1)
 
         self.blocks.update_current_join_block(None)
 

@@ -113,11 +113,17 @@ class BasicBlock(Block):
     def add_parent(self, parent_block: 'BasicBlock', parent_type: BlockRelation):
         self.parents[parent_block] = parent_type
 
+    def remove_parent(self, parent_block: 'BasicBlock'):
+        self.parents.pop(parent_block)
+
     def get_parents(self):
         return self.parents
 
     def add_child(self, child_block: 'BasicBlock', child_type: BlockRelation):
         self.children[child_block] = child_type
+
+    def remove_child(self, child_block: 'BasicBlock'):
+        self.children.pop(child_block)
 
     def get_children(self):
         return self.children

@@ -1,5 +1,6 @@
-from blocks import BasicBlock, BlockRelation
 import copy
+
+from blocks import BasicBlock, BlockRelation
 
 
 class Utils:
@@ -10,6 +11,10 @@ class Utils:
     def add_relationship(self, parent_block: BasicBlock, child_block: BasicBlock, relationship: BlockRelation):
         parent_block.add_child(child_block, relationship)
         child_block.add_parent(parent_block, relationship)
+
+    def remove_relationship(self, parent_block: BasicBlock, child_block: BasicBlock):
+        parent_block.remove_child(child_block)
+        child_block.remove_parent(parent_block)
 
     def copy_vars(self, parent_block: BasicBlock, child_block: BasicBlock):
         child_block.vars = copy.deepcopy(parent_block.vars)

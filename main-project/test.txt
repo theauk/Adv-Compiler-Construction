@@ -1,12 +1,12 @@
 main
-    var a, b; {
-    let a <- call InputNum();
-    let b <- 2;
+    var a, b, c; {
+
+    let c <- 2;
 
     if a > 0 then
-        call OutputNewLine();
+        let b <- b + 3;
         else
-        call OutputNewLine();
+        let b <- b + 3;
     fi;
 
     call OutputNewLine();

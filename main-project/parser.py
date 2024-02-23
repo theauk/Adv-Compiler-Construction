@@ -37,9 +37,9 @@ class Parser:
     def check_identifier(self):
         reserved = self.reserved_identifier()
         if not reserved:
-            if self.token not in self.symbolTable:
+            if self.token not in self.blocks.get_current_block().get_vars():
                 self.tokenizer.error(
-                    f"SyntaxError: the {self.tokenizer.last_id} has not been initialized. It is now initialized to 0")
+                    f"SyntaxError: {self.tokenizer.last_id} has not been initialized. It is now initialized to 0")
                 self.symbolTable[self.token] = self.tokenizer.last_id
                 self.blocks.add_constant(0)
                 self.blocks.add_var_to_current_block(self.token, self.blocks.get_constant_id(0))
@@ -197,6 +197,7 @@ class Parser:
     def assignment(self):
         if not self.reserved_identifier():
             designator = self.token  # TODO ARRAY distinguish
+
             self.symbolTable[designator] = self.tokenizer.last_id
             self.next_token()
             # "<-"

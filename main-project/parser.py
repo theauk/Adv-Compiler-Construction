@@ -379,7 +379,7 @@ class Parser:
         # Add branch instruction
         new_instr = then_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA,
                                              while_block.find_first_instr())
-        while_block.update_instruction(branch_instr_idn, y=new_instr)
+        while_block.update_instruction(branch_instr_idn, y=then_block.find_first_instr())
 
         self.check_token(Tokens.OD_TOKEN)
 

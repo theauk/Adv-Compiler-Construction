@@ -4,9 +4,9 @@ main
     let c <- 2;
 
     if a > 0 then
-        let b <- b + 3;
+        call OutputNewLine();
         else
-        let b <- b + 3;
+        call OutputNewLine();
     fi;
 
     call OutputNewLine();

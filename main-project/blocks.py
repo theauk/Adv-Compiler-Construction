@@ -79,9 +79,10 @@ class BasicBlock(Block):
     def get_updated_vars(self):
         return self.updated_vars
 
-    def add_var_assignment(self, var, instruction_number):
+    def add_var_assignment(self, var, instruction_number, update_var=True):
         self.vars[var] = instruction_number
-        self.updated_vars.add(var)
+        if update_var:
+            self.updated_vars.add(var)
 
     def add_parent(self, parent_block: 'BasicBlock', parent_type: BlockRelation):
         self.parents[parent_block] = parent_type

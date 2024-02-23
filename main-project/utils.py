@@ -49,8 +49,8 @@ class Utils:
     def update_var_table_for_block(self, join_block, then_block, else_block):
         for key, value in then_block.get_vars().items():
             if key not in join_block.get_vars():
-                join_block.add_var_assignment(key, value)
+                join_block.add_var_assignment(key, value, update_var=False)
 
         for key, value in else_block.get_vars().items():
             if key not in join_block.get_vars():
-                join_block.add_var_assignment(key, value)
+                join_block.add_var_assignment(key, value, update_var=False)

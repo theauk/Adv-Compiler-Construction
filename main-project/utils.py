@@ -1,5 +1,4 @@
 from blocks import BasicBlock, BlockRelation
-from operations import Operations
 
 
 class Utils:
@@ -20,8 +19,9 @@ class Utils:
             if child not in already_added_vars:
                 block1_child = block1.get_vars()[child]
                 block2_child = block2.get_vars()[child]
-                join_block.add_new_instr(instr_id=self.baseSSA.get_new_instr_id(), op=Operations.PHI,
-                                         x=block2_child, y=block1_child)
+                available_phi_instructions = join_block.get_available_phi_instruction()
+                join_block.update_instruction(instr_idn=available_phi_instructions.get_id(), x=block2_child,
+                                              y=block1_child)
                 already_added_vars.add(child)
 
     def add_phis_if(self, if_block: BasicBlock, then_block: BasicBlock, else_block: BasicBlock):

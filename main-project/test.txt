@@ -1,11 +1,16 @@
 main
-    var a; {
+    var a, b; {
     let a <- call InputNum();
+    let b <- 2;
 
     if a > 0 then
         let a <- a + 2;
-        else
+        let b <- a + 5;
         call OutputNewLine();
+        else
+        let a <- a + 2;
+        let a <- a + 3;
+
 
     fi;
 

@@ -11,6 +11,9 @@ ______
 QUESTIONS:
 ______
 - Skal jeg dække return stm?
+- Lad os sige at der er en assignment til samme var then og else. Der bliver lavet en phi efter den første assignment i
+    then hvilket vil sige at then assignment har i instr number og phien før i + 1. Assignment i else får så i + 2. Det vil sige at
+    phi bliver i+1: phi(i, i+2), i.e. phi instr number er mindre end en af de instructions inden i phi – er det okay?
 
 OVERVEJELSER:
 ______
@@ -26,9 +29,9 @@ x add var værdier til grafen for debugging purposes
 - phis (måde at holde styr på hvad der skal samles -> kan også være at kopierer var tabeller med og så se hvad der skal sammenholdes/ikke er det samme længere fra de to sider)
     x du skal nok kopierer tabeller ned
     x phi'en skal tilføjes så snart der er en assignment (så den tæller instr id correct)
-    - add phi instr x and y
+    x add phi instr x and y
 - check what happens in phi when variable is declared first time inside then and else (altså ikke ovenover)
-- add bra instruction number. Skal tilføjes så snart phi er færdig (altså før andet i den blok - se papir)
+x add bra instruction number. Skal tilføjes så snart phi er færdig (altså før andet i den blok - se papir)
 - take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword
 - dom
 x du skal nok opdatere visul. så at den laver [] med de forskellige tre typer og så sætter dem sammen til sidst, så de samme kommer i samme rækkefølge

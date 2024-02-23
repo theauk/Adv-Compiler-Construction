@@ -29,6 +29,9 @@ class Instruction:
         self.x = x
         self.y = y
 
+    def get_id(self):
+        return self.id
+
     def __str__(self):
         if not self.x and not self.y and not self.op:
             return f"{self.id}: \<empty\>"

@@ -1,5 +1,6 @@
 from enum import Enum
 
+from operations import Operations
 from ssa import Instruction
 
 
@@ -54,6 +55,7 @@ class BasicBlock(Block):
         self.updated_vars = set()
         self.parents: dict = {}
         self.children: {}
+        self.available_phis = []
 
     def update_id(self, idn):
         self.id = idn
@@ -64,6 +66,8 @@ class BasicBlock(Block):
     def add_new_instr(self, instr_id, op=None, x=None, y=None):
         inst = Instruction(instr_id, op, x, y)
         self.instructions[instr_id] = inst
+        if op == Operations.PHI:
+            self.available_phis.append(inst)
         return instr_id
 
     def get_instructions(self):
@@ -100,6 +104,9 @@ class BasicBlock(Block):
             instr.x = x
         if y:
             instr.y = y
+
+    def get_available_phi_instruction(self):
+        return self.available_phis.pop(0)
 
 
 class Blocks:

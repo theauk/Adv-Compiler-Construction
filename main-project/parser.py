@@ -318,7 +318,7 @@ class Parser:
             self.utils.add_relationship(parent_block=leaf_right, child_block=potential_join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
 
-        # self.utils.add_phis_if(if_block, then_block, else_block)
+        self.utils.add_phis_if(if_block, then_block, else_block)
 
         self.blocks.update_current_block(self.blocks.get_current_join_block())
         branch_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA,

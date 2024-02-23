@@ -75,7 +75,7 @@ class BasicBlock(Block):
     def get_updated_vars(self):
         return self.updated_vars
 
-    def update_var_assignment(self, var, instruction_number):
+    def add_var_assignment(self, var, instruction_number):
         self.vars[var] = instruction_number
         self.updated_vars.add(var)
 
@@ -109,7 +109,7 @@ class Blocks:
         self.constant_block = ConstantBlock(0)
         self.blocks_list: list[BasicBlock] = []
         self.current_block: BasicBlock = initial_block
-        self.current_join_block: BasicBlock = BasicBlock(join=True)
+        self.current_join_block = None
         self.leaf_joins = []
 
     def get_current_block(self):
@@ -141,7 +141,7 @@ class Blocks:
         self.current_block = new_current_block
 
     def add_var_to_current_block(self, var, instruction_number):
-        self.current_block.update_var_assignment(var, instruction_number)
+        self.current_block.add_var_assignment(var, instruction_number)
 
     def find_var_idn(self, var):
         # find the instr id for a var

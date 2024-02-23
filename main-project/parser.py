@@ -202,6 +202,14 @@ class Parser:
 
             self.blocks.add_var_to_current_block(designator, idn)
 
+            # Check if phi should be added (given we have a current join block and have not already made a phi ready
+            # for a certain variable
+            current_join_block = self.blocks.get_current_join_block()
+            if current_join_block and designator not in current_join_block.get_updated_vars():
+                instr = self.baseSSA.get_new_instr_id()
+                current_join_block.add_new_instr(instr_id=instr, op=Operations.PHI)
+                current_join_block.add_var_assignment(designator, instr)
+
         return
 
     def func_call(self):
@@ -236,6 +244,10 @@ class Parser:
         return
 
     def if_statement(self):
+        # new block below (potentially a join block) but do not add it yet (so that it does not get an ID yet)
+        potential_join_block = BasicBlock()
+        self.blocks.update_current_join_block(potential_join_block)
+
         # if part
         left_side, rel_op_instr, right_side = self.relation()
         if_block = self.blocks.get_current_block()
@@ -250,6 +262,7 @@ class Parser:
         then_block = BasicBlock()
         self.utils.add_relationship(parent_block=if_block, child_block=then_block,
                                     relationship=BlockRelation.FALL_THROUGH)
+        self.utils.copy_vars(parent_block=if_block, child_block=then_block)
         self.blocks.add_block(then_block)
         self.stat_sequence()
 
@@ -257,55 +270,60 @@ class Parser:
         else_block = BasicBlock()
         self.utils.add_relationship(parent_block=if_block, child_block=else_block,
                                     relationship=BlockRelation.BRANCH)
+        self.utils.copy_vars(parent_block=if_block, child_block=else_block)
         self.blocks.add_block(else_block)
         if self.token == Tokens.ELSE_TOKEN:
             self.next_token()
             self.stat_sequence()
-        else:  # empty else block
+        if not else_block.get_instructions():  # empty else block
             else_block.add_new_instr(self.baseSSA.get_new_instr_id())
 
         self.check_token(Tokens.FI_TOKEN)
         # update the "branch" instruction/arrow for if so that it points to the first instruction in else
         if_block.update_instruction(branch_instr_idn, y=else_block.find_first_instr())
 
-        # new block below (potentially a join block)
-        child_block = BasicBlock(idn=self.blocks.get_new_block_id())
-        self.blocks.add_block(child_block)
+        # Add the join block so that it gets an ID
+        self.blocks.add_block(potential_join_block)
+
         # add join block number, set it as the current block, and update its parents
-        self.blocks.update_current_block(child_block)
-        self.blocks.update_current_join_block(child_block)
+        self.blocks.update_current_block(potential_join_block)
+        self.blocks.update_current_join_block(potential_join_block)
 
         # update parents and children
         if not then_block.get_children() and not else_block.get_children():
             branch_block = then_block
-            self.utils.add_relationship(parent_block=then_block, child_block=child_block,
+            self.utils.add_relationship(parent_block=then_block, child_block=potential_join_block,
                                         relationship=BlockRelation.BRANCH)
-            self.utils.add_relationship(parent_block=else_block, child_block=child_block,
+            self.utils.add_relationship(parent_block=else_block, child_block=potential_join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
         elif not then_block.get_children():
             branch_block = then_block
-            self.utils.add_relationship(parent_block=then_block, child_block=child_block,
+            self.utils.add_relationship(parent_block=then_block, child_block=potential_join_block,
                                         relationship=BlockRelation.BRANCH)
-            self.utils.add_relationship(parent_block=self.blocks.get_current_join_block(), child_block=child_block,
+            self.utils.add_relationship(parent_block=self.blocks.get_current_join_block(),
+                                        child_block=potential_join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
         elif not else_block.get_children():
             branch_block = self.blocks.get_current_join_block()
-            self.utils.add_relationship(parent_block=self.blocks.get_current_join_block(), child_block=child_block,
+            self.utils.add_relationship(parent_block=self.blocks.get_current_join_block(),
+                                        child_block=potential_join_block,
                                         relationship=BlockRelation.BRANCH)
-            self.utils.add_relationship(parent_block=else_block, child_block=child_block,
+            self.utils.add_relationship(parent_block=else_block, child_block=potential_join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
         else:
             leaf_left, leaf_right = self.blocks.get_lowest_leaf_join_block()
             branch_block = leaf_left
-            self.utils.add_relationship(parent_block=leaf_left, child_block=child_block,
+            self.utils.add_relationship(parent_block=leaf_left, child_block=potential_join_block,
                                         relationship=BlockRelation.BRANCH)
-            self.utils.add_relationship(parent_block=leaf_right, child_block=child_block,
+            self.utils.add_relationship(parent_block=leaf_right, child_block=potential_join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
 
-        self.utils.add_phis_if(if_block, then_block, else_block)
+        # self.utils.add_phis_if(if_block, then_block, else_block)
 
         # TODO update bra id after phi implementation -> take the first instr_id in the join block
         branch_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA, -1)
+
+        self.blocks.update_current_join_block(None)
 
         return
 
@@ -338,6 +356,8 @@ class Parser:
         self.blocks.add_block(branch_block)
         new_instr = branch_block.add_new_instr(self.baseSSA.get_new_instr_id())
         current_block.update_instruction(branch_instr_idn, y=new_instr)
+
+        self.blocks.update_current_join_block(None)
 
         return
 

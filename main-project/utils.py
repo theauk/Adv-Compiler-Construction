@@ -10,6 +10,8 @@ class Utils:
     def add_relationship(self, parent_block: BasicBlock, child_block: BasicBlock, relationship: BlockRelation):
         parent_block.add_child(child_block, relationship)
         child_block.add_parent(parent_block, relationship)
+
+    def copy_vars(self, parent_block: BasicBlock, child_block: BasicBlock):
         child_block.vars = parent_block.vars.copy()
 
     def add_phi_instructions(self, block1: BasicBlock, block2: BasicBlock, var_set: set, already_added_vars: set,

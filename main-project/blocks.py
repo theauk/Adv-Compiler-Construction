@@ -46,14 +46,16 @@ class ConstantBlock(Block):
 
 
 class BasicBlock(Block):
-    def __init__(self, idn=None, join=False):
+    def __init__(self, idn=None, join=False, while_block=False):
         super().__init__(idn)
         self.dom = []
         self.join = join
+        self.while_block = while_block
         self.instructions = {}
         self.instruction_order_list = []
         self.vars: dict = {}
         self.updated_vars = set()
+        self.phi_vars = set()
         self.parents: dict = {}
         self.children: {}
         self.available_phis = []
@@ -63,6 +65,9 @@ class BasicBlock(Block):
 
     def update_join(self, join):
         self.join = join
+
+    def is_while(self):
+        return self.while_block
 
     def add_new_instr(self, instr_id, op=None, x=None, y=None, start=False):
         inst = Instruction(instr_id, op, x, y)
@@ -109,7 +114,7 @@ class BasicBlock(Block):
     def find_first_instr(self):
         if not self.instructions:
             return None
-        return min(self.instructions)
+        return self.instruction_order_list[0].get_id()
 
     def update_instruction(self, instr_idn, x=None, y=None):
         instr: Instruction = self.instructions[instr_idn]
@@ -120,6 +125,12 @@ class BasicBlock(Block):
 
     def get_available_phi_instruction(self):
         return self.available_phis.pop(0)
+
+    def add_phi_var(self, phi_var):
+        self.phi_vars.add(phi_var)
+
+    def get_phi_vars(self):
+        return self.phi_vars
 
 
 class Blocks:
@@ -172,12 +183,6 @@ class Blocks:
 
     def get_current_join_block(self):
         return self.current_join_block
-
-    # def new_join_block(self):
-    #    join_block = BasicBlock(join=True)
-    #    self.blocks_list.append(join_block)
-    #    self.current_join_block = join_block
-    #    return join_block
 
     def get_lowest_leaf_join_block(self):
         return self.leaf_joins.pop(0)

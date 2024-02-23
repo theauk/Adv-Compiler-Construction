@@ -209,9 +209,10 @@ class Parser:
             # Check if phi should be added (given we have a current join block and have not already made a phi ready
             # for a certain variable)
             current_join_block = self.blocks.get_current_join_block()
-            if current_join_block and designator not in current_join_block.get_updated_vars():
+            if current_join_block and designator not in current_join_block.get_phi_vars():
+                current_join_block.add_phi_var(designator)
                 instr = self.baseSSA.get_new_instr_id()
-                current_join_block.add_new_instr(instr_id=instr, op=Operations.PHI)
+                current_join_block.add_new_instr(instr_id=instr, op=Operations.PHI, start=current_join_block.is_while())
                 current_join_block.add_var_assignment(designator, instr)
 
         return
@@ -345,7 +346,12 @@ class Parser:
         return
 
     def while_statement(self):  # TODO: fix arrow/branch structure similar to if + handle loops
-        while_block = self.blocks.get_current_block()
+        while_block = BasicBlock(while_block=True)
+        self.utils.add_relationship(parent_block=self.blocks.get_current_block(), child_block=while_block,
+                                    relationship=BlockRelation.NORMAL)
+        self.utils.copy_vars(self.blocks.get_current_block(), while_block)
+        self.blocks.add_block(while_block)
+
         self.blocks.update_current_join_block(while_block)
         left_side, rel_op_instr, right_side = self.relation()
 
@@ -367,7 +373,12 @@ class Parser:
         self.blocks.add_block(then_block)
 
         self.stat_sequence()
-        new_instr = then_block.add_new_instr(self.baseSSA.get_new_instr_id())
+
+        self.utils.add_phis_while(while_block, then_block)
+
+        # Add branch instruction
+        new_instr = then_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA,
+                                             while_block.find_first_instr())
         while_block.update_instruction(branch_instr_idn, y=new_instr)
 
         self.check_token(Tokens.OD_TOKEN)

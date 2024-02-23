@@ -46,6 +46,16 @@ class Utils:
 
         self.update_var_table_for_block(join_block=join_block, then_block=then_block, else_block=else_block)
 
+    def add_phis_while(self, while_block, then_block):
+        already_added_vars = set()
+        intersection_while_then = then_block.get_updated_vars().intersection(while_block.get_updated_vars())
+
+        self.add_phi_instructions(block1=while_block, block2=then_block, var_set=intersection_while_then,
+                                  already_added_vars=already_added_vars, join_block=while_block)
+
+        if already_added_vars:
+            while_block.update_join(True)
+
     def update_var_table_for_block(self, join_block, then_block, else_block):
         for key, value in then_block.get_vars().items():
             if key not in join_block.get_vars():

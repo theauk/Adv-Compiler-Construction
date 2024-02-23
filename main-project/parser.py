@@ -184,10 +184,11 @@ class Parser:
         elif self.token == Tokens.IF_TOKEN:
             self.next_token()
             self.if_statement()
-            self.blocks.update_leaf_joins(self.blocks.current_block)
+            self.blocks.update_leaf_joins_if(self.blocks.current_block)
         elif self.token == Tokens.WHILE_TOKEN:
             self.next_token()
             self.while_statement()
+            self.blocks.update_leaf_joins_while(self.blocks.current_block)
         elif self.token == Tokens.RETURN_TOKEN:
             self.next_token()
             self.return_statement()
@@ -307,7 +308,7 @@ class Parser:
             self.utils.add_phis_if(if_block, then_block, else_block)
         elif not then_block.get_children():
             # Case 2: no additional join in then
-            fall_through_block = self.blocks.get_lowest_leaf_join_block()
+            fall_through_block = self.blocks.get_lowest_leaf_join_block_if()
             self.utils.add_relationship(parent_block=fall_through_block, child_block=potential_join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
             self.utils.add_relationship(parent_block=then_block,
@@ -317,7 +318,7 @@ class Parser:
             branch_block = then_block
         elif not else_block.get_children():
             # Case 3: no additional join in else
-            branch_block = self.blocks.get_lowest_leaf_join_block()
+            branch_block = self.blocks.get_lowest_leaf_join_block_if()
             self.utils.add_relationship(parent_block=branch_block,
                                         child_block=potential_join_block,
                                         relationship=BlockRelation.BRANCH)
@@ -326,8 +327,8 @@ class Parser:
             self.utils.add_phis_if(if_block, branch_block, else_block)
         else:
             # Case 4: new joins in both then and else
-            leaf_left = self.blocks.get_lowest_leaf_join_block()
-            leaf_right = self.blocks.get_lowest_leaf_join_block()
+            leaf_left = self.blocks.get_lowest_leaf_join_block_if()
+            leaf_right = self.blocks.get_lowest_leaf_join_block_if()
             branch_block = leaf_left
             self.utils.add_relationship(parent_block=leaf_left, child_block=potential_join_block,
                                         relationship=BlockRelation.BRANCH)
@@ -359,8 +360,8 @@ class Parser:
         cmp_instr_idn = while_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.CMP, left_side,
                                                   right_side)
         # add the branch instr (branch instr added when known below)
-        branch_instr_idn = while_block.add_new_instr(self.baseSSA.get_new_instr_id(), op=rel_op_instr,
-                                                     x=cmp_instr_idn)
+        cmp_branch_to_instr = while_block.add_new_instr(self.baseSSA.get_new_instr_id(), op=rel_op_instr,
+                                                        x=cmp_instr_idn)
 
         self.check_token(Tokens.DO_TOKEN)
 
@@ -377,18 +378,30 @@ class Parser:
         self.utils.add_phis_while(while_block, then_block)
 
         # Add branch instruction
-        new_instr = then_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA,
-                                             while_block.find_first_instr())
-        while_block.update_instruction(branch_instr_idn, y=then_block.find_first_instr())
+        then_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA, while_block.find_first_instr())
 
         self.check_token(Tokens.OD_TOKEN)
 
-        # new BB for branch
-        branch_block = BasicBlock()
+        if self.blocks.get_left_joins_while():
+            branch_block = self.blocks.get_lowest_leaf_join_block_while()
+        else:
+            # new BB for branch
+            branch_block = BasicBlock()
+            self.utils.copy_vars(parent_block=while_block, child_block=branch_block)
+            self.blocks.add_block(branch_block)
+
         self.utils.add_relationship(parent_block=while_block, child_block=branch_block,
                                     relationship=BlockRelation.BRANCH)
-        self.utils.copy_vars(parent_block=while_block, child_block=branch_block)
-        self.blocks.add_block(branch_block)
+
+        cur_block_first_instr = self.blocks.get_current_block().find_first_instr()
+        if cur_block_first_instr is not None:
+            while_block.update_instruction(cmp_branch_to_instr, y=cur_block_first_instr)
+        elif branch_block.is_first_hidden_instr():
+            while_block.update_instruction(cmp_branch_to_instr, y=branch_block.get_hidden_first_instr())
+        else:
+            # If there are no phi instructions needed then take what will be the next instr number but do not update it
+            while_block.update_instruction(cmp_branch_to_instr, y=self.baseSSA.get_cur_instr_id() + 1)
+            self.blocks.get_current_block().set_hidden_first_instr(self.baseSSA.get_cur_instr_id() + 1)
 
         self.blocks.update_current_join_block(None)
 

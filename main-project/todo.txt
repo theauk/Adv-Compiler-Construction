@@ -24,6 +24,7 @@ ______
 NEXTS:
 ______
 - while phis:
+    - fix so that if you have nested while the branch falls out to the already existing "out" block and does not make a new one
     - update instr numbers downstream after adding phis
         - noget med at når while starter så lav et globalt set hvor var instr seen -> bogstav fx {1 -> a, 7 -> a} (hvor a egentlig er token nr)
           efter phi functionen lav second pass function der starter fra den første non-phi instr og kører indtil den rammer

@@ -1,12 +1,17 @@
 main
-    var a, b, c; {
+    var a, b; {
 
-    let c <- 2;
+    let a <- 2;
 
     if a > 0 then
-        call OutputNewLine();
+           let b <- 2 + a;
         else
-        call OutputNewLine();
+        if a > 0 then
+            let b <- 2 + a;
+            else
+            let b <- 2 + a;
+            fi;
+
     fi;
 
     call OutputNewLine();

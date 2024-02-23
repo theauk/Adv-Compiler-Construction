@@ -170,7 +170,7 @@ class Blocks:
     #    return join_block
 
     def get_lowest_leaf_join_block(self):
-        return self.leaf_joins[-2], self.leaf_joins[-1]
+        return self.leaf_joins.pop(0)
 
     def update_leaf_joins(self, join_block):
         # Check if a new join is a leaf join block, i.e., whether it is not a child of another join block.

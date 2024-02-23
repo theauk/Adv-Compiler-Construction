@@ -27,9 +27,8 @@ class Visualizer:
             text += f'bb{block.get_id()} [shape=record, label="<b>'
             text += f'join BB{block.get_id()} | {{' if block.join else f'BB{block.get_id()} | {{'
             block_texts = []
-            for instruction_id in sorted(block.get_instructions().keys()):
-                cur_instr = block.get_instructions()[instruction_id]
-                block_texts.append(f'{str(cur_instr)}')
+            for instruction in block.get_instruction_order_list():
+                block_texts.append(f'{str(instruction)}')
             text += '|'.join(block_texts)
             text += '}'
 

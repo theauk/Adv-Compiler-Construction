@@ -3,13 +3,11 @@ main
 
     let a <- 2;
 
-    if a > 0 then
-           call OutputNewLine();
-        else
-            call OutputNewLine();
+    while a > 0 do
+           let a <- a + 1
 
-    fi;
-    let a <- b + 2;
+    od;
+
     call OutputNewLine();
 
     }.

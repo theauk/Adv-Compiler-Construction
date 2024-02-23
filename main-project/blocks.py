@@ -51,6 +51,7 @@ class BasicBlock(Block):
         self.dom = []
         self.join = join
         self.instructions = {}
+        self.instruction_order_list = []
         self.vars: dict = {}
         self.updated_vars = set()
         self.parents: dict = {}
@@ -63,15 +64,24 @@ class BasicBlock(Block):
     def update_join(self, join):
         self.join = join
 
-    def add_new_instr(self, instr_id, op=None, x=None, y=None):
+    def add_new_instr(self, instr_id, op=None, x=None, y=None, start=False):
         inst = Instruction(instr_id, op, x, y)
         self.instructions[instr_id] = inst
+
+        if start:
+            self.instruction_order_list.insert(0, inst)
+        else:
+            self.instruction_order_list.append(inst)
+
         if op == Operations.PHI:
             self.available_phis.append(inst)
         return instr_id
 
     def get_instructions(self):
         return self.instructions
+
+    def get_instruction_order_list(self):
+        return self.instruction_order_list
 
     def get_vars(self):
         return self.vars

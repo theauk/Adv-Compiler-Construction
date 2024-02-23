@@ -345,39 +345,40 @@ class Parser:
         return
 
     def while_statement(self):  # TODO: fix arrow/branch structure similar to if + handle loops
-        current_block = self.blocks.get_current_block()
-        self.blocks.update_current_join_block(current_block)
+        while_block = self.blocks.get_current_block()
+        self.blocks.update_current_join_block(while_block)
         left_side, rel_op_instr, right_side = self.relation()
 
         # make comparison instr
-        cmp_instr_idn = current_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.CMP, left_side,
-                                                    right_side)
+        cmp_instr_idn = while_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.CMP, left_side,
+                                                  right_side)
         # add the branch instr (branch instr added when known below)
-        branch_instr_idn = current_block.add_new_instr(self.baseSSA.get_new_instr_id(), op=rel_op_instr,
-                                                       x=cmp_instr_idn)
+        branch_instr_idn = while_block.add_new_instr(self.baseSSA.get_new_instr_id(), op=rel_op_instr,
+                                                     x=cmp_instr_idn)
 
         self.check_token(Tokens.DO_TOKEN)
 
         then_block = BasicBlock()
-        self.utils.add_relationship(parent_block=current_block, child_block=then_block,
+        self.utils.add_relationship(parent_block=while_block, child_block=then_block,
                                     relationship=BlockRelation.FALL_THROUGH)
-        self.utils.copy_vars(parent_block=current_block, child_block=then_block)
+        self.utils.add_relationship(parent_block=then_block, child_block=while_block,
+                                    relationship=BlockRelation.NORMAL)
+        self.utils.copy_vars(parent_block=while_block, child_block=then_block)
         self.blocks.add_block(then_block)
 
         self.stat_sequence()
+        new_instr = then_block.add_new_instr(self.baseSSA.get_new_instr_id())
+        while_block.update_instruction(branch_instr_idn, y=new_instr)
+
         self.check_token(Tokens.OD_TOKEN)
 
         # new BB for branch
         branch_block = BasicBlock()
-        self.utils.add_relationship(parent_block=current_block, child_block=branch_block,
+        self.utils.add_relationship(parent_block=while_block, child_block=branch_block,
                                     relationship=BlockRelation.BRANCH)
-        self.utils.copy_vars(parent_block=current_block,
-                             child_block=current_block)  # TODO: This should probbaly be updated when thinking phis
+        self.utils.copy_vars(parent_block=while_block, child_block=branch_block)
         self.blocks.add_block(branch_block)
-        new_instr = branch_block.add_new_instr(self.baseSSA.get_new_instr_id())
-        current_block.update_instruction(branch_instr_idn, y=new_instr)
 
-        self.blocks.update_current_block(self.blocks.get_current_join_block())
         self.blocks.update_current_join_block(None)
 
         return

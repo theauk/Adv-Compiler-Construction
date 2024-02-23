@@ -85,6 +85,9 @@ class Parser:
             # final "."
             self.check_token(Tokens.PERIOD_TOKEN)
 
+            instr_id = self.baseSSA.get_new_instr_id()
+            self.blocks.current_block.add_new_instr(instr_id=instr_id, op=Operations.END)
+
         return
 
     def var_declaration(self):
@@ -321,8 +324,15 @@ class Parser:
         self.utils.add_phis_if(if_block, then_block, else_block)
 
         self.blocks.update_current_block(self.blocks.get_current_join_block())
-        branch_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA,
-                                   self.blocks.get_current_block().find_first_instr())
+
+        cur_block_first_instr = self.blocks.get_current_block().find_first_instr()
+        if cur_block_first_instr is not None:
+            branch_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA, cur_block_first_instr)
+        else:
+            # If there are no phi instructions needed then take what will be the next instr number but do not update it
+            branch_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA,
+                                       self.baseSSA.get_cur_instr_id() + 1)
+
         self.blocks.update_current_join_block(None)
 
         return

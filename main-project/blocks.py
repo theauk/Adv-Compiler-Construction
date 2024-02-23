@@ -96,6 +96,8 @@ class BasicBlock(Block):
         return self.children
 
     def find_first_instr(self):
+        if not self.instructions:
+            return None
         return min(self.instructions)
 
     def update_instruction(self, instr_idn, x=None, y=None):

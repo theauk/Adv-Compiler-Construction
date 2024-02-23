@@ -25,7 +25,8 @@ x tjek SSA for built-in funcs
 x add var værdier til grafen for debugging purposes
 - phis (måde at holde styr på hvad der skal samles -> kan også være at kopierer var tabeller med og så se hvad der skal sammenholdes/ikke er det samme længere fra de to sider)
     x du skal nok kopierer tabeller ned
-    - phi'en skal tilføjes så snart der er en assignment (så den tæller instr id correct)
+    x phi'en skal tilføjes så snart der er en assignment (så den tæller instr id correct)
+    - add phi instr x and y
 - check what happens in phi when variable is declared first time inside then and else (altså ikke ovenover)
 - add bra instruction number. Skal tilføjes så snart phi er færdig (altså før andet i den blok - se papir)
 - take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword

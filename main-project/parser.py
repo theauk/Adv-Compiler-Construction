@@ -320,9 +320,9 @@ class Parser:
 
         # self.utils.add_phis_if(if_block, then_block, else_block)
 
-        # TODO update bra id after phi implementation -> take the first instr_id in the join block
-        branch_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA, -1)
-
+        self.blocks.update_current_block(self.blocks.get_current_join_block())
+        branch_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA,
+                                   self.blocks.get_current_block().find_first_instr())
         self.blocks.update_current_join_block(None)
 
         return
@@ -344,6 +344,7 @@ class Parser:
         then_block = BasicBlock()
         self.utils.add_relationship(parent_block=current_block, child_block=then_block,
                                     relationship=BlockRelation.FALL_THROUGH)
+        self.utils.copy_vars(parent_block=current_block, child_block=then_block)
         self.blocks.add_block(then_block)
 
         self.stat_sequence()
@@ -353,10 +354,13 @@ class Parser:
         branch_block = BasicBlock()
         self.utils.add_relationship(parent_block=current_block, child_block=branch_block,
                                     relationship=BlockRelation.BRANCH)
+        self.utils.copy_vars(parent_block=current_block,
+                             child_block=current_block)  # TODO: This should probbaly be updated when thinking phis
         self.blocks.add_block(branch_block)
         new_instr = branch_block.add_new_instr(self.baseSSA.get_new_instr_id())
         current_block.update_instruction(branch_instr_idn, y=new_instr)
 
+        self.blocks.update_current_block(self.blocks.get_current_join_block())
         self.blocks.update_current_join_block(None)
 
         return

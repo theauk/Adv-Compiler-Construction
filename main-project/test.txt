@@ -4,8 +4,8 @@ main
     let b <- 2;
 
     while a > 0 do
-        let a <- a + 1;
-        let a <- a + 1;
+        let a <- a + 4;
+        let b <- a + 4;
     od;
 
     let a <- a + 1;

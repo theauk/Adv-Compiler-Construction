@@ -1,4 +1,5 @@
 from blocks import BasicBlock, BlockRelation
+import copy
 
 
 class Utils:
@@ -11,7 +12,7 @@ class Utils:
         child_block.add_parent(parent_block, relationship)
 
     def copy_vars(self, parent_block: BasicBlock, child_block: BasicBlock):
-        child_block.vars = parent_block.vars.copy()
+        child_block.vars = copy.deepcopy(parent_block.vars)
 
     def add_phi_instructions(self, block1: BasicBlock, block2: BasicBlock, var_set: set, already_added_vars: set,
                              join_block: BasicBlock):
@@ -48,9 +49,9 @@ class Utils:
 
     def add_phis_while(self, while_block, then_block):
         already_added_vars = set()
-        intersection_while_then = then_block.get_updated_vars().intersection(while_block.get_updated_vars())
+        while_phi_vars = while_block.get_phi_vars()
 
-        self.add_phi_instructions(block1=while_block, block2=then_block, var_set=intersection_while_then,
+        self.add_phi_instructions(block1=while_block, block2=then_block, var_set=while_phi_vars,
                                   already_added_vars=already_added_vars, join_block=while_block)
 
         if already_added_vars:

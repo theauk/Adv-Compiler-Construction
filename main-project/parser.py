@@ -213,7 +213,7 @@ class Parser:
                 current_join_block.add_phi_var(designator)
                 instr = self.baseSSA.get_new_instr_id()
                 current_join_block.add_new_instr(instr_id=instr, op=Operations.PHI, start=current_join_block.is_while())
-                current_join_block.add_var_assignment(designator, instr)
+                current_join_block.add_var_assignment(designator, instr, False, current_join_block.is_while())
 
         return
 
@@ -345,7 +345,7 @@ class Parser:
 
         return
 
-    def while_statement(self):  # TODO: fix arrow/branch structure similar to if + handle loops
+    def while_statement(self):
         while_block = BasicBlock(while_block=True)
         self.utils.add_relationship(parent_block=self.blocks.get_current_block(), child_block=while_block,
                                     relationship=BlockRelation.NORMAL)
@@ -369,8 +369,8 @@ class Parser:
                                     relationship=BlockRelation.FALL_THROUGH)
         self.utils.add_relationship(parent_block=then_block, child_block=while_block,
                                     relationship=BlockRelation.NORMAL)
-        self.utils.copy_vars(parent_block=while_block, child_block=then_block)
         self.blocks.add_block(then_block)
+        self.utils.copy_vars(parent_block=while_block, child_block=then_block)
 
         self.stat_sequence()
 

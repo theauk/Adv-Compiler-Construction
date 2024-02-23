@@ -23,6 +23,13 @@ ______
 
 NEXTS:
 ______
+- while phis:
+    - update instr numbers downstream after adding phis
+        - noget med at når while starter så lav et globalt set hvor var instr seen -> bogstav fx {1 -> a, 7 -> a} (hvor a egentlig er token nr)
+          efter phi functionen lav second pass function der starter fra den første non-phi instr og kører indtil den rammer
+          den current while blok igen. Den checker for hver instruction if x eller y er i dict'en. Hvis ja så opdater til det nye nummer baseret på værditabellen i while
+
+______
 x implement det samme for while ift branches (like if)
 x tjek SSA for built-in funcs
 x add var værdier til grafen for debugging purposes
@@ -34,7 +41,7 @@ x add bra instruction number. Skal tilføjes så snart phi er færdig (altså f�
 x du skal nok opdatere visul. så at den laver [] med de forskellige tre typer og så sætter dem sammen til sidst, så de samme kommer i samme rækkefølge
 x check what happens in phi when variable is declared first time inside then and else (altså ikke ovenover)
 x update dicts for join block so it is ready for another e.g. if
-- phis for while
+x phis for while
 
 - fix så hvis det er if then "return" og noget efter if så har den branch blok ikke en empty men det der kommer efter
 - take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword

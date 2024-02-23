@@ -94,8 +94,9 @@ class BasicBlock(Block):
     def get_updated_vars(self):
         return self.updated_vars
 
-    def add_var_assignment(self, var, instruction_number, update_var=True):
-        self.vars[var] = instruction_number
+    def add_var_assignment(self, var, instruction_number, update_var=True, while_block=False):
+        if not while_block:
+            self.vars[var] = instruction_number
         if update_var:
             self.updated_vars.add(var)
 

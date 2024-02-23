@@ -4,16 +4,12 @@ main
     let a <- 2;
 
     if a > 0 then
-           let b <- 2 + a;
+           call OutputNewLine();
         else
-        if a > 0 then
-            let b <- 2 + a;
-            else
-            let b <- 2 + a;
-            fi;
+            call OutputNewLine();
 
     fi;
-
+    let a <- b + 2;
     call OutputNewLine();
 
     }.

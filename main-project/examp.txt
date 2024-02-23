@@ -32,3 +32,21 @@ main
     call OutputNewLine();
 
     }.
+
+
+ no join in either
+ main
+    var a, b; {
+
+    let a <- 2;
+
+    if a > 0 then
+           call OutputNewLine();
+        else
+            call OutputNewLine();
+
+    fi;
+
+    call OutputNewLine();
+
+    }.

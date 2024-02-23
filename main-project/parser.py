@@ -207,7 +207,7 @@ class Parser:
             self.blocks.add_var_to_current_block(designator, idn)
 
             # Check if phi should be added (given we have a current join block and have not already made a phi ready
-            # for a certain variable
+            # for a certain variable)
             current_join_block = self.blocks.get_current_join_block()
             if current_join_block and designator not in current_join_block.get_updated_vars():
                 instr = self.baseSSA.get_new_instr_id()
@@ -295,8 +295,9 @@ class Parser:
         # The join block might have changed if there was a nested join inside else so set it back to original
         self.blocks.update_current_join_block(potential_join_block)
 
-        # update parents and children
+        # Update parents and children
         if not then_block.get_children() and not else_block.get_children():
+            # Case 1: no additional join in either then or else
             branch_block = then_block
             self.utils.add_relationship(parent_block=then_block, child_block=potential_join_block,
                                         relationship=BlockRelation.BRANCH)
@@ -304,6 +305,7 @@ class Parser:
                                         relationship=BlockRelation.FALL_THROUGH)
             self.utils.add_phis_if(if_block, then_block, else_block)
         elif not then_block.get_children():
+            # Case 2: no additional join in then
             fall_through_block = self.blocks.get_lowest_leaf_join_block()
             self.utils.add_relationship(parent_block=fall_through_block, child_block=potential_join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
@@ -313,6 +315,7 @@ class Parser:
             self.utils.add_phis_if(if_block, then_block, fall_through_block)
             branch_block = then_block
         elif not else_block.get_children():
+            # Case 3: no additional join in else
             branch_block = self.blocks.get_lowest_leaf_join_block()
             self.utils.add_relationship(parent_block=branch_block,
                                         child_block=potential_join_block,
@@ -320,7 +323,8 @@ class Parser:
             self.utils.add_relationship(parent_block=else_block, child_block=potential_join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
             self.utils.add_phis_if(if_block, branch_block, else_block)
-        else:  # TODO check phi like right above
+        else:
+            # Case 4: new joins in both then and else
             leaf_left = self.blocks.get_lowest_leaf_join_block()
             leaf_right = self.blocks.get_lowest_leaf_join_block()
             branch_block = leaf_left
@@ -328,6 +332,7 @@ class Parser:
                                         relationship=BlockRelation.BRANCH)
             self.utils.add_relationship(parent_block=leaf_right, child_block=potential_join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
+            self.utils.add_phis_if(if_block, leaf_left, leaf_right)
 
         cur_block_first_instr = self.blocks.get_current_block().find_first_instr()
         if cur_block_first_instr is not None:
@@ -336,8 +341,6 @@ class Parser:
             # If there are no phi instructions needed then take what will be the next instr number but do not update it
             branch_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA,
                                        self.baseSSA.get_cur_instr_id() + 1)
-
-        #self.blocks.update_current_join_block(None)
 
         return
 

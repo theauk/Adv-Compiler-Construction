@@ -30,10 +30,14 @@ ______
           efter phi functionen lav second pass function der starter fra den første non-phi instr og kører indtil den rammer
           den current while blok igen. Den checker for hver instruction if x eller y er i dict'en. Hvis ja så opdater til det nye nummer baseret på værditabellen i while
         - during second pass also update the comp y værdi til den første instr i den while blokken brancher til
+        - phi should be propegated so e.g. if only assign in inner inner while there should also be phi further out
+- put empty i empty while blocks
 - check kombi af while og if
 - add dom arrows
     - burde være nemt nok ift if og while og normal bloks. Tjek noter for outliers
 - common subexpression elimination
+- fix så hvis det er if then "return" og noget efter if så har den branch blok ikke en empty men det der kommer efter
+- take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword
 
 ______
 x implement det samme for while ift branches (like if)
@@ -48,10 +52,6 @@ x du skal nok opdatere visul. så at den laver [] med de forskellige tre typer o
 x check what happens in phi when variable is declared first time inside then and else (altså ikke ovenover)
 x update dicts for join block so it is ready for another e.g. if
 x phis for while
-
-- fix så hvis det er if then "return" og noget efter if så har den branch blok ikke en empty men det der kommer efter
-- take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword
-- dom
 
 ______
 x Alle while og if ender ud i en assignment, i.e. der skal være en join blok for enden af den tråd.

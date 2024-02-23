@@ -175,6 +175,13 @@ class Blocks:
         self.blocks_list.append(block)
         self.current_block = block
 
+    def remove_latest_block(self):
+        latest_block = self.blocks_list.pop()
+        parent_latest_block = list(latest_block.get_parents().keys())[0]
+        parent_latest_block.remove_child(latest_block)
+        self.current_block = self.blocks_list[-1]
+        self.id_count -= 1
+
     def get_new_block_id(self):
         self.id_count += 1
         return self.id_count
@@ -223,3 +230,4 @@ class Blocks:
             self.leaf_joins_while[-1] = join_block
         else:
             self.leaf_joins_while.append(join_block)
+

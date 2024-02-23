@@ -406,6 +406,7 @@ class Parser:
             self.utils.add_relationship(parent_block=while_block, child_block=branch_block,
                                         relationship=BlockRelation.BRANCH)
 
+        # TODO do this on second pass
         while_block.update_instruction(cmp_branch_to_instr, y=self.baseSSA.get_cur_instr_id() + 1)
 
         self.blocks.update_current_join_block(None)

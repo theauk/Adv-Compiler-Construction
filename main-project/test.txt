@@ -5,7 +5,13 @@ main
 
     while a > 0 do
         let a <- a + 4;
-
+        let b <- a + 2;
+        while a > 0 do
+            let a <- a + 4;
+            while a > 0 do
+                let a <- a + 4;
+            od;
+        od;
     od;
 
     let a <- a + 1;

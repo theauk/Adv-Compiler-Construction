@@ -56,6 +56,7 @@ class Parser:
             self.tokenizer.error(
                 f"SyntaxError: expected {self.tokenizer.get_token_from_index(token_type)} "
                 f"got {self.tokenizer.get_token_from_index(self.token)}")
+            self.next_token()
             return False
         else:
             self.next_token()
@@ -504,14 +505,17 @@ class Parser:
             self.next_token()
             result = self.expression()
             self.check_token(Tokens.CLOSE_PAREN_TOKEN)
-            self.next_token()
             return result  # return whatever the expression gives (ends up in factor as well)
         elif self.token == Tokens.CALL_TOKEN:
             self.next_token()
             result = self.func_call()
             return result  # return what func call gives
         else:
-            return ''  # TODO consider return
+            self.tokenizer.error(
+                f"SyntaxError: expected either {self.tokenizer.get_token_from_index(Tokens.IDENT), self.tokenizer.get_token_from_index(Tokens.NUMBER), self.tokenizer.get_token_from_index(Tokens.OPEN_PAREN_TOKEN), self.tokenizer.get_token_from_index(Tokens.CALL_TOKEN)} "
+                f"got {self.tokenizer.get_token_from_index(self.token)}")
+            self.next_token()
+            return
 
     def relation(self):
         left_side = self.expression()

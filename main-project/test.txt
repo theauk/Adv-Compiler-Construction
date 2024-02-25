@@ -3,13 +3,11 @@ main
     let a <- call InputNum();
     let b <- 2;
 
-    if a > 2 then
-        let a <- 2 + 2
-    fi;
-
-    if a > 2 then
-        let a <- 2 + 2
-    fi;
+        while a < 2 do
+            while a < 2 do
+            let a <- 2 + 6;
+        od;
+        od;
 
     let a <- a + 1;
     call OutputNewLine();

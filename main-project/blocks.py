@@ -67,6 +67,9 @@ class BasicBlock(Block):
     def update_join(self, join):
         self.join = join
 
+    def set_while(self, while_val):
+        self.while_block = while_val
+
     def is_while(self):
         return self.while_block
 
@@ -88,7 +91,7 @@ class BasicBlock(Block):
         else:
             self.instruction_order_list.append(inst)
 
-        if op == Operations.PHI:
+        if op == Operations.PHI and not self.while_block:
             self.existing_phis_instr_number.append(inst)
         return instr_id
 
@@ -168,7 +171,7 @@ class Blocks:
         self.blocks_list: list[BasicBlock] = []
         self.current_block: BasicBlock = initial_block
         self.current_join_block = None
-        self.leaf_joins_if = []
+        self.leaf_joins = []
         self.leaf_joins_while = []
 
     def get_current_block(self):
@@ -219,24 +222,24 @@ class Blocks:
     def get_current_join_block(self):
         return self.current_join_block
 
-    def get_lowest_leaf_join_block_if(self):
-        return self.leaf_joins_if.pop(0)
+    def get_lowest_leaf_join_block(self):
+        return self.leaf_joins.pop(0)
 
-    def update_leaf_joins_if(self, join_block):
+    def update_leaf_joins(self, join_block):
         # Check if a new join is a leaf join block, i.e., whether it is not a child of another join block.
-        if self.leaf_joins_if and self.leaf_joins_if[-1] in join_block.get_parents():
-            self.leaf_joins_if[-1] = join_block
+        if self.leaf_joins and self.leaf_joins[-1] in join_block.get_parents():
+            self.leaf_joins[-1] = join_block
         else:
-            self.leaf_joins_if.append(join_block)
+            self.leaf_joins.append(join_block)
 
-    def get_leaf_joins_while(self):
-        return self.leaf_joins_while
+    def get_leaf_joins(self):
+        return self.leaf_joins
 
-    def get_lowest_leaf_join_block_while(self):
-        return self.leaf_joins_while.pop(0)
+    #def get_lowest_leaf_join_block_while(self):
+    #    return self.leaf_joins_while.pop(0)
 
-    def update_leaf_joins_while(self, join_block):
-        if self.leaf_joins_while and self.leaf_joins_while[-1] in join_block.get_parents():
-            self.leaf_joins_while[-1] = join_block
-        else:
-            self.leaf_joins_while.append(join_block)
+    #def update_leaf_joins_while(self, join_block):
+    #    if self.leaf_joins_while and self.leaf_joins_while[-1] in join_block.get_parents():
+    #        self.leaf_joins_while[-1] = join_block
+    #    else:
+    #        self.leaf_joins_while.append(join_block)

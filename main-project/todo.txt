@@ -11,32 +11,30 @@ ______
 QUESTIONS:
 ______
 - Skal jeg dække return stm?
-- Lad os sige at der er en assignment til samme var then og else. Der bliver lavet en phi efter den første assignment i
-    then hvilket vil sige at then assignment har i instr number og phien før i + 1. Assignment i else får så i + 2. Det vil sige at
-    phi bliver i+1: phi(i, i+2), i.e. phi instr number er mindre end en af de instructions inden i phi – er det okay?
+- hvad skal der ske med branch blok med to while efter hinanden
 
 OVERVEJELSER:
 ______
 - error handling. Like hvad hvis der er noget i check token der ikke passer. Skal det så fortsætte?
-- skal jeg copy table over med var instr id i stedet for at lave recursion method?
 
 
 NEXTS:
 ______
 
 x fix phi numbering og factor
-- while phis:
-    x fix so that if you have nested while the branch falls out to the already existing "out" block and does not make a new one
-    - update instr numbers downstream after adding phis
-        - noget med at når while starter så lav et globalt set hvor var instr seen -> bogstav fx {1 -> a, 7 -> a} (hvor a egentlig er token nr)
-          efter phi functionen lav second pass function der starter fra den første non-phi instr og kører indtil den rammer
-          den current while blok igen. Den checker for hver instruction if x eller y er i dict'en. Hvis ja så opdater til det nye nummer baseret på værditabellen i while
-        - during second pass also update the comp y værdi til den første instr i den while blokken brancher til
-        - phi should be propegated so e.g. if only assign in inner inner while there should also be phi further out
+x fix so that if you have nested while the branch falls out to the already existing "out" block and does not make a new one
 x put empty i empty while blocks
-- check kombi af while og if
-- add dom arrows
-    - burde være nemt nok ift if og while og normal bloks. Tjek noter for outliers
+x check kombi af while og if
+x add dom arrows
+
+x phi should be propegated so e.g. if only assign in inner inner while there should also be phi further out
+- update instr numbers downstream after adding phis
+    - noget med at når while starter så lav et globalt set hvor var instr seen -> bogstav fx {1 -> a, 7 -> a} (hvor a egentlig er token nr)
+      efter phi functionen lav second pass function der starter fra den første non-phi instr og kører indtil den rammer
+      den current while blok igen. Den checker for hver instruction if x eller y er i dict'en. Hvis ja så opdater til det nye nummer baseret på værditabellen i while
+- during second pass also update the comp y værdi til den første instr i den while blokken brancher til
+x remove bra instruction that mistakenly gets inserted for two non nested while sts
+
 - common subexpression elimination
 - fix så hvis det er if then "return" og noget efter if så har den branch blok ikke en empty men det der kommer efter
 - take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword
@@ -140,52 +138,3 @@ Lav noget der kan konvertere din data struktur træ til det der graf halløj
 THEN
 - copy propagation
 - common subexpression elemination
-
-
-
-
-
-
-
-
-
-
-
-
-
-    def add_phis_if(self, if_block: BasicBlock, then_block: BasicBlock, else_block: BasicBlock):
-        already_added_vars = set()
-        join_block: BasicBlock = self.blocks.get_current_join_block()
-
-        # Joining var that has been updated both in then and else
-        intersection_then_else = then_block.get_updated_vars().intersection(else_block.get_updated_vars())
-        for child in intersection_then_else:
-            if child not in already_added_vars:
-                then_instr_child = then_block.get_vars()[child]
-                else_instr_child = else_block.get_vars()[child]
-                join_block.add_new_instr(instr_id=self.baseSSA.get_new_instr_id(), op=Operations.PHI, x=else_instr_child,
-                                         y=then_instr_child)
-                already_added_vars.add(child)
-
-        intersection_if_then = if_block.get_updated_vars().intersection(then_block.get_updated_vars())
-        for child in intersection_if_then:
-            if child not in already_added_vars:
-                if_instr_child = if_block.get_vars()[child]
-                then_instr_child = then_block.get_vars()[child]
-                join_block.add_new_instr(instr_id=self.baseSSA.get_new_instr_id(), op=Operations.PHI,
-                                         x=then_instr_child,
-                                         y=if_instr_child)
-                already_added_vars.add(child)
-
-        intersection_if_else = if_block.get_updated_vars().intersection(else_block.get_updated_vars())
-        for child in intersection_if_else:
-            if child not in already_added_vars:
-                if_instr_child = if_block.get_vars()[child]
-                else_instr_child = then_block.get_vars()[child]
-                join_block.add_new_instr(instr_id=self.baseSSA.get_new_instr_id(), op=Operations.PHI,
-                                         x=else_instr_child,
-                                         y=if_instr_child)
-                already_added_vars.add(child)
-
-        if already_added_vars:
-            join_block.update_join(True)

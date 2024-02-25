@@ -26,14 +26,15 @@ class Utils:
             child_block.initialize_vars(parent_block.get_vars())
 
     def create_phi_instruction(self, current_join_block, designator, x=None, y=None):
-        current_join_block.add_phi_var(designator)
-        instr = self.baseSSA.get_new_instr_id()
         if x and y:
+            current_join_block.add_phi_var(designator)
+            instr = self.baseSSA.get_new_instr_id()
             current_join_block.add_new_instr(instr_id=instr, op=Operations.PHI, x=x, y=y,
                                              start=current_join_block.is_while())
-        else:
-            current_join_block.add_new_instr(instr_id=instr, op=Operations.PHI, start=current_join_block.is_while())
-        current_join_block.add_var_assignment(designator, instr, False, current_join_block.is_while())
+        #else:
+        #    current_join_block.add_new_instr(instr_id=instr, op=Operations.PHI, start=current_join_block.is_while())
+            current_join_block.add_var_assignment(designator, instr, False, current_join_block.is_while())
+            return instr
 
     def add_phi_instructions(self, block1: BasicBlock, block2: BasicBlock, var_set: set, already_added_vars: set,
                              join_block: BasicBlock):
@@ -44,14 +45,13 @@ class Utils:
 
                 if block1_child != block2_child:
                     if join_block.is_available_exiting_phi_instruction_number():
-                        phi_instructions = join_block.get_existing_phi_instruction_number()
-                        join_block.update_instruction(instr_idn=phi_instructions.get_id(), x=block2_child,
-                                                      y=block1_child)
-                        join_block.add_var_assignment(var=child, instruction_number=phi_instructions.get_id(),
-                                                      update_var=True)
+                        phi_instruction = join_block.get_existing_phi_instruction_number().get_id()
+                        join_block.update_instruction(instr_idn=phi_instruction, x=block2_child, y=block1_child)
+                        join_block.add_var_assignment(var=child, instruction_number=phi_instruction, update_var=True)
                     else:
-                        self.create_phi_instruction(join_block, child, x=block2_child, y=block1_child)
+                        phi_instruction = self.create_phi_instruction(join_block, child, x=block2_child, y=block1_child)
 
+                    join_block.add_var_assignment(child, phi_instruction)
                     already_added_vars.add(child)
 
     def add_phis_if(self, then_block: BasicBlock, else_block: BasicBlock):
@@ -70,8 +70,15 @@ class Utils:
 
         # self.update_var_table_for_block(join_block=join_block, then_block=then_block, else_block=else_block)
 
-    def add_phis_while(self, while_block, then_block):
+    def add_phis_while(self, while_block: BasicBlock, then_block: BasicBlock):
         already_added_vars = set()
+
+        # Check for nested stmts where the upper while need to use the lower stmts
+        while_parents = while_block.get_parents()
+        branch_parent_block = [obj for obj, enum in while_parents.items() if enum == BlockRelation.BRANCH]
+        if branch_parent_block:
+            then_block = branch_parent_block[0]
+
         while_vars = set(while_block.get_vars().keys())
         then_vars = set(then_block.get_vars().keys())
         intersection_while_then = while_vars.intersection(then_vars)

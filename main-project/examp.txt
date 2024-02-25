@@ -50,3 +50,22 @@ main
     call OutputNewLine();
 
     }.
+
+fixing extra branch
+main
+    var a, b; {
+    let a <- call InputNum();
+    let b <- 2;
+
+    if a > 2 then
+        while a < 2 do
+            let a <- 2 + 6
+            od;
+        else
+        let a <- 2 + 4
+    fi;
+
+    let a <- a + 1;
+    call OutputNewLine();
+
+    }.

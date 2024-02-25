@@ -4,9 +4,9 @@ main
     let b <- 2;
 
         while a < 2 do
-            while a < 2 do
-            let a <- 2 + 6;
-        od;
+            if a < 2 then
+                let a <- 2 + 2
+                fi;
         od;
 
     let a <- a + 1;

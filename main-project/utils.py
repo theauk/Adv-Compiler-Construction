@@ -75,9 +75,10 @@ class Utils:
 
         # Check for nested stmts where the upper while need to use the lower stmts
         while_parents = while_block.get_parents()
-        branch_parent_block = [obj for obj, enum in while_parents.items() if enum == BlockRelation.BRANCH]
-        if branch_parent_block:
-            then_block = branch_parent_block[0]
+        branch_parent_blocks = [obj for obj, enum in while_parents.items() if enum == BlockRelation.BRANCH]
+        for block in branch_parent_blocks:
+            if block.get_id() > then_block.get_id():
+                then_block = block
 
         while_vars = set(while_block.get_vars().keys())
         then_vars = set(then_block.get_vars().keys())

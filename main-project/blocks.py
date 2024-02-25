@@ -61,6 +61,9 @@ class BasicBlock(Block):
         self.existing_phis_instr_number = []
         self.hidden_first_instr = -1
 
+    def get_id(self):
+        return self.id
+
     def update_id(self, idn):
         self.id = idn
 

@@ -2,6 +2,7 @@ from enum import Enum
 
 from operations import Operations
 from ssa import Instruction
+import copy
 
 
 class BlockRelation(Enum):
@@ -58,7 +59,7 @@ class BasicBlock(Block):
         self.phi_vars = set()
         self.parents: dict = {}
         self.children: {}
-        self.available_phis = []
+        self.existing_phis_instr_number = []
         self.hidden_first_instr = -1
 
     def update_id(self, idn):
@@ -89,7 +90,7 @@ class BasicBlock(Block):
             self.instruction_order_list.append(inst)
 
         if op == Operations.PHI:
-            self.available_phis.append(inst)
+            self.existing_phis_instr_number.append(inst)
         return instr_id
 
     def get_instructions(self):
@@ -109,6 +110,9 @@ class BasicBlock(Block):
             self.vars[var] = instruction_number
         if update_var:
             self.updated_vars.add(var)
+
+    def initialize_vars(self, new_vars):
+        self.vars = copy.deepcopy(new_vars)
 
     def add_parent(self, parent_block: 'BasicBlock', parent_type: BlockRelation):
         self.parents[parent_block] = parent_type
@@ -140,10 +144,14 @@ class BasicBlock(Block):
         if y:
             instr.y = y
 
-    def get_available_phi_instruction(self):
-        return self.available_phis.pop(0)
+    def get_existing_phi_instruction_number(self):
+        return self.existing_phis_instr_number.pop(0)
+
+    def is_available_exiting_phi_instruction_number(self):
+        return len(self.existing_phis_instr_number) > 0
 
     def add_phi_var(self, phi_var):
+        self.updated_vars.add(phi_var)
         self.phi_vars.add(phi_var)
 
     def get_phi_vars(self):
@@ -230,4 +238,3 @@ class Blocks:
             self.leaf_joins_while[-1] = join_block
         else:
             self.leaf_joins_while.append(join_block)
-

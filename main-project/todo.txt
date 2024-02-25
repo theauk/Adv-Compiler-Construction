@@ -23,6 +23,20 @@ ______
 
 NEXTS:
 ______
+
+phi exceptions har noget at gøre med at der ikke bliver lavet en available phi i BB7 når der ikke er join i begge to
+så måske hvis der ikke len(intersection then else) then add a phi to potential join
+kig på 212
+problemet er at det skal tilføjes så snart der ændres, i.e., vi skal have id +1 når der er assignment. Men hvad med
+ydersiden, altså hvor det er et result af nogle andre fra to branches men ikke en assignment in itself? Er det så okay
+bare at lave en ny eller skal nummeret completely follow the initial phi inside the last of then and or else?
+Hvorfor er det at det virker når der er ny join i begge. Hvordan er det lige at BB7 får en available phi uden at der er en assignment i den?
+
+Måske bare sluge kamelen og sige at hvis der ikke intersection mellem then og else så betyder det at du skal tilføje
+phi i current join
+Men find stadig lige ud af hvorfor det virker i den store join nederst når begge har join
+I think it is because for else the current join block is the one below. Men hvorfor virker det så stadig når der er to if inner
+
 - while phis:
     x fix so that if you have nested while the branch falls out to the already existing "out" block and does not make a new one
     - update instr numbers downstream after adding phis

@@ -227,7 +227,7 @@ class Blocks:
         else:
             self.leaf_joins_if.append(join_block)
 
-    def get_left_joins_while(self):
+    def get_leaf_joins_while(self):
         return self.leaf_joins_while
 
     def get_lowest_leaf_join_block_while(self):

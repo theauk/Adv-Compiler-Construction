@@ -78,14 +78,3 @@ class Utils:
 
         if already_added_vars:
             while_block.update_join(True)
-
-    # not necessary since should always be joined
-    # def update_var_table_for_block(self, join_block, then_block, else_block):
-    #    # Add vars from then and else
-    #    for key, value in then_block.get_vars().items():
-    #        if key not in join_block.get_vars():
-    #            join_block.add_var_assignment(key, value, update_var=False)
-
-    # for key, value in else_block.get_vars().items():
-    #    if key not in join_block.get_vars():
-    #        join_block.add_var_assignment(key, value, update_var=False)

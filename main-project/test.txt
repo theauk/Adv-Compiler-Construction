@@ -1,4 +1,16 @@
 main
-var a, b; {
-    let a <- (a + a)*a;
-}.
+    var a, b; {
+    let a <- call InputNum();
+    let b <- 2;
+
+    while a > 0 do
+         while a > 0 do
+            let a <- a + 4;
+         od;
+         let a <- a + 4;
+    od;
+
+    let a <- a + 1;
+    call OutputNewLine();
+
+    }.

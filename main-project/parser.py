@@ -341,7 +341,9 @@ class Parser:
             branch_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA,
                                        self.baseSSA.get_cur_instr_id() + 1)
 
-        self.utils.add_doms_if(if_block, then_block, else_block, potential_join_block)
+        then_block.add_dom_parent(if_block)
+        else_block.add_dom_parent(if_block)
+        potential_join_block.add_dom_parent(if_block)
 
         return
 
@@ -412,6 +414,9 @@ class Parser:
         if BlockRelation.BRANCH not in while_block.get_children().values():
             self.utils.add_relationship(parent_block=while_block, child_block=branch_block,
                                         relationship=BlockRelation.BRANCH)
+
+        then_block.add_dom_parent(while_block)
+        branch_block.add_dom_parent(while_block)
 
         self.blocks.update_current_join_block(None)
 

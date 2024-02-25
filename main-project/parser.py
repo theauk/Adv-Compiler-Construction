@@ -350,14 +350,17 @@ class Parser:
     def while_statement(self):
         # TODO might have to set leaf while list to empty here
 
+        initial_current_block = self.blocks.get_current_block()
+
         # Check if parent block needs an empty instruction
-        if len(self.blocks.get_current_block().get_instructions()) == 0:
+        if len(initial_current_block.get_instructions()) == 0:
             self.blocks.get_current_block().add_new_instr(self.baseSSA.get_new_instr_id())
 
         while_block = BasicBlock(while_block=True)
         self.utils.add_relationship(parent_block=self.blocks.get_current_block(), child_block=while_block,
                                     relationship=BlockRelation.NORMAL, copy_vars=True)
         self.blocks.add_block(while_block)
+        while_block.add_dom_parent(initial_current_block)
 
         self.blocks.update_current_join_block(while_block)
 

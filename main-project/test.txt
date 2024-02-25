@@ -1,23 +1,17 @@
 main
+    var a, b; {
+    let a <- call InputNum();
+    let b <- 2;
 
-var a, b, c;
+    if a > 2 then
+        let a <- 2 + 2
+    fi;
 
-{
-    let a <- 0;
+    if a > 2 then
+        let a <- 2 + 2
+    fi;
 
-    while a < 99
-    do
-        let c <- a + 0;
+    let a <- a + 1;
+    call OutputNewLine();
 
-        let b <- 0;
-        while b < 17
-        do
-            let a <- a + 1;
-            let b <- b + 1;
-        od;
-
-        let a <- a - 1;
-    od;
-
-    let c <- a + 0;
-}.
+    }.

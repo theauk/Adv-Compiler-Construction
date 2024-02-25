@@ -341,6 +341,8 @@ class Parser:
             branch_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.BRA,
                                        self.baseSSA.get_cur_instr_id() + 1)
 
+        self.utils.add_doms_if(if_block, then_block, else_block, potential_join_block)
+
         return
 
     def while_statement(self):
@@ -362,8 +364,7 @@ class Parser:
         cmp_instr_idn = while_block.add_new_instr(self.baseSSA.get_new_instr_id(), Operations.CMP, left_side,
                                                   right_side)
         # add the branch instr (branch instr added when known below)
-        cmp_branch_to_instr = while_block.add_new_instr(self.baseSSA.get_new_instr_id(), op=rel_op_instr,
-                                                        x=cmp_instr_idn)
+        while_block.add_new_instr(self.baseSSA.get_new_instr_id(), op=rel_op_instr, x=cmp_instr_idn)
 
         self.check_token(Tokens.DO_TOKEN)
 
@@ -380,7 +381,7 @@ class Parser:
 
         if len(self.blocks.get_leaf_joins_while()) > 0:
             leaf_while: BasicBlock = self.blocks.get_lowest_leaf_join_block_while()
-            leaf_while_parent = list(leaf_while.get_parents().keys())[0]
+            leaf_while_parent: BasicBlock = list(leaf_while.get_parents().keys())[0]
             # There are no instructions below od but in the "same" while block. Remove the branch block and branch
             # to the while above
             if len(leaf_while.get_instructions()) == 0:
@@ -393,6 +394,9 @@ class Parser:
                                          x=while_block.find_first_instr())
                 self.utils.add_relationship(parent_block=leaf_while, child_block=while_block,
                                             relationship=BlockRelation.BRANCH)
+
+            # leaf_while_parent_branch_instr = leaf_while_parent.get_instruction_order_list()[-1].get_id()
+            # leaf_while_parent.update_instruction(leaf_while_parent_branch_instr, y=leaf_while.find_first_instr())
 
         # Check if bra instruction should be inserted
         if len(self.blocks.get_current_block().get_children()) == 0:
@@ -408,9 +412,6 @@ class Parser:
         if BlockRelation.BRANCH not in while_block.get_children().values():
             self.utils.add_relationship(parent_block=while_block, child_block=branch_block,
                                         relationship=BlockRelation.BRANCH)
-
-        # TODO do this on secon
-        # while_block.update_instruction(cmp_branch_to_instr, y=self.baseSSA.get_cur_instr_id() + 1)
 
         self.blocks.update_current_join_block(None)
 

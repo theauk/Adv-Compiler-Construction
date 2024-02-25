@@ -79,3 +79,8 @@ class Utils:
 
         if already_added_vars:
             while_block.update_join(True)
+
+    def add_doms_if(self, if_block: BasicBlock, then_block: BasicBlock, else_block: BasicBlock, join_block: BasicBlock):
+        then_block.add_dom_parent(if_block)
+        else_block.add_dom_parent(if_block)
+        join_block.add_dom_parent(if_block)

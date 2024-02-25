@@ -9,7 +9,6 @@ class BlockRelation(Enum):
     NORMAL = 1
     BRANCH = 2
     FALL_THROUGH = 3
-    DOM = 4
 
     def __str__(self):
         if self.value == 3:
@@ -49,7 +48,7 @@ class ConstantBlock(Block):
 class BasicBlock(Block):
     def __init__(self, idn=None, join=False, while_block=False):
         super().__init__(idn)
-        self.dom = []
+        self.dom_parents = []
         self.join = join
         self.while_block = while_block
         self.instructions = {}
@@ -156,6 +155,9 @@ class BasicBlock(Block):
 
     def get_phi_vars(self):
         return self.phi_vars
+
+    def add_dom_parent(self, dom_parent):
+        self.dom_parents.append(dom_parent)
 
 
 class Blocks:

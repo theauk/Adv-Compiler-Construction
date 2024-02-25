@@ -46,22 +46,23 @@ class Visualizer:
 
     def make_arrows(self):
         other_blocks: list[BasicBlock] = self.blocks.get_blocks_list()
-        instrs = []
-        branches = []
+        normal = []
+        other = []
         doms = []
 
         for block in other_blocks:
             parents = block.get_parents()
             for parent_block, parent_type in parents.items():
                 if parent_type == BlockRelation.NORMAL:
-                    instrs.append(f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n ;')
-                elif parent_type == BlockRelation.DOM:
-                    doms.append(
-                        f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n [color=blue, style=dotted, label="{str(parent_type)}"];')
+                    normal.append(f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n ;')
                 else:
-                    instrs.append(f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n [label="{str(parent_type)}"];')
+                    other.append(f'bb{parent_block.get_id()}:s -> bb{block.get_id()}:n [label="{str(parent_type)}"];')
 
-        return '\n'.join(instrs) + '\n'.join(branches) + '\n'.join(doms)
+            for dom_parent in block.dom_parents:
+                doms.append(
+                    f'bb{dom_parent.get_id()}:b -> bb{block.get_id()}:b [color=blue, style=dotted, label="dom"];')
+
+        return '\n'.join(normal) + '\n' + '\n'.join(other) + '\n' + '\n'.join(doms)
 
     def make_graph(self):
         constants = self.make_constants()

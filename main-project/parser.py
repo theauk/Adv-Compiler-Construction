@@ -395,10 +395,10 @@ class Parser:
                                             relationship=BlockRelation.BRANCH)
 
         # Check if bra instruction should be inserted
-        if len(then_block.get_children()) == 0:
+        if len(self.blocks.get_current_block().get_children()) == 0:
             bra_instr = self.baseSSA.get_new_instr_id()
-            then_block.add_new_instr(bra_instr, Operations.BRA, while_block.find_first_instr())
-            self.utils.add_relationship(parent_block=then_block, child_block=while_block,
+            self.blocks.get_current_block().add_new_instr(bra_instr, Operations.BRA, while_block.find_first_instr())
+            self.utils.add_relationship(parent_block=self.blocks.get_current_block(), child_block=while_block,
                                         relationship=BlockRelation.BRANCH)
 
         branch_block = BasicBlock()

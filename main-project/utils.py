@@ -42,16 +42,17 @@ class Utils:
                 block1_child = block1.get_vars()[child]
                 block2_child = block2.get_vars()[child]
 
-                if join_block.is_available_exiting_phi_instruction_number():
-                    phi_instructions = join_block.get_existing_phi_instruction_number()
-                    join_block.update_instruction(instr_idn=phi_instructions.get_id(), x=block2_child,
-                                                  y=block1_child)
-                    join_block.add_var_assignment(var=child, instruction_number=phi_instructions.get_id(),
-                                                  update_var=True)
-                else:
-                    self.create_phi_instruction(join_block, child, x=block2_child, y=block1_child)
+                if block1_child != block2_child:
+                    if join_block.is_available_exiting_phi_instruction_number():
+                        phi_instructions = join_block.get_existing_phi_instruction_number()
+                        join_block.update_instruction(instr_idn=phi_instructions.get_id(), x=block2_child,
+                                                      y=block1_child)
+                        join_block.add_var_assignment(var=child, instruction_number=phi_instructions.get_id(),
+                                                      update_var=True)
+                    else:
+                        self.create_phi_instruction(join_block, child, x=block2_child, y=block1_child)
 
-                already_added_vars.add(child)
+                    already_added_vars.add(child)
 
     def add_phis_if(self, then_block: BasicBlock, else_block: BasicBlock):
         already_added_vars = set()

@@ -33,7 +33,7 @@ x fix phi numbering og factor
           den current while blok igen. Den checker for hver instruction if x eller y er i dict'en. Hvis ja så opdater til det nye nummer baseret på værditabellen i while
         - during second pass also update the comp y værdi til den første instr i den while blokken brancher til
         - phi should be propegated so e.g. if only assign in inner inner while there should also be phi further out
-- put empty i empty while blocks
+x put empty i empty while blocks
 - check kombi af while og if
 - add dom arrows
     - burde være nemt nok ift if og while og normal bloks. Tjek noter for outliers

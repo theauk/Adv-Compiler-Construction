@@ -9,10 +9,11 @@ class Utils:
         self.blocks = blocks
         self.baseSSA = baseSSA
 
-    def add_relationship(self, parent_block: BasicBlock, child_block: BasicBlock, relationship: BlockRelation):
+    def add_relationship(self, parent_block: BasicBlock, child_block: BasicBlock, relationship: BlockRelation,
+                         copy_vars=True):
         parent_block.add_child(child_block, relationship)
         child_block.add_parent(parent_block, relationship)
-        if True:
+        if copy_vars:
             self.copy_vars(parent_block, child_block, relationship)
 
     def remove_relationship(self, parent_block: BasicBlock, child_block: BasicBlock):

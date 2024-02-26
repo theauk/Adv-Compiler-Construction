@@ -92,6 +92,7 @@ class BasicBlock(Block):
             else:
                 self.instruction_order_list.append(inst)
 
+            # phi instr number for while
             if op == Operations.PHI and not self.while_block:
                 self.existing_phis_instr_number.append(inst)
 

@@ -36,8 +36,9 @@ x phi should be propegated so e.g. if only assign in inner inner while there sho
 x remove bra instruction that mistakenly gets inserted for two non nested while sts
 
 x check instructions in relop
-figure out why block disappears
-add e.g. bge right instruction when leaving while and checking block above
+x figure out why block disappears
+- figure out why phis on while top now disappeared
+- add e.g. bge right instruction when leaving while and checking block above
 
 - common subexpression elimination
     x add sets

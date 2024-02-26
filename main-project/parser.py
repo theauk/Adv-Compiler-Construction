@@ -348,10 +348,6 @@ class Parser:
 
         initial_current_block = self.blocks.get_current_block()
 
-        # Check if parent block needs an empty instruction
-        # if len(initial_current_block.get_instructions()) == 0:
-        #    self.blocks.get_current_block().add_new_instr(self.baseSSA.get_new_instr_id())
-
         if len(self.blocks.get_current_block().get_instructions()) == 0:
             while_block = self.blocks.get_current_block()
             while_block.set_while(True)
@@ -387,7 +383,7 @@ class Parser:
             if len(leaf_block.get_instructions()) == 0 and self.blocks.get_current_join_block() != leaf_block:
                 self.blocks.remove_latest_block()
                 self.utils.add_relationship(parent_block=leaf_block_parent, child_block=while_block,
-                                            relationship=BlockRelation.BRANCH)
+                                            relationship=BlockRelation.BRANCH, copy_vars=False)
             elif len(leaf_block.get_children()) == 0:
                 # There are instructions below od. Add a branch from that block to top of the current while.
                 self.blocks.add_new_instr(block=leaf_block, instr_id=self.baseSSA.get_new_instr_id(), op=Operations.BRA,

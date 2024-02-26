@@ -32,7 +32,7 @@ x phi should be propegated so e.g. if only assign in inner inner while there sho
     - noget med at når while starter så lav et globalt set hvor var instr seen -> bogstav fx {1 -> a, 7 -> a} (hvor a egentlig er token nr)
       efter phi functionen lav second pass function der starter fra den første non-phi instr og kører indtil den rammer
       den current while blok igen. Den checker for hver instruction if x eller y er i dict'en. Hvis ja så opdater til det nye nummer baseret på værditabellen i while
-- during second pass also update the bra y værdi til den første instr i den while blokken brancher til
+x during second pass also update the bra y værdi til den første instr i den while blokken brancher til
 x remove bra instruction that mistakenly gets inserted for two non nested while sts
 
 x check instructions in relop

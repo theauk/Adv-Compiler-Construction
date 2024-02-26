@@ -116,4 +116,38 @@ class Utils:
                     if relation_type == BlockRelation.BRANCH:
                         child_first_instr_id = child.find_first_instr()
                         block.update_instruction(branch_instr, y=child_first_instr_id)
+                    elif relation_type == BlockRelation.FALL_THROUGH:
+                        self.update_phis_while(block, child)
 
+    def update_phis_while(self, start_while_block: BasicBlock, fall_through_child: BasicBlock):
+        visited = {start_while_block}
+        path = []
+        stack = [fall_through_child]
+
+        old_to_new_instr_ids = {}
+        for i in start_while_block.get_instructions().values():
+            if i.op == Operations.PHI:
+                old_to_new_instr_ids[i.y] = i.id
+
+        for i in start_while_block.get_instructions().values():
+            if i.op != Operations.PHI:
+                if i.x in old_to_new_instr_ids:
+                    start_while_block.update_instruction(i.id, x=old_to_new_instr_ids[i.x])
+                if i.y in old_to_new_instr_ids:
+                    start_while_block.update_instruction(i.id, y=old_to_new_instr_ids[i.y])
+
+        while stack:
+            current_block = stack.pop()
+
+            for i in current_block.get_instructions().values():
+                if i.x in old_to_new_instr_ids:
+                    current_block.update_instruction(i.id, x=old_to_new_instr_ids[i.x])
+                if i.y in old_to_new_instr_ids:
+                    current_block.update_instruction(i.id, y=old_to_new_instr_ids[i.y])
+
+            visited.add(current_block)
+            path.append(current_block)
+
+            for child_block in current_block.get_children().keys():
+                if child_block not in visited:
+                    stack.append(child_block)

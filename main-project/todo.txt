@@ -21,6 +21,14 @@ ______
 NEXTS:
 ______
 
+- make tests
+- hvad skal der ske med branch blok med to while efter hinanden
+- arrays (?!)
+
+- fix så hvis det er if then "return" og noget efter if så har den branch blok ikke en empty men det der kommer efter
+- take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword
+______
+
 x fix phi numbering og factor
 x fix so that if you have nested while the branch falls out to the already existing "out" block and does not make a new one
 x put empty i empty while blocks
@@ -28,10 +36,7 @@ x check kombi af while og if
 x add dom arrows
 
 x phi should be propegated so e.g. if only assign in inner inner while there should also be phi further out
-- update instr numbers downstream after adding phis
-    - noget med at når while starter så lav et globalt set hvor var instr seen -> bogstav fx {1 -> a, 7 -> a} (hvor a egentlig er token nr)
-      efter phi functionen lav second pass function der starter fra den første non-phi instr og kører indtil den rammer
-      den current while blok igen. Den checker for hver instruction if x eller y er i dict'en. Hvis ja så opdater til det nye nummer baseret på værditabellen i while
+x update instr numbers downstream after adding phis
 x during second pass also update the bra y værdi til den første instr i den while blokken brancher til
 x remove bra instruction that mistakenly gets inserted for two non nested while sts
 
@@ -42,10 +47,7 @@ x figure out why phis on while top now disappeared
 x common subexpression elimination
     x add sets
     x check sets before adding instr and decrease id if necessary
-    x any stuff that will change when instr are updated downstream after while phis?
-
-- fix så hvis det er if then "return" og noget efter if så har den branch blok ikke en empty men det der kommer efter
-- take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword
+    x any stuff that will change when instr are updated downstream after while phis
 
 ______
 x implement det samme for while ift branches (like if)

@@ -88,7 +88,13 @@ class BasicBlock(Block):
             self.instructions[instr_id] = inst
 
             if insert_at_beginning:
-                self.instruction_order_list.insert(0, inst)
+                insert_index = 0
+                for i, instr in enumerate(self.instruction_order_list):
+                    if instr.op != Operations.PHI:
+                        insert_index = i
+                        break
+                self.instruction_order_list.insert(insert_index, inst)
+
             else:
                 self.instruction_order_list.append(inst)
 

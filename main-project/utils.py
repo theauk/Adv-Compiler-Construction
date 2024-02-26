@@ -105,10 +105,10 @@ class Utils:
 
     def fix_phi_and_outer_while_bra(self):
         blocks_list: list[BasicBlock] = self.blocks.get_blocks_list()
+        visited_while = set()
 
         for block in blocks_list:
             if block.is_while():
-
                 # Update the branching instruction
                 branch_instr = block.get_instruction_order_list()[-1].get_id()
 
@@ -116,8 +116,8 @@ class Utils:
                     if relation_type == BlockRelation.BRANCH:
                         child_first_instr_id = child.find_first_instr()
                         block.update_instruction(branch_instr, y=child_first_instr_id)
-                    elif relation_type == BlockRelation.FALL_THROUGH:
-                        self.update_phis_while(block, child)
+                    elif relation_type == BlockRelation.FALL_THROUGH and block not in visited_while:
+                        visited_while.update(self.update_phis_while(block, child))
 
     def update_phis_while(self, start_while_block: BasicBlock, fall_through_child: BasicBlock):
         visited = {start_while_block}
@@ -151,3 +151,5 @@ class Utils:
             for child_block in current_block.get_children().keys():
                 if child_block not in visited:
                     stack.append(child_block)
+
+        return visited

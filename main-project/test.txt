@@ -2,13 +2,13 @@ main
     var a, b; {
     let a <- call InputNum();
     let a <- 2 + 1;
-    let a <- a + 1;
+    let b <- a + 1;
 
         while a < 2 do
             while a < 2 do
-                let a <- 2 + 1;
-        od;
-            let a <- 2 + 1;
+                let a <- a + 1;
+                let b <- b + 1;
+               od;
         od;
 
     let a <- a + 1;

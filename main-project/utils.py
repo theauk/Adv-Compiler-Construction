@@ -102,3 +102,18 @@ class Utils:
                                                          x=cse_instr)
 
         return branch_instr_idn
+
+    def fix_phi_and_outer_while_bra(self):
+        blocks_list: list[BasicBlock] = self.blocks.get_blocks_list()
+
+        for block in blocks_list:
+            if block.is_while():
+
+                # Update the branching instruction
+                branch_instr = block.get_instruction_order_list()[-1].get_id()
+
+                for child, relation_type in block.get_children().items():
+                    if relation_type == BlockRelation.BRANCH:
+                        child_first_instr_id = child.find_first_instr()
+                        block.update_instruction(branch_instr, y=child_first_instr_id)
+

@@ -32,18 +32,17 @@ x phi should be propegated so e.g. if only assign in inner inner while there sho
     - noget med at når while starter så lav et globalt set hvor var instr seen -> bogstav fx {1 -> a, 7 -> a} (hvor a egentlig er token nr)
       efter phi functionen lav second pass function der starter fra den første non-phi instr og kører indtil den rammer
       den current while blok igen. Den checker for hver instruction if x eller y er i dict'en. Hvis ja så opdater til det nye nummer baseret på værditabellen i while
-- during second pass also update the comp y værdi til den første instr i den while blokken brancher til
+- during second pass also update the bra y værdi til den første instr i den while blokken brancher til
 x remove bra instruction that mistakenly gets inserted for two non nested while sts
 
 x check instructions in relop
 x figure out why block disappears
-- figure out why phis on while top now disappeared
-- add e.g. bge right instruction when leaving while and checking block above
+x figure out why phis on while top now disappeared
 
-- common subexpression elimination
+x common subexpression elimination
     x add sets
     x check sets before adding instr and decrease id if necessary
-    - any stuff that will change when instr are updated downstream after while phis?
+    x any stuff that will change when instr are updated downstream after while phis?
 
 - fix så hvis det er if then "return" og noget efter if så har den branch blok ikke en empty men det der kommer efter
 - take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword

@@ -89,6 +89,8 @@ class Parser:
             instr_id = self.baseSSA.get_new_instr_id()
             self.blocks.add_new_instr(block=self.blocks.get_current_block(), instr_id=instr_id, op=Operations.END)
 
+        self.utils.fix_phi_and_outer_while_bra()
+
         return
 
     def var_declaration(self):

@@ -8,6 +8,7 @@ main
             while a < 2 do
                 let a <- 2 + 1;
         od;
+            let a <- 2 + 1;
         od;
 
     let a <- a + 1;

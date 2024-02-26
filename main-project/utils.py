@@ -26,7 +26,7 @@ class Utils:
             child_block.initialize_vars(parent_block.get_vars())
 
     def create_phi_instruction(self, current_join_block, designator, x=None, y=None):
-        if x and y:
+        if x and y or not current_join_block.is_while():
             current_join_block.add_phi_var(designator)
             instr = self.baseSSA.get_new_instr_id()
             self.blocks.add_new_instr(current_join_block, instr_id=instr, op=Operations.PHI, x=x, y=y,
@@ -37,20 +37,20 @@ class Utils:
     def add_phi_instructions(self, block1: BasicBlock, block2: BasicBlock, var_set: set, already_added_vars: set,
                              join_block: BasicBlock):
         for child in var_set:
-            if child not in already_added_vars:
-                block1_child = block1.get_vars()[child]
-                block2_child = block2.get_vars()[child]
+            block1_child = block1.get_vars()[child]
+            block2_child = block2.get_vars()[child]
+            if (block1_child, block2_child) not in already_added_vars:
 
                 if block1_child != block2_child:
                     if join_block.is_available_exiting_phi_instruction_number():
                         phi_instruction = join_block.get_existing_phi_instruction_number().get_id()
-                        join_block.update_instruction(instr_idn=phi_instruction, x=block2_child, y=block1_child)
+                        join_block.update_instruction(instr_idn=phi_instruction, x=block1_child, y=block2_child)
                         join_block.add_var_assignment(var=child, instruction_number=phi_instruction, update_var=True)
                     else:
-                        phi_instruction = self.create_phi_instruction(join_block, child, x=block2_child, y=block1_child)
+                        phi_instruction = self.create_phi_instruction(join_block, child, x=block1_child, y=block2_child)
 
                     join_block.add_var_assignment(child, phi_instruction)
-                    already_added_vars.add(child)
+                    already_added_vars.add((block1_child, block2_child))
 
     def add_phis_if(self, then_block: BasicBlock, else_block: BasicBlock):
         already_added_vars = set()
@@ -127,7 +127,7 @@ class Utils:
         old_to_new_instr_ids = {}
         for i in start_while_block.get_instructions().values():
             if i.op == Operations.PHI:
-                old_to_new_instr_ids[i.y] = i.id
+                old_to_new_instr_ids[i.x] = i.id
 
         for i in start_while_block.get_instructions().values():
             if i.op != Operations.PHI:

@@ -76,6 +76,12 @@ class BasicBlock(Block):
     def is_while(self):
         return self.while_block
 
+    def is_cse(self, op=None, x=None, y=None):
+        if (op, x, y) in self.dom_instructions:
+            return self.dom_instructions[(op, x, y)]
+        else:
+            return None
+
     def add_new_instr(self, instr_id, op=None, x=None, y=None, insert_at_beginning=False):
         if (op, x, y) not in self.dom_instructions:
             inst = Instruction(instr_id, op, x, y)
@@ -89,11 +95,12 @@ class BasicBlock(Block):
             if op == Operations.PHI and not self.while_block:
                 self.existing_phis_instr_number.append(inst)
 
-            self.add_dom_instruction(instr_id, op, x, y)
+            if op and op not in Operations.get_no_cse_instructions():
+                self.add_dom_instruction(instr_id, op, x, y)
 
-            return False
+            return instr_id, False
         else:
-            return True
+            return self.dom_instructions[(op, x, y)], True
 
     def get_instructions(self):
         return self.instructions
@@ -184,9 +191,10 @@ class Blocks:
         self.leaf_joins_while = []
 
     def add_new_instr(self, block: 'BasicBlock', instr_id, op=None, x=None, y=None, insert_at_beginning=False):
-        cse = block.add_new_instr(instr_id, op, x, y, insert_at_beginning)
+        instr, cse = block.add_new_instr(instr_id, op, x, y, insert_at_beginning)
         if cse:
             self.baseSSA.decrease_id_count()
+        return instr
 
     def get_current_block(self):
         return self.current_block

@@ -27,6 +27,9 @@ class BaseSSA:
     def rel_op_to_instruction(self, rel_op):
         return self.rel_op_to_instr[rel_op]
 
+    def get_no_cse_instructions(self):
+        return self.rel_op_to_instr.update()
+
 
 class Instruction:
     def __init__(self, id_count, op: Operations, x=None, y=None):

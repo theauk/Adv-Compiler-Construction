@@ -257,27 +257,22 @@ class Parser:
         # if part
         left_side, rel_op_instr, right_side = self.relation()
         if_block = self.blocks.get_current_block()
-        # make comparison instr
-        cmp_instr_idn = self.baseSSA.get_new_instr_id()
-        self.blocks.add_new_instr(if_block, cmp_instr_idn, Operations.CMP, left_side, right_side)
-        # add the branch instr (branch instr added when known below)
-        branch_instr_idn = self.baseSSA.get_new_instr_id()
-        self.blocks.add_new_instr(if_block, branch_instr_idn, op=rel_op_instr, x=cmp_instr_idn)
+        branch_instr_idn = self.utils.make_relation(if_block, left_side, right_side, rel_op_instr)
+
         potential_join_block.add_dom_parent(if_block)
 
         # then part
         self.check_token(Tokens.THEN_TOKEN)
         then_block = BasicBlock()
         self.utils.add_relationship(parent_block=if_block, child_block=then_block,
-                                    relationship=BlockRelation.FALL_THROUGH, copy_vars=True)
+                                    relationship=BlockRelation.FALL_THROUGH)
         self.blocks.add_block(then_block)
         then_block.add_dom_parent(if_block)
         self.stat_sequence()
 
         # else part (might be empty)
         else_block = BasicBlock()
-        self.utils.add_relationship(parent_block=if_block, child_block=else_block,
-                                    relationship=BlockRelation.BRANCH, copy_vars=True)
+        self.utils.add_relationship(parent_block=if_block, child_block=else_block, relationship=BlockRelation.BRANCH)
         self.blocks.add_block(else_block)
         else_block.add_dom_parent(if_block)
 
@@ -293,6 +288,9 @@ class Parser:
         self.check_token(Tokens.FI_TOKEN)
         # update the "branch" instruction/arrow for if so that it points to the first instruction in else
         if_block.update_instruction(branch_instr_idn, y=else_block.find_first_instr())
+
+        if not potential_join_block.get_instructions():  # empty else block
+            self.blocks.add_new_instr(potential_join_block, self.baseSSA.get_new_instr_id())
 
         # Add the join block so that it gets an ID
         self.blocks.add_block(potential_join_block)
@@ -314,16 +312,14 @@ class Parser:
             fall_through_block = self.blocks.get_lowest_leaf_join_block()
             self.utils.add_relationship(parent_block=fall_through_block, child_block=potential_join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
-            self.utils.add_relationship(parent_block=then_block,
-                                        child_block=potential_join_block,
+            self.utils.add_relationship(parent_block=then_block, child_block=potential_join_block,
                                         relationship=BlockRelation.BRANCH)
             self.utils.add_phis_if(then_block, fall_through_block)
             branch_block = then_block
         elif not else_block.get_children():
             # Case 3: no additional conditional in else
             branch_block = self.blocks.get_lowest_leaf_join_block()
-            self.utils.add_relationship(parent_block=branch_block,
-                                        child_block=potential_join_block,
+            self.utils.add_relationship(parent_block=branch_block, child_block=potential_join_block,
                                         relationship=BlockRelation.BRANCH)
             self.utils.add_relationship(parent_block=else_block, child_block=potential_join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
@@ -365,25 +361,20 @@ class Parser:
         else:
             while_block = BasicBlock(while_block=True)
             self.utils.add_relationship(parent_block=self.blocks.get_current_block(), child_block=while_block,
-                                        relationship=BlockRelation.NORMAL, copy_vars=True)
+                                        relationship=BlockRelation.NORMAL)
             self.blocks.add_block(while_block)
             while_block.add_dom_parent(initial_current_block)
 
             self.blocks.update_current_join_block(while_block)
 
         left_side, rel_op_instr, right_side = self.relation()
-        # make comparison instr
-        cmp_instr_idn = self.baseSSA.get_new_instr_id()
-        self.blocks.add_new_instr(while_block, cmp_instr_idn, Operations.CMP, left_side, right_side)
-        # add the branch instr (branch instr added when known below)
-        branch_instr_idn = self.baseSSA.get_new_instr_id()
-        self.blocks.add_new_instr(while_block, branch_instr_idn, op=rel_op_instr, x=cmp_instr_idn)
+        branch_instr_idn = self.utils.make_relation(while_block, left_side, right_side, rel_op_instr)
 
         self.check_token(Tokens.DO_TOKEN)
 
         then_block = BasicBlock()
         self.utils.add_relationship(parent_block=while_block, child_block=then_block,
-                                    relationship=BlockRelation.FALL_THROUGH, copy_vars=True)
+                                    relationship=BlockRelation.FALL_THROUGH)
         self.blocks.add_block(then_block)
         then_block.add_dom_parent(while_block)
 
@@ -460,15 +451,13 @@ class Parser:
                 self.next_token()
                 idn_right = self.factor()
                 # = idn_left so that if we e.g. have 2 + 2 + 2 then the id for the first 2 * 2 becomes the next left
-                idn_left = self.baseSSA.get_new_instr_id()
-                self.blocks.add_new_instr(self.blocks.get_current_block(), idn_left, Operations.ADD, idn_left,
-                                          idn_right)
+                idn_left = self.blocks.add_new_instr(self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
+                                                     Operations.ADD, idn_left, idn_right)
             elif self.token == Tokens.MINUS_TOKEN:
                 self.next_token()
                 idn_right = self.factor()
-                idn_left = self.baseSSA.get_new_instr_id()
-                self.blocks.add_new_instr(self.blocks.get_current_block(), idn_left, Operations.SUB, idn_left,
-                                          idn_right)
+                idn_left = self.blocks.add_new_instr(self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
+                                                     Operations.SUB, idn_left, idn_right)
 
         return idn_left
 

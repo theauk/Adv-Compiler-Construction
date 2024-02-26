@@ -33,3 +33,17 @@ class Operations(Enum):
 
     def __repr__(self) -> str:
         return self.__str__()
+
+    @classmethod
+    def get_no_cse_instructions(cls):
+        return {
+            Operations.BEQ,
+            Operations.BNE,
+            Operations.BGE,
+            Operations.BLE,
+            Operations.BGT,
+            Operations.BLT,
+            Operations.BRA,
+            Operations.PHI,
+            Operations.READ
+        }

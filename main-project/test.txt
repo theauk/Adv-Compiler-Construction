@@ -1,11 +1,12 @@
 main
     var a, b; {
     let a <- call InputNum();
-    let a <- a + 1;
+    let a <- 2 + 1;
+    let a <- 2 + 1;
 
         while a < 2 do
             if a < 2 then
-                let a <- 2 + 2
+                let a <- 2 + 1;
                 fi;
         od;
 
@@ -13,3 +14,4 @@ main
     call OutputNewLine();
 
     }.
+

@@ -9,11 +9,10 @@ class Utils:
         self.blocks = blocks
         self.baseSSA = baseSSA
 
-    def add_relationship(self, parent_block: BasicBlock, child_block: BasicBlock, relationship: BlockRelation,
-                         copy_vars=False):
+    def add_relationship(self, parent_block: BasicBlock, child_block: BasicBlock, relationship: BlockRelation):
         parent_block.add_child(child_block, relationship)
         child_block.add_parent(parent_block, relationship)
-        if copy_vars:
+        if True:
             self.copy_vars(parent_block, child_block, relationship)
 
     def remove_relationship(self, parent_block: BasicBlock, child_block: BasicBlock):
@@ -30,9 +29,7 @@ class Utils:
             current_join_block.add_phi_var(designator)
             instr = self.baseSSA.get_new_instr_id()
             self.blocks.add_new_instr(current_join_block, instr_id=instr, op=Operations.PHI, x=x, y=y,
-                                             insert_at_beginning=current_join_block.is_while())
-        #else:
-        #    current_join_block.add_new_instr(instr_id=instr, op=Operations.PHI, start=current_join_block.is_while())
+                                      insert_at_beginning=current_join_block.is_while())
             current_join_block.add_var_assignment(designator, instr, False, current_join_block.is_while())
             return instr
 
@@ -90,3 +87,17 @@ class Utils:
         if already_added_vars:
             while_block.update_join(True)
 
+    def make_relation(self, if_block: BasicBlock, left_side, right_side, rel_op_instr):
+        # Check if potential cmp instr is cse
+        cse_instr = if_block.is_cse(op=rel_op_instr, x=left_side, y=right_side)
+        if not cse_instr:
+            cmp_instr_idn = self.blocks.add_new_instr(if_block, self.baseSSA.get_new_instr_id(), Operations.CMP,
+                                                      left_side, right_side)
+            # add the branch instr (branch instr y added when known later)
+            branch_instr_idn = self.blocks.add_new_instr(if_block, self.baseSSA.get_new_instr_id(), op=rel_op_instr,
+                                                         x=cmp_instr_idn)
+        else:
+            branch_instr_idn = self.blocks.add_new_instr(if_block, self.baseSSA.get_new_instr_id(), op=rel_op_instr,
+                                                         x=cse_instr)
+
+        return branch_instr_idn

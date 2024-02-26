@@ -29,8 +29,8 @@ class Utils:
         if x and y:
             current_join_block.add_phi_var(designator)
             instr = self.baseSSA.get_new_instr_id()
-            current_join_block.add_new_instr(instr_id=instr, op=Operations.PHI, x=x, y=y,
-                                             start=current_join_block.is_while())
+            self.blocks.add_new_instr(current_join_block, instr_id=instr, op=Operations.PHI, x=x, y=y,
+                                             insert_at_beginning=current_join_block.is_while())
         #else:
         #    current_join_block.add_new_instr(instr_id=instr, op=Operations.PHI, start=current_join_block.is_while())
             current_join_block.add_var_assignment(designator, instr, False, current_join_block.is_while())
@@ -89,3 +89,4 @@ class Utils:
 
         if already_added_vars:
             while_block.update_join(True)
+

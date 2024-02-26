@@ -1,8 +1,8 @@
+import copy
 from enum import Enum
 
 from operations import Operations
 from ssa import Instruction
-import copy
 
 
 class BlockRelation(Enum):
@@ -59,7 +59,7 @@ class BasicBlock(Block):
         self.parents: dict = {}
         self.children: {}
         self.existing_phis_instr_number = []
-        self.hidden_first_instr = -1
+        self.dom_instructions = {}
 
     def get_id(self):
         return self.id
@@ -76,27 +76,24 @@ class BasicBlock(Block):
     def is_while(self):
         return self.while_block
 
-    def set_hidden_first_instr(self, instr):
-        self.hidden_first_instr = instr
+    def add_new_instr(self, instr_id, op=None, x=None, y=None, insert_at_beginning=False):
+        if (op, x, y) not in self.dom_instructions:
+            inst = Instruction(instr_id, op, x, y)
+            self.instructions[instr_id] = inst
 
-    def get_hidden_first_instr(self):
-        return self.hidden_first_instr
+            if insert_at_beginning:
+                self.instruction_order_list.insert(0, inst)
+            else:
+                self.instruction_order_list.append(inst)
 
-    def is_first_hidden_instr(self):
-        return self.hidden_first_instr != -1
+            if op == Operations.PHI and not self.while_block:
+                self.existing_phis_instr_number.append(inst)
 
-    def add_new_instr(self, instr_id, op=None, x=None, y=None, start=False):
-        inst = Instruction(instr_id, op, x, y)
-        self.instructions[instr_id] = inst
+            self.add_dom_instruction(instr_id, op, x, y)
 
-        if start:
-            self.instruction_order_list.insert(0, inst)
+            return False
         else:
-            self.instruction_order_list.append(inst)
-
-        if op == Operations.PHI and not self.while_block:
-            self.existing_phis_instr_number.append(inst)
-        return instr_id
+            return True
 
     def get_instructions(self):
         return self.instructions
@@ -164,6 +161,15 @@ class BasicBlock(Block):
 
     def add_dom_parent(self, dom_parent):
         self.dom_parents.append(dom_parent)
+        dom_parent_instructions = dom_parent.get_dom_instructions()
+        self.dom_instructions.update(dom_parent_instructions)
+
+    def add_dom_instruction(self, instr_id, op, x, y):
+        if op != Operations.PHI:
+            self.dom_instructions[(op, x, y)] = instr_id
+
+    def get_dom_instructions(self):
+        return self.dom_instructions
 
 
 class Blocks:
@@ -176,6 +182,11 @@ class Blocks:
         self.current_join_block = None
         self.leaf_joins = []
         self.leaf_joins_while = []
+
+    def add_new_instr(self, block: 'BasicBlock', instr_id, op=None, x=None, y=None, insert_at_beginning=False):
+        cse = block.add_new_instr(instr_id, op, x, y, insert_at_beginning)
+        if cse:
+            self.baseSSA.decrease_id_count()
 
     def get_current_block(self):
         return self.current_block
@@ -238,10 +249,10 @@ class Blocks:
     def get_leaf_joins(self):
         return self.leaf_joins
 
-    #def get_lowest_leaf_join_block_while(self):
+    # def get_lowest_leaf_join_block_while(self):
     #    return self.leaf_joins_while.pop(0)
 
-    #def update_leaf_joins_while(self, join_block):
+    # def update_leaf_joins_while(self, join_block):
     #    if self.leaf_joins_while and self.leaf_joins_while[-1] in join_block.get_parents():
     #        self.leaf_joins_while[-1] = join_block
     #    else:

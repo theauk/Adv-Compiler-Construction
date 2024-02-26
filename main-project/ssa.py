@@ -21,6 +21,9 @@ class BaseSSA:
     def get_cur_instr_id(self):
         return self.id_count
 
+    def decrease_id_count(self):
+        self.id_count -= 1
+
     def rel_op_to_instruction(self, rel_op):
         return self.rel_op_to_instr[rel_op]
 

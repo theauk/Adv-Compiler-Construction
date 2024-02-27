@@ -32,8 +32,8 @@ od;
 let b <- 2 + b # cse since b has not been updated [copy 2 + b down since b has NOT been updated]
 
 
-1. update Instr to have the vars
-2. when in while first pass do not cse
+x 1. update Instr to have the vars
+x 2. when in do not cse
 3. second pass while
     - make a dict (instr, instr_var) -> updated phi instr
     - when you see phi do dict[(x, x_var)] = its phi instr

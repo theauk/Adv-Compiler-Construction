@@ -84,9 +84,10 @@ class BasicBlock(Block):
         else:
             return None
 
-    def add_new_instr_block(self, in_while, instr_id: int, op: Operations = None, x: int = None, y: int = None) -> (int, bool):
+    def add_new_instr_block(self, in_while, instr_id: int, op: Operations = None, x: int = None, y: int = None, x_var: int = None, y_var: int = None) -> (
+    int, bool):
         if in_while or (op, x, y) not in self.dom_instructions:
-            inst = Instruction(instr_id, op, x, y)
+            inst = Instruction(instr_id, op, x, y, x_var, y_var)
             self.instructions[instr_id] = inst
 
             # For while blocks a phi instruction should be inserted at the beginning after
@@ -202,7 +203,8 @@ class Blocks:
         self.leaf_joins = []
         self.leaf_joins_while = []
 
-    def add_new_instr(self, in_while, block: BasicBlock, instr_id: int, op: Operations = None, x: int = None, y: int = None) -> int:
+    def add_new_instr(self, in_while, block: BasicBlock, instr_id: int, op: Operations = None, x: int = None,
+                      y: int = None, x_var: int = None, y_var: int = None) -> int:
         """
         Adds a new instruction to the given block unless it is a common subexpression.
         :param block: block to add instruction to
@@ -212,7 +214,7 @@ class Blocks:
         :param y: second instruction parameter
         :return: the instruction id of the new instruction or the common subexpression
         """
-        instr, cse = block.add_new_instr_block(in_while, instr_id, op, x, y)
+        instr, cse = block.add_new_instr_block(in_while, instr_id, op, x, y, x_var, y_var)
         if cse:
             self.baseSSA.decrease_id_count()
         print("add instr: ", instr, " is in while: ", in_while)

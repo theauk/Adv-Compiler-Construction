@@ -26,7 +26,8 @@ class Utils:
                                                   while_block=current_join_block.is_while())
             return instr
 
-    def add_phi_instructions(self, in_while, block1: BasicBlock, block2: BasicBlock, var_set: set, already_added_vars: set,
+    def add_phi_instructions(self, in_while, block1: BasicBlock, block2: BasicBlock, var_set: set,
+                             already_added_vars: set,
                              join_block: BasicBlock):
         for child in var_set:
             block1_child = block1.get_vars()[child]
@@ -39,7 +40,8 @@ class Utils:
                         join_block.update_instruction(instr_idn=phi_instruction, x=block1_child, y=block2_child)
                         join_block.add_var_assignment(var=child, instruction_number=phi_instruction)
                     else:
-                        phi_instruction = self.create_phi_instruction(in_while, join_block, child, x=block1_child, y=block2_child)
+                        phi_instruction = self.create_phi_instruction(in_while, join_block, child, x=block1_child,
+                                                                      y=block2_child)
 
                     join_block.add_var_assignment(var=child, instruction_number=phi_instruction)
                     already_added_vars.add((block1_child, block2_child))
@@ -79,19 +81,21 @@ class Utils:
         if already_added_vars:
             while_block.update_join(True)
 
-    def make_relation(self, if_block: BasicBlock, left_side, right_side, rel_op_instr, in_while):
+    def make_relation(self, if_block: BasicBlock, left_side, right_side, rel_op_instr, left_side_var, right_side_var,
+                      in_while):
         # Check if potential cmp instr is a common subexpression
         cse_instr = if_block.is_cse(op=rel_op_instr, x=left_side, y=right_side)
         if not cse_instr:
-            cmp_instr_idn = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(), Operations.CMP,
-                                                      left_side, right_side)
+            cmp_instr_idn = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(),
+                                                      Operations.CMP, left_side, right_side, left_side_var,
+                                                      right_side_var)
             # Add the branch instr (y added later when known)
-            branch_instr_idn = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(), op=rel_op_instr,
-                                                         x=cmp_instr_idn)
+            branch_instr_idn = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(),
+                                                         op=rel_op_instr, x=cmp_instr_idn, x_var=left_side_var)
         else:
             # Common subexpression so only add the branch instruction
-            branch_instr_idn = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(), op=rel_op_instr,
-                                                         x=cse_instr)
+            branch_instr_idn = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(),
+                                                         op=rel_op_instr, x=cse_instr, x_var=left_side_var)
 
         return branch_instr_idn
 
@@ -113,7 +117,7 @@ class Utils:
                         block.update_instruction(branch_instr, y=child_first_instr_id)
                     elif relation_type == BlockRelation.FALL_THROUGH and block not in visited_while:
                         # Update while phi instructions
-                        #visited_while.update(self.update_phis_while(block, child))
+                        # visited_while.update(self.update_phis_while(block, child))
                         print("")
 
     def update_phis_while(self, start_while_block: BasicBlock, fall_through_child: BasicBlock):

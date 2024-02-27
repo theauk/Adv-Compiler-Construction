@@ -1,18 +1,18 @@
 main
-    var a, b; {
-    let a <- call InputNum();
-    let a <- 2 + 1;
-    let b <- a + 1;
+    var x, y, z, i, j; {
+    let x <- 10;
+    let y <- 2;
+    let i <- 0;
+    let j <- i;
+    let z <- j + 1;
 
-        while a < 2 do
-            while a < 2 do
-                let a <- a + 1;
-                let b <- b + 1;
-               od;
+    while x < 10 do
+        while x < 10 do
+        let i <- i + 1;
+        let y <- j + 1;
         od;
-
-    let a <- a + 1;
+    od;
+    let y <- j + 1;
     call OutputNewLine();
 
     }.
-

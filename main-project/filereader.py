@@ -16,7 +16,7 @@ class FileReader:
         self.current_char = self.file.read(1)
         return return_char
 
-    def error(self, error_msg):
+    def error(self, error_msg: str):
         print(f"Error: {error_msg}")
 
     def close(self):

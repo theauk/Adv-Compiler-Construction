@@ -1,3 +1,50 @@
+while and vars:
+do not copy instrs that have vars as x or y from while block to then block
+but do copy instr into branch for vars that do not get updated
+    would probably have to check updated var list for then before continuing to branch block
+    but what about while in while?
+        might have to propegate up the updated vars
+
+ehm hvad med add (1) (2) vs add (2) (1)??? altså hvor rækkefølge does not matter
+
+let a <- 1 + 2;
+let b <- 2 + a;
+
+while a < 2 do [a has been updated]
+    while a < 2 do [a has been updated]
+        let a <- 2 + a # not cse
+    od;
+    let a <- 2 + a # not cse [ALSO TRY WITHOUT THIS]
+od;
+
+let b <- 2 + a # not cse since a might have been updated [do not copy 2 + a down because a has been updated]
+
+let a <- 1 + 2;
+let b <- 2 + b;
+
+while a < 2 do
+    while a < 2 do
+        let a <- 2 + a # not cse
+    od;
+    let a <- 2 + a # not cse
+od;
+
+let b <- 2 + b # cse since b has not been updated [copy 2 + b down since b has NOT been updated]
+
+
+1. update Instr to have the vars
+2. when in while first pass do not cse
+3. second pass while
+    - make a dict (instr, instr_var) -> updated phi instr
+    - when you see phi do dict[(x, x_var)] = its phi instr
+    - when you see (x, x_var) or (y, y_var) as one of the (instr, instr_var) then update it to corresponding dict instr
+        - update dom instr FIGURE OUT HOW TO APPROACH THIS because it should spread, cannot just add var since sometimes even with dif var it should be eliminated + updates should propegate. Might need to rethink how I make and copy those
+4. third pass while
+    - check for cse
+    - update instr numbering if cse
+
+
+
 HUSKS:
 ______
 - phis
@@ -12,6 +59,7 @@ QUESTIONS:
 ______
 - Skal jeg dække return stm?
 - hvad skal der ske med branch blok med to while efter hinanden
+- skal der være end instruction?
 
 OVERVEJELSER:
 ______

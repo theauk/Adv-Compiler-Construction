@@ -69,3 +69,78 @@ main
     call OutputNewLine();
 
     }.
+
+should not do CSE for a + 2
+main
+    var a, b; {
+    let a <- call InputNum();
+    let a <- 2 + 1;
+    let b <- a + 2;
+
+        while a < 2 do
+            if a < 2 then
+                let a <- a + 2;
+                let b <- b + 1;
+               fi;
+        od;
+
+    let a <- a + 1;
+    call OutputNewLine();
+
+    }.
+
+should do cse for a + 2
+main
+    var a, b; {
+    let a <- call InputNum();
+    let a <- 2 + 1;
+    let b <- a + 2;
+
+        while a < 2 do
+            if a < 2 then
+                let b <- b + 1;
+               fi;
+        od;
+
+    let a <- a + 2;
+    call OutputNewLine();
+
+    }.
+
+
+bringing y <- j + 1 + 2; back???
+main
+    var x, y, z, i, j; {
+    let i <- call InputNum();
+    let x <- 0;
+    let y <- 0;
+    let z <- 0;
+    let j <- i;
+
+    while x < 10 do
+        let x <- i + 1;
+        let y <- j + 1 + 2;
+        let i <- i + 1;
+    od;
+
+    call OutputNewLine();
+
+    }.
+
+
+missing y phi
+main
+    var x, y, z, i, j; {
+    let x <- 10;
+    let i <- 0;
+    let j <- i;
+
+    while x < 10 do
+        let y <- j + 1;
+        let i <- i + 1;
+
+    od;
+
+    call OutputNewLine();
+
+    }.

@@ -17,6 +17,10 @@ class Parser:
         self.setup_blocks()
         self.utils = Utils(self.blocks, self.baseSSA)
         self.next_token()
+        self.while_stack = []
+    
+    def in_while(self):
+        return len(self.while_stack) > 0
 
     def setup_blocks(self):
         initial_block = BasicBlock()
@@ -86,9 +90,11 @@ class Parser:
             # final "."
             self.check_token(Tokens.PERIOD_TOKEN)
 
+            # Add end instruction
             instr_id = self.baseSSA.get_new_instr_id()
-            self.blocks.add_new_instr(block=self.blocks.get_current_block(), instr_id=instr_id, op=Operations.END)
+            self.blocks.add_new_instr(self.in_while(), block=self.blocks.get_current_block(), instr_id=instr_id, op=Operations.END)
 
+        # Fix potentially missing branch instruction y values and propagate phi while instructions
         self.utils.fix_phi_and_outer_while_bra()
 
         return
@@ -109,37 +115,27 @@ class Parser:
             self.reserved_identifier()
             self.next_token()
 
-        # Check for ";"
         self.check_token(Tokens.SEMI_TOKEN)
 
         return
 
     def array_declaration(self):
-        # "["
         while self.check_token(Tokens.OPEN_BRACKET_TOKEN):
-            # number
             self.check_token(Tokens.NUMBER)
-            # "]"
             self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
 
         return
 
     def func_declaration(self):
-        # Check if valid ident
         self.check_identifier()
-        # formalParam
         self.formal_parameter()
-        # Check for ";"
         self.check_token(Tokens.SEMI_TOKEN)
-        # funcBody
         self.func_body()
-        # Check for ";"
         self.check_token(Tokens.SEMI_TOKEN)
 
         return
 
     def formal_parameter(self):
-        # Check for "("
         self.check_token(Tokens.OPEN_PAREN_TOKEN)
         # Check for optional ident
         if self.token == Tokens.IDENT:
@@ -148,8 +144,8 @@ class Parser:
             while self.token == Tokens.COMMA_TOKEN:
                 self.next_token()
                 self.check_identifier()
-        # Check for ")"
         self.check_token(Tokens.CLOSE_PAREN_TOKEN)
+
         return
 
     def func_body(self):
@@ -158,17 +154,13 @@ class Parser:
             self.next_token()
             self.var_declaration()
 
-        # Check for "{"
         self.check_token(Tokens.BEGIN_TOKEN)
-        # Check for optional statSequence
         self.stat_sequence()
-        # Check for "}"
         self.check_token(Tokens.END_TOKEN)
 
         return
 
     def stat_sequence(self):
-        # statement
         self.statement()
         # Check for additional statements
         while self.token == Tokens.SEMI_TOKEN:
@@ -214,7 +206,7 @@ class Parser:
             # for a certain variable)
             current_join_block = self.blocks.get_current_join_block()
             if current_join_block and designator not in current_join_block.get_phi_vars():
-                self.utils.create_phi_instruction(current_join_block, designator)
+                self.utils.create_phi_instruction(self.in_while(), current_join_block, designator)
 
         return
 
@@ -225,22 +217,22 @@ class Parser:
             self.check_token(Tokens.OPEN_PAREN_TOKEN)
             self.check_token(Tokens.CLOSE_PAREN_TOKEN)
             idn = self.baseSSA.get_new_instr_id()
-            self.blocks.add_new_instr(self.blocks.get_current_block(), idn, Operations.READ)
+            self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), idn, Operations.READ)
             return idn
         elif self.token == Tokens.OUTPUT_NUM_TOKEN:  # OutputNum(x)
             self.next_token()
             self.check_token(Tokens.OPEN_PAREN_TOKEN)
             x = self.expression()
             self.check_token(Tokens.CLOSE_PAREN_TOKEN)
-            self.blocks.add_new_instr(self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
+            self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
                                       Operations.WRITE, x)
         elif self.token == Tokens.OUTPUT_NEW_LINE_TOKEN:  # OutputNewLine()
             self.next_token()
             self.check_token(Tokens.OPEN_PAREN_TOKEN)
             self.check_token(Tokens.CLOSE_PAREN_TOKEN)
-            self.blocks.add_new_instr(self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
+            self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
                                       Operations.WRITE_NL)
-        else:  # TODO: user funcs
+        else:  # user funcs
             self.check_identifier()
             if self.check_token(Tokens.OPEN_PAREN_TOKEN):
                 self.expression()
@@ -259,7 +251,7 @@ class Parser:
         # if part
         left_side, rel_op_instr, right_side = self.relation()
         if_block = self.blocks.get_current_block()
-        branch_instr_idn = self.utils.make_relation(if_block, left_side, right_side, rel_op_instr)
+        branch_instr_idn = self.utils.make_relation(if_block, left_side, right_side, rel_op_instr, self.in_while())
 
         join_block.add_dom_parent(if_block)
 
@@ -285,7 +277,7 @@ class Parser:
             self.next_token()
             self.stat_sequence()
         if not else_block.get_instructions():  # empty else block
-            self.blocks.add_new_instr(else_block, self.baseSSA.get_new_instr_id())
+            self.blocks.add_new_instr(self.in_while(), else_block, self.baseSSA.get_new_instr_id())
 
         self.check_token(Tokens.FI_TOKEN)
         # update the "branch" instruction/arrow for if so that it points to the first instruction in else
@@ -305,7 +297,7 @@ class Parser:
                                         relationship=BlockRelation.BRANCH)
             self.utils.add_relationship(parent_block=else_block, child_block=join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
-            self.utils.add_phis_if(then_block, else_block)
+            self.utils.add_phis_if(self.in_while(), then_block, else_block)
         elif not then_block.get_children():
             # Case 2: no additional conditional in then
             fall_through_block = self.blocks.get_lowest_leaf_join_block()
@@ -313,7 +305,7 @@ class Parser:
                                         relationship=BlockRelation.FALL_THROUGH)
             self.utils.add_relationship(parent_block=then_block, child_block=join_block,
                                         relationship=BlockRelation.BRANCH)
-            self.utils.add_phis_if(then_block, fall_through_block)
+            self.utils.add_phis_if(self.in_while(), then_block, fall_through_block)
             branch_block = then_block
         elif not else_block.get_children():
             # Case 3: no additional conditional in else
@@ -336,20 +328,20 @@ class Parser:
 
         cur_block_first_instr = self.blocks.get_current_block().find_first_instr()
         if cur_block_first_instr is not None:
-            self.blocks.add_new_instr(branch_block, self.baseSSA.get_new_instr_id(), Operations.BRA,
+            self.blocks.add_new_instr(self.in_while(), branch_block, self.baseSSA.get_new_instr_id(), Operations.BRA,
                                       cur_block_first_instr)
         else:
             # If there are no phi instructions needed then take what will be the next instr number but do not update it
-            self.blocks.add_new_instr(branch_block, self.baseSSA.get_new_instr_id(), Operations.BRA,
+            self.blocks.add_new_instr(self.in_while(), branch_block, self.baseSSA.get_new_instr_id(), Operations.BRA,
                                       self.baseSSA.get_cur_instr_id() + 1)
 
         return
 
     def while_statement(self):
-        # TODO might have to set leaf while list to empty here
-
+        self.while_stack.append("while")
         initial_current_block = self.blocks.get_current_block()
 
+        # Check if there is already a block available to be used for a while block. Otherwise, make a new one.
         if len(self.blocks.get_current_block().get_instructions()) == 0:
             while_block = self.blocks.get_current_block()
             while_block.set_while(True)
@@ -359,14 +351,15 @@ class Parser:
                                         relationship=BlockRelation.NORMAL)
             self.blocks.add_block(while_block)
             while_block.add_dom_parent(initial_current_block)
-
             self.blocks.update_current_join_block(while_block)
 
+        # Make the cmp and branch instruction
         left_side, rel_op_instr, right_side = self.relation()
-        branch_instr_idn = self.utils.make_relation(while_block, left_side, right_side, rel_op_instr)
+        self.utils.make_relation(while_block, left_side, right_side, rel_op_instr, self.in_while())
 
         self.check_token(Tokens.DO_TOKEN)
 
+        # Make new then block
         then_block = BasicBlock()
         self.utils.add_relationship(parent_block=while_block, child_block=then_block,
                                     relationship=BlockRelation.FALL_THROUGH)
@@ -377,45 +370,48 @@ class Parser:
 
         self.check_token(Tokens.OD_TOKEN)
 
+        # Handle dangling blocks and potential instructions below od
         if len(self.blocks.get_leaf_joins()) > 0:
             leaf_block: BasicBlock = self.blocks.get_lowest_leaf_join_block()
             leaf_block_parent: BasicBlock = list(leaf_block.get_parents().keys())[0]
-            # There are no instructions below od but in the "same" while block. Remove the branch block and branch
-            # to the while above
+            # There are no instructions below od but the block is inside another while.
+            # Remove the branch block (since it is not needed) and branch to the while above.
             if len(leaf_block.get_instructions()) == 0 and self.blocks.get_current_join_block() != leaf_block:
                 self.blocks.remove_latest_block()
                 self.utils.add_relationship(parent_block=leaf_block_parent, child_block=while_block,
                                             relationship=BlockRelation.BRANCH, copy_vars=False)
             elif len(leaf_block.get_children()) == 0:
                 # There are instructions below od. Add a branch from that block to top of the current while.
-                self.blocks.add_new_instr(block=leaf_block, instr_id=self.baseSSA.get_new_instr_id(), op=Operations.BRA,
+                self.blocks.add_new_instr(self.in_while(), block=leaf_block, instr_id=self.baseSSA.get_new_instr_id(), op=Operations.BRA,
                                           x=while_block.find_first_instr())
                 self.utils.add_relationship(parent_block=leaf_block, child_block=while_block,
                                             relationship=BlockRelation.BRANCH, copy_vars=False)
 
-        self.utils.add_phis_while(while_block, then_block)
+        self.utils.add_phis_while(self.in_while(), while_block, then_block)
 
-        # Check if bra instruction should be inserted
+        # Check if bra instruction should be inserted to create path out of current block if necessary
         if len(self.blocks.get_current_block().get_children()) == 0:
             bra_instr = self.baseSSA.get_new_instr_id()
-            self.blocks.get_current_block().add_new_instr(bra_instr, Operations.BRA, while_block.find_first_instr())
+            self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), bra_instr, Operations.BRA,
+                                      while_block.find_first_instr())
             self.utils.add_relationship(parent_block=self.blocks.get_current_block(), child_block=while_block,
                                         relationship=BlockRelation.BRANCH, copy_vars=False)
 
-        branch_block = BasicBlock()
-        self.utils.copy_vars(parent_block=while_block, child_block=branch_block, relationship=BlockRelation.BRANCH)
-        self.blocks.add_block(branch_block)
-
         if BlockRelation.BRANCH not in while_block.get_children().values():
+            # Handle the branch block
+            branch_block = BasicBlock()
+            self.utils.copy_vars(parent_block=while_block, child_block=branch_block)
+            self.blocks.add_block(branch_block)
             self.utils.add_relationship(parent_block=while_block, child_block=branch_block,
                                         relationship=BlockRelation.BRANCH)
-        branch_block.add_dom_parent(while_block)
+            branch_block.add_dom_parent(while_block)
 
         self.blocks.update_current_join_block(None)
-
+        self.while_stack.pop()
+        print("while stack now len: ", len(self.while_stack))
         return
 
-    def return_statement(self):  # TODO user func
+    def return_statement(self):  # TODO should I implement tis??
         return self.expression()
 
     def designator(self):
@@ -441,12 +437,12 @@ class Parser:
                 self.next_token()
                 idn_right = self.factor()
                 # = idn_left so that if we e.g. have 2 + 2 + 2 then the id for the first 2 * 2 becomes the next left
-                idn_left = self.blocks.add_new_instr(self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
+                idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
                                                      Operations.ADD, idn_left, idn_right)
             elif self.token == Tokens.MINUS_TOKEN:
                 self.next_token()
                 idn_right = self.factor()
-                idn_left = self.blocks.add_new_instr(self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
+                idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
                                                      Operations.SUB, idn_left, idn_right)
 
         return idn_left
@@ -458,13 +454,13 @@ class Parser:
             if self.token == Tokens.TIMES_TOKEN:
                 self.next_token()
                 idn_right = self.factor()
-                idn_left = self.blocks.get_current_block().add_new_instr(self.baseSSA.get_new_instr_id(),
-                                                                         Operations.MUL, idn_left, idn_right)
+                idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
+                                                     Operations.MUL, idn_left, idn_right)
             elif self.token == Tokens.DIV_TOKEN:
                 self.next_token()
                 idn_right = self.factor()
-                idn_left = self.blocks.get_current_block().add_new_instr(self.baseSSA.get_new_instr_id(),
-                                                                         Operations.DIV, idn_left, idn_right)
+                idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
+                                                     Operations.DIV, idn_left, idn_right)
 
         return idn_left
 
@@ -474,7 +470,7 @@ class Parser:
             if array:
                 pass  # TODO array
             else:
-                return self.blocks.find_var_idn(designator)
+                return self.blocks.find_var_given_id(designator)
         elif self.token == Tokens.NUMBER:
             num = self.tokenizer.last_number
             self.blocks.add_constant(num)

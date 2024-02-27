@@ -14,17 +14,17 @@ class BaseSSA:
             Tokens.GEQ_TOKEN: Operations.BLT,
         }
 
-    def get_new_instr_id(self):
+    def get_new_instr_id(self) -> int:
         self.id_count += 1
         return self.id_count
 
-    def get_cur_instr_id(self):
+    def get_cur_instr_id(self) -> int:
         return self.id_count
 
     def decrease_id_count(self):
         self.id_count -= 1
 
-    def rel_op_to_instruction(self, rel_op):
+    def rel_op_to_instruction(self, rel_op: int) -> Operations:
         return self.rel_op_to_instr[rel_op]
 
     def get_no_cse_instructions(self):

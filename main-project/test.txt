@@ -3,7 +3,6 @@ main
     let y <- 2;
     let i <- 0;
     let j <- i;
-    let z <- j + 1;
 
     while j < 10 do
         while j < 10 do

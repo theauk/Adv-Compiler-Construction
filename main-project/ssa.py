@@ -27,9 +27,6 @@ class BaseSSA:
     def rel_op_to_instruction(self, rel_op: int) -> Operations:
         return self.rel_op_to_instr[rel_op]
 
-    def get_no_cse_instructions(self):
-        return self.rel_op_to_instr.update()
-
 
 class Instruction:
     def __init__(self, id_count, op: Operations, x=None, y=None, x_var=None, y_var=None):
@@ -49,6 +46,6 @@ class Instruction:
         elif not self.x and not self.y:
             return f"{self.id}: {self.op}"
         elif not self.y:
-            return f"{self.id}: {self.op} ({self.x}:{self.x_var})"
+            return f"{self.id}: {self.op} ({self.x}:{self.x_var if self.x_var else ''})"
         else:
-            return f"{self.id}: {self.op} ({self.x}:{self.x_var}) ({self.y}:{self.y_var})"
+            return f"{self.id}: {self.op} ({self.x}:{self.x_var if self.x_var else ''}) ({self.y}:{self.y_var if self.y_var else ''})"

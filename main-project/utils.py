@@ -120,14 +120,18 @@ class Utils:
                         # visited_while.update(self.update_phis_while(block, child))
                         print("")
 
-    def update_phis_while(self, start_while_block: BasicBlock, fall_through_child: BasicBlock):
+    def update_while(self, start_while_block: BasicBlock):
         visited = {start_while_block}
         path = []
-        stack = [fall_through_child]
+        stack = []
+
+        for child, relationship in start_while_block.get_children().items():
+            if relationship == BlockRelation.FALL_THROUGH:
+                stack.append(child)
 
         # Gather the instructions to update
         old_to_new_instr_ids = {}
-        for i in start_while_block.get_instructions().values():
+        for i in start_while_block.get_instruction_order_list():
             if i.op == Operations.PHI:
                 old_to_new_instr_ids[i.x] = i.id
 
@@ -145,17 +149,28 @@ class Utils:
             current_block = stack.pop()
 
             # Check if the instruction should be updated to match new phi value
-            for i in current_block.get_instructions().values():
+            for i in current_block.get_instruction_order_list():
+                original_i_x = i.x
                 if i.x in old_to_new_instr_ids:
                     current_block.update_instruction(i.id, x=old_to_new_instr_ids[i.x])
                 if i.y in old_to_new_instr_ids:
                     current_block.update_instruction(i.id, y=old_to_new_instr_ids[i.y])
+                if i.op == Operations.PHI:
+                    old_to_new_instr_ids[original_i_x] = i.id
 
             visited.add(current_block)
             path.append(current_block)
 
-            for child_block in current_block.get_children().keys():
+            for child_block, relationship in current_block.get_children().items():
+                if relationship == BlockRelation.BRANCH:
+                    # Update the branching instruction
+                    branch_instr = current_block.get_instruction_order_list()[-1].get_id()
+                    child_first_instr_id = child_block.find_first_instr()
+                    current_block.update_instruction(branch_instr, x=child_first_instr_id)
+
                 if child_block not in visited:
                     stack.append(child_block)
 
-        return visited
+
+
+

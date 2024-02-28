@@ -95,9 +95,6 @@ class Parser:
             self.blocks.add_new_instr(self.in_while(), block=self.blocks.get_current_block(), instr_id=instr_id,
                                       op=Operations.END)
 
-        # Fix potentially missing branch instruction y values and propagate phi while instructions
-        self.utils.fix_phi_and_outer_while_bra()
-
         return
 
     def var_declaration(self):
@@ -412,10 +409,14 @@ class Parser:
 
         self.blocks.update_current_join_block(None)
         self.while_stack.pop()
-        print("while stack now len: ", len(self.while_stack))
+
+        # Do more passes on most outer while block to update phis, branching and cse if we are no longer in the while
+        if not self.in_while():
+            self.utils.update_while(while_block)
+
         return
 
-    def return_statement(self):  # TODO should I implement tis??
+    def return_statement(self):  # TODO should I implement this??
         return self.expression()
 
     def designator(self):

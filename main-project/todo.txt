@@ -34,6 +34,7 @@ let b <- 2 + b # cse since b has not been updated [copy 2 + b down since b has N
 
 x 1. update Instr to have the vars
 x 2. when in do not cse
+x a. make it do second pass when leaving most outer while
 3. second pass while
     - make a dict (instr, instr_var) -> updated phi instr
     - when you see phi do dict[(x, x_var)] = its phi instr
@@ -43,6 +44,9 @@ x 2. when in do not cse
     - check for cse
     - update instr numbering if cse
 
+5. pass through all -> update outer while block instructions
+    - maybe just save them in list when that line for outer while check is entered
+    - later pass through that list and update their branching
 
 
 HUSKS:

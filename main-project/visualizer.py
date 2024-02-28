@@ -2,10 +2,11 @@ from blocks import Blocks, BasicBlock, BlockRelation
 
 
 class Visualizer:
-    def __init__(self, blocks, symbol_table, show_vars=False):
+    def __init__(self, blocks, symbol_table, show_vars=False, show_instr_vars=False):
         self.blocks: Blocks = blocks
         self.symbol_table = symbol_table
         self.show_vars = show_vars
+        self.show_instr_vars = show_instr_vars
 
     def make_constants(self):
         constant_complete_text = 'bb0 [shape=record, label="<b>BB0 | {'
@@ -28,7 +29,10 @@ class Visualizer:
             text += f'join BB{block.get_id()} | {{' if block.join else f'BB{block.get_id()} | {{'
             block_texts = []
             for instruction in block.get_instruction_order_list():
-                block_texts.append(f'{str(instruction)}')
+                if self.show_instr_vars:
+                    block_texts.append(instruction.print_debug())
+                else:
+                    block_texts.append(f'{str(instruction)}')
             text += '|'.join(block_texts)
             text += '}'
 

@@ -3,7 +3,7 @@ from visualizer import Visualizer
 
 
 def main():
-    parser = Parser("test.txt")
+    parser = Parser("tests/0_test.txt")
     parser.computation()
 
     visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True)

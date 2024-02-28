@@ -46,6 +46,16 @@ class Instruction:
         elif not self.x and not self.y:
             return f"{self.id}: {self.op}"
         elif not self.y:
+            return f"{self.id}: {self.op} ({self.x})"
+        else:
+            return f"{self.id}: {self.op} ({self.x}) ({self.y})"
+
+    def print_debug(self):
+        if not self.x and not self.y and not self.op:
+            return f"{self.id}: \<empty\>"
+        elif not self.x and not self.y:
+            return f"{self.id}: {self.op}"
+        elif not self.y:
             return f"{self.id}: {self.op} ({self.x}:{self.x_var if self.x_var else ''})"
         else:
             return f"{self.id}: {self.op} ({self.x}:{self.x_var if self.x_var else ''}) ({self.y}:{self.y_var if self.y_var else ''})"

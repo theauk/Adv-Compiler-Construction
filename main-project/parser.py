@@ -349,7 +349,7 @@ class Parser:
             self.utils.add_relationship(parent_block=self.blocks.get_current_block(), child_block=while_block,
                                         relationship=BlockRelation.NORMAL)
             self.blocks.add_block(while_block)
-            while_block.add_dom_parent(initial_current_block)
+            while_block.add_dom_parent(initial_current_block, self.in_while())
             self.blocks.update_current_join_block(while_block)
 
         # Make the cmp and branch instruction
@@ -364,7 +364,7 @@ class Parser:
         self.utils.add_relationship(parent_block=while_block, child_block=then_block,
                                     relationship=BlockRelation.FALL_THROUGH)
         self.blocks.add_block(then_block)
-        then_block.add_dom_parent(while_block)
+        then_block.add_dom_parent(while_block, self.in_while())
 
         self.stat_sequence()
 
@@ -405,7 +405,7 @@ class Parser:
             self.blocks.add_block(branch_block)
             self.utils.add_relationship(parent_block=while_block, child_block=branch_block,
                                         relationship=BlockRelation.BRANCH)
-            branch_block.add_dom_parent(while_block)
+            branch_block.add_dom_parent(while_block, self.in_while())
 
         self.blocks.update_current_join_block(None)
         self.while_stack.pop()

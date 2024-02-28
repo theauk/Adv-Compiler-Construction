@@ -48,7 +48,7 @@ class ConstantBlock(Block):
 class BasicBlock(Block):
     def __init__(self, idn: int = None, join: bool = False, while_block: bool = False):
         super().__init__(idn)
-        self.dom_parents = []
+        self.dom_parents = set()
         self.join = join
         self.while_block = while_block
         self.instructions = {}
@@ -84,8 +84,9 @@ class BasicBlock(Block):
         else:
             return None
 
-    def add_new_instr_block(self, in_while, instr_id: int, op: Operations = None, x: int = None, y: int = None, x_var: int = None, y_var: int = None) -> (
-    int, bool):
+    def add_new_instr_block(self, in_while, instr_id: int, op: Operations = None, x: int = None, y: int = None,
+                            x_var: int = None, y_var: int = None) -> (
+            int, bool):
         if in_while or (op, x, y) not in self.dom_instructions:
             inst = Instruction(instr_id, op, x, y, x_var, y_var)
             self.instructions[instr_id] = inst
@@ -107,8 +108,9 @@ class BasicBlock(Block):
             if op == Operations.PHI and not self.while_block:
                 self.existing_phis_instructions.append(inst)
 
-            # Add as a dominating instruction if applicable given the Operation
-            if op and op not in Operations.get_no_cse_instructions():
+            # Add as a dominating instruction if applicable given the Operation (and not in while since they
+            # will be added later)
+            if op and op not in Operations.get_no_cse_instructions() and not in_while:
                 self.add_dom_instruction(instr_id, op, x, y)
 
             return instr_id, False
@@ -182,14 +184,28 @@ class BasicBlock(Block):
     def get_phi_vars(self) -> set[int]:
         return self.phi_vars
 
-    def add_dom_parent(self, dom_parent: 'BasicBlock'):
-        self.dom_parents.append(dom_parent)
+    def get_dom_parents(self):
+        return self.dom_parents
+
+    def add_dom_parent(self, dom_parent: 'BasicBlock', in_while=False):
+        self.dom_parents.add(dom_parent)
+        if not in_while:
+            self.copy_dom_instructions(dom_parent)
+
+    def copy_dom_instructions(self, dom_parent):
         dom_parent_instructions = dom_parent.dom_instructions
         self.dom_instructions.update(dom_parent_instructions)
 
     def add_dom_instruction(self, instr_id, op, x, y):
         if op != Operations.PHI:
             self.dom_instructions[(op, x, y)] = instr_id
+
+    def get_dom_instruction(self):
+        return self.dom_instructions
+
+    def remove_instruction(self, idn, index):
+        del self.instructions[idn]
+        del self.instruction_order_list[index]
 
 
 class Blocks:
@@ -217,7 +233,6 @@ class Blocks:
         instr, cse = block.add_new_instr_block(in_while, instr_id, op, x, y, x_var, y_var)
         if cse:
             self.baseSSA.decrease_id_count()
-        print("add instr: ", instr, " is in while: ", in_while)
         return instr
 
     def get_current_block(self) -> BasicBlock:

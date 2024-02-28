@@ -21,7 +21,8 @@ class Utils:
         if x and y or not current_join_block.is_while():
             current_join_block.add_phi_var(designator)
             instr = self.baseSSA.get_new_instr_id()
-            self.blocks.add_new_instr(in_while, current_join_block, instr_id=instr, op=Operations.PHI, x=x, y=y)
+            self.blocks.add_new_instr(in_while, current_join_block, instr_id=instr, op=Operations.PHI, x=x, y=y,
+                                      x_var=designator)
             current_join_block.add_var_assignment(var=designator, instruction_number=instr,
                                                   while_block=current_join_block.is_while())
             return instr
@@ -99,30 +100,15 @@ class Utils:
 
         return branch_instr_idn
 
-    def fix_phi_and_outer_while_bra(self):
-        """
-        Do a second pass and propagate the phi instructions created in while blocks and update potentially missing
-        branch instruction y parameters.
-        """
-        blocks_list: list[BasicBlock] = self.blocks.get_blocks_list()
-        visited_while = set()
-
-        for block in blocks_list:
-            if block.is_while():
-                for child, relation_type in block.get_children().items():
-                    if relation_type == BlockRelation.BRANCH:
-                        # Update the branching instruction
-                        branch_instr = block.get_instruction_order_list()[-1].get_id()
-                        child_first_instr_id = child.find_first_instr()
-                        block.update_instruction(branch_instr, y=child_first_instr_id)
-                    elif relation_type == BlockRelation.FALL_THROUGH and block not in visited_while:
-                        # Update while phi instructions
-                        # visited_while.update(self.update_phis_while(block, child))
-                        print("")
-
     def update_while(self, start_while_block: BasicBlock):
+        # First pass to update phi instructions and propagate them + update bra instruction x value
+        self.update_while_phis_and_bra(start_while_block)
+
+        # Second pass to do cse
+        self.update_while_cse(start_while_block)
+
+    def update_while_phis_and_bra(self, start_while_block: BasicBlock):
         visited = {start_while_block}
-        path = []
         stack = []
 
         for child, relationship in start_while_block.get_children().items():
@@ -133,16 +119,16 @@ class Utils:
         old_to_new_instr_ids = {}
         for i in start_while_block.get_instruction_order_list():
             if i.op == Operations.PHI:
-                old_to_new_instr_ids[i.x] = i.id
+                old_to_new_instr_ids[(i.x, i.x_var)] = i.id
 
         # Check instructions in the starting while block (except for the phi instructions where the updated variables
         # are coming from)
         for i in start_while_block.get_instructions().values():
             if i.op != Operations.PHI:
-                if i.x in old_to_new_instr_ids:
-                    start_while_block.update_instruction(i.id, x=old_to_new_instr_ids[i.x])
-                if i.y in old_to_new_instr_ids:
-                    start_while_block.update_instruction(i.id, y=old_to_new_instr_ids[i.y])
+                if (i.x, i.x_var) in old_to_new_instr_ids:
+                    start_while_block.update_instruction(i.id, x=old_to_new_instr_ids[(i.x, i.x_var)])
+                if (i.y, i.y_var) in old_to_new_instr_ids:
+                    start_while_block.update_instruction(i.id, y=old_to_new_instr_ids[(i.y, i.y_var)])
 
         # Keep going until we are back at the starting while block
         while stack:
@@ -151,15 +137,14 @@ class Utils:
             # Check if the instruction should be updated to match new phi value
             for i in current_block.get_instruction_order_list():
                 original_i_x = i.x
-                if i.x in old_to_new_instr_ids:
-                    current_block.update_instruction(i.id, x=old_to_new_instr_ids[i.x])
-                if i.y in old_to_new_instr_ids:
-                    current_block.update_instruction(i.id, y=old_to_new_instr_ids[i.y])
+                if (i.x, i.x_var) in old_to_new_instr_ids:
+                    current_block.update_instruction(i.id, x=old_to_new_instr_ids[(i.x, i.x_var)])
+                if (i.y, i.y_var) in old_to_new_instr_ids:
+                    current_block.update_instruction(i.id, y=old_to_new_instr_ids[(i.y, i.y_var)])
                 if i.op == Operations.PHI:
-                    old_to_new_instr_ids[original_i_x] = i.id
+                    old_to_new_instr_ids[(original_i_x, i.x_var)] = i.id
 
             visited.add(current_block)
-            path.append(current_block)
 
             for child_block, relationship in current_block.get_children().items():
                 if relationship == BlockRelation.BRANCH:
@@ -171,6 +156,33 @@ class Utils:
                 if child_block not in visited:
                     stack.append(child_block)
 
+    def update_while_cse(self, start_while_block):
+        visited = {start_while_block}
+        stack = [start_while_block]
+        removed_instructions = []
 
+        # Keep going until we are back at the starting while block
+        while stack:
+            current_block: BasicBlock = stack.pop()
 
+            for dom_parent in current_block.get_dom_parents():
+                current_block.copy_dom_instructions(dom_parent)
 
+            # Check if cse
+            remove_instr = []
+            for i, instruction in enumerate(current_block.get_instruction_order_list()):
+                if instruction.op not in Operations.get_no_cse_instructions():
+                    if (instruction.op, instruction.x, instruction.y) in current_block.get_dom_instruction():
+                        remove_instr.append((instruction.id, i))
+                        removed_instructions.append(instruction.id)
+                    else:
+                        current_block.add_dom_instruction(instruction.id, instruction.op, instruction.x, instruction.y)
+
+            for (idn, i) in remove_instr:
+                current_block.remove_instruction(idn, i)
+
+            visited.add(current_block)
+
+            for child_block, relationship in current_block.get_children().items():
+                if child_block not in visited:
+                    stack.append(child_block)

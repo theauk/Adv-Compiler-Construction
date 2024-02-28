@@ -35,11 +35,14 @@ let b <- 2 + b # cse since b has not been updated [copy 2 + b down since b has N
 x 1. update Instr to have the vars
 x 2. when in do not cse
 x a. make it do second pass when leaving most outer while
+x b update inner phis and ensure for nested they are not just all the top
 3. second pass while
-    - make a dict (instr, instr_var) -> updated phi instr
-    - when you see phi do dict[(x, x_var)] = its phi instr
-    - when you see (x, x_var) or (y, y_var) as one of the (instr, instr_var) then update it to corresponding dict instr
-        - update dom instr FIGURE OUT HOW TO APPROACH THIS because it should spread, cannot just add var since sometimes even with dif var it should be eliminated + updates should propegate. Might need to rethink how I make and copy those
+    x make a dict (instr, instr_var) -> updated phi instr
+    x when you see phi do dict[(x, x_var)] = its phi instr
+    x when you see (x, x_var) or (y, y_var) as one of the (instr, instr_var) then update it to corresponding dict instr
+    x get vars into phi instructions
+    - update doms
+        - first block should stay the same
 4. third pass while
     - check for cse
     - update instr numbering if cse

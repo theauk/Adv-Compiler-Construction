@@ -60,6 +60,11 @@ class Utils:
 
         if already_added_vars:
             join_block.update_join(True)
+        else:
+            # Redundant phis
+            join_block.reset_instructions()
+
+
 
     def add_phis_while(self, in_while, while_block: BasicBlock, then_block: BasicBlock):
         already_added_vars = set()
@@ -160,6 +165,7 @@ class Utils:
         visited = {start_while_block}
         stack = [start_while_block]
         removed_instructions = []
+        phis = []
 
         # Keep going until we are back at the starting while block
         while stack:
@@ -179,19 +185,29 @@ class Utils:
                         removed_instructions.append(instruction.id)
                     else:
                         current_block.add_dom_instruction(instruction.id, instruction.op, instruction.x, instruction.y)
+                elif instruction.op == Operations.PHI:
+                    phis.append(instruction)
 
             # Remove cse instructions
-            for (idn, i, cse_idn) in remove_instr:
+            for (idn, i, cse_idn) in reversed(remove_instr): # to not mess with indices
                 current_block.remove_instruction(idn, i)
                 # Update the table that keeps track of the var assignments so that the var points to the cse instruction
                 for var, instr_idn in current_block.get_vars().items():
                     if instr_idn == idn:
                         current_block.add_var_assignment(var, cse_idn)
 
+                # Check phis above
+                for phi in phis:
+                    if idn == phi.y:
+                        phi.y = cse_idn
+
             visited.add(current_block)
             for child_block, relationship in current_block.get_children().items():
                 if child_block not in visited:
                     stack.append(child_block)
+
+        print("")
+
 
     def fix_while_branching(self, outer_while_blocks: list[BasicBlock]):
         for block in outer_while_blocks:

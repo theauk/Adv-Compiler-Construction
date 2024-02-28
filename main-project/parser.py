@@ -220,7 +220,7 @@ class Parser:
             self.check_token(Tokens.CLOSE_PAREN_TOKEN)
             idn = self.baseSSA.get_new_instr_id()
             self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), idn, Operations.READ)
-            return idn
+            return idn, None
         elif self.token == Tokens.OUTPUT_NUM_TOKEN:  # OutputNum(x)
             self.next_token()
             self.check_token(Tokens.OPEN_PAREN_TOKEN)
@@ -243,7 +243,7 @@ class Parser:
                     self.expression()
                 self.check_token(Tokens.CLOSE_PAREN_TOKEN)
 
-        return
+        return None, None
 
     def if_statement(self):
         # new block below (potentially a join block) but do not add it yet (so that it does not get an ID yet)
@@ -336,7 +336,7 @@ class Parser:
         else:
             # If there are no phi instructions needed then take what will be the next instr number but do not update it
             self.blocks.add_new_instr(self.in_while(), branch_block, self.baseSSA.get_new_instr_id(), Operations.BRA,
-                                      self.baseSSA.get_cur_instr_id() + 1)
+                                      self.baseSSA.get_cur_instr_id() + 1) # TODO check this branch number since might be wrong if e.g. adding new var so that instr number left is not the first
 
         return
 

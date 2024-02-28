@@ -207,6 +207,13 @@ class BasicBlock(Block):
         del self.instructions[idn]
         del self.instruction_order_list[index]
 
+    def reset_instructions(self):
+        self.instructions = {}
+        self.instruction_order_list = []
+        self.updated_vars = {}
+        self.existing_phis_instructions = []
+        self.phi_vars = {}
+
 
 class Blocks:
     def __init__(self, baseSSA, initial_block):

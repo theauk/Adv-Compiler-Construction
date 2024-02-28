@@ -31,19 +31,30 @@ class TestInterpreter(unittest.TestCase):
         parser = Parser('tests/0_test.txt')
         parser.computation()
 
-        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=True)
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
         text = visualizer.make_graph()
         write_to_file('tests/0_test.dot', text)
         print(text)
 
     def test_redundant_phi_if(self):
-        expected_output = read_expected_output('tests/redundant_phi_if.dot')
-
-        parser = Parser('tests/redundant_phi_if.txt')
+        parser = Parser('tests/if_redundant_phi.txt')
         parser.computation()
 
         visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
-        output_text = visualizer.make_graph().strip()
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/if_redundant_phi.dot')
+
+        self.assertEquals(output_text, expected_output)
+
+    def test_while_do_not_cse_copied_var(self):
+        parser = Parser('tests/while_do_not_cse_copied_var.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/while_do_not_cse_copied_var.dot')
 
         self.assertEquals(output_text, expected_output)
 

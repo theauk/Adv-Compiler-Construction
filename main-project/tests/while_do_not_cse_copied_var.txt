@@ -1,5 +1,5 @@
 main
-var x, y, z, i, j; {
+var y, i, j; {
     let y <- 2;
     let i <- 0;
     let j <- i;

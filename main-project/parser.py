@@ -18,6 +18,7 @@ class Parser:
         self.utils = Utils(self.blocks, self.baseSSA)
         self.next_token()
         self.while_stack = []
+        self.outer_while_blocks = []
 
     def in_while(self):
         return len(self.while_stack) > 0
@@ -94,6 +95,9 @@ class Parser:
             instr_id = self.baseSSA.get_new_instr_id()
             self.blocks.add_new_instr(self.in_while(), block=self.blocks.get_current_block(), instr_id=instr_id,
                                       op=Operations.END)
+
+            if len(self.outer_while_blocks) > 0:
+                self.utils.fix_while_branching(self.outer_while_blocks)
 
         return
 
@@ -413,6 +417,7 @@ class Parser:
         # Do more passes on most outer while block to update phis, branching and cse if we are no longer in the while
         if not self.in_while():
             self.utils.update_while(while_block)
+            self.outer_while_blocks.append(while_block)
 
         return
 

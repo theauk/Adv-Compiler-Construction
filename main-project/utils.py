@@ -22,7 +22,7 @@ class Utils:
             current_join_block.add_phi_var(designator)
             instr = self.baseSSA.get_new_instr_id()
             self.blocks.add_new_instr(in_while, current_join_block, instr_id=instr, op=Operations.PHI, x=x, y=y,
-                                      x_var=designator)
+                                      x_var=designator, y_var=designator)
             current_join_block.add_var_assignment(var=designator, instruction_number=instr,
                                                   while_block=current_join_block.is_while())
             return instr
@@ -165,6 +165,7 @@ class Utils:
         while stack:
             current_block: BasicBlock = stack.pop()
 
+            # Copy instructions down if dominated
             for dom_parent in current_block.get_dom_parents():
                 current_block.copy_dom_instructions(dom_parent)
 
@@ -173,16 +174,30 @@ class Utils:
             for i, instruction in enumerate(current_block.get_instruction_order_list()):
                 if instruction.op not in Operations.get_no_cse_instructions():
                     if (instruction.op, instruction.x, instruction.y) in current_block.get_dom_instruction():
-                        remove_instr.append((instruction.id, i))
+                        cse_idn = current_block.get_dom_instruction()[(instruction.op, instruction.x, instruction.y)]
+                        remove_instr.append((instruction.id, i, cse_idn))
                         removed_instructions.append(instruction.id)
                     else:
                         current_block.add_dom_instruction(instruction.id, instruction.op, instruction.x, instruction.y)
 
-            for (idn, i) in remove_instr:
+            # Remove cse instructions
+            for (idn, i, cse_idn) in remove_instr:
                 current_block.remove_instruction(idn, i)
+                # Update the table that keeps track of the var assignments so that the var points to the cse instruction
+                for var, instr_idn in current_block.get_vars().items():
+                    if instr_idn == idn:
+                        current_block.add_var_assignment(var, cse_idn)
 
             visited.add(current_block)
-
             for child_block, relationship in current_block.get_children().items():
                 if child_block not in visited:
                     stack.append(child_block)
+
+    def fix_while_branching(self, outer_while_blocks: list[BasicBlock]):
+        for block in outer_while_blocks:
+            for child_block, relationship in block.get_children().items():
+                if relationship == BlockRelation.BRANCH:
+                    # Update the branching instruction to the first instruction in the branch block
+                    branch_instr = block.get_instruction_order_list()[-1].get_id()
+                    child_first_instr_id = child_block.find_first_instr()
+                    block.update_instruction(branch_instr, y=child_first_instr_id)

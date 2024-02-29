@@ -75,7 +75,7 @@ class Utils:
         # Remove unused phis due to return statement
         self.remove_unused_phis(join_block)
 
-        #self.blocks.set_current_block(join_block)
+        self.blocks.set_current_block(join_block)
 
     def remove_unused_phis(self, join_block):
         unused_phis = []

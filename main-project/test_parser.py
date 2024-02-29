@@ -91,6 +91,17 @@ class TestInterpreter(unittest.TestCase):
 
         self.assertEqual(output_text, expected_output)
 
+    def test_return_only_else(self):
+        parser = Parser('tests/return_only_else.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/return_only_else.dot')
+
+        self.assertEqual(output_text, expected_output)
+
 
 if __name__ == '__main__':
     unittest.main()

@@ -2,17 +2,15 @@ main
 var x, y, z, i, j; {
     let i <- 0;
     let j <- i;
-    let y <- 2;
+    let y <- 2 + 2;
 
-    if y < 10 then
+    while y < 10 do
+        while y < 10 do
+            let y <- j + 1;
+            return 5;
+        od;
         let y <- j + 1;
-        let y <- j + 1;
-        return
-        else
-        let i <- i + 1;
-        return;
-
-    fi;
-
+    od;
+    let y <- j + 1;
     call OutputNewLine();
 }.

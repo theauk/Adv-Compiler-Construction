@@ -91,15 +91,16 @@ class Utils:
             if block.get_id() > then_block.get_id():
                 then_block = block
 
-        while_vars = set(while_block.get_vars().keys())
-        then_vars = set(then_block.get_vars().keys())
-        intersection_while_then = while_vars.intersection(then_vars)
+        if not then_block.is_return_block():
+            while_vars = set(while_block.get_vars().keys())
+            then_vars = set(then_block.get_vars().keys())
+            intersection_while_then = while_vars.intersection(then_vars)
 
-        self.add_phi_instructions(in_while, block1=while_block, block2=then_block, var_set=intersection_while_then,
-                                  already_added_vars=already_added_vars, join_block=while_block)
+            self.add_phi_instructions(in_while, block1=while_block, block2=then_block, var_set=intersection_while_then,
+                                      already_added_vars=already_added_vars, join_block=while_block)
 
-        if already_added_vars:
-            while_block.update_join(True)
+            if already_added_vars:
+                while_block.update_join(True)
 
     def make_relation(self, if_block: BasicBlock, left_side, right_side, rel_op_instr, left_side_var, right_side_var,
                       in_while):

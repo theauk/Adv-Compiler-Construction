@@ -45,7 +45,7 @@ class TestInterpreter(unittest.TestCase):
 
         expected_output = read_expected_output('tests/if_redundant_phi.dot')
 
-        self.assertEquals(output_text, expected_output)
+        self.assertEqual(output_text, expected_output)
 
     def test_while_do_not_cse_copied_var(self):
         parser = Parser('tests/while_do_not_cse_copied_var.txt')
@@ -56,7 +56,7 @@ class TestInterpreter(unittest.TestCase):
 
         expected_output = read_expected_output('tests/while_do_not_cse_copied_var.dot')
 
-        self.assertEquals(output_text, expected_output)
+        self.assertEqual(output_text, expected_output)
 
 
 if __name__ == '__main__':

@@ -51,7 +51,7 @@ class Utils:
         already_added_vars = set()
         join_block: BasicBlock = self.blocks.get_current_join_block()
 
-        if then_block.is_return_block() and else_block.is_return_block():
+        if not (then_block.is_return_block() and else_block.is_return_block()):
             if then_block.is_return_block():
                 then_block = if_block
             if else_block.is_return_block():
@@ -69,6 +69,8 @@ class Utils:
             else:
                 # Redundant phis
                 join_block.reset_instructions()
+        else:
+            join_block.reset_instructions()
 
         # Remove unused phis due to return statement
         self.remove_unused_phis(join_block)

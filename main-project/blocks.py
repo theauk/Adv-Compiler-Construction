@@ -212,9 +212,9 @@ class BasicBlock(Block):
     def reset_instructions(self):
         self.instructions = {}
         self.instruction_order_list = []
-        self.updated_vars = {}
+        self.updated_vars = set()
         self.existing_phis_instructions = []
-        self.phi_vars = {}
+        self.phi_vars = set()
 
     def set_as_return_block(self):
         self.return_block = True

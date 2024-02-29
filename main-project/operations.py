@@ -45,5 +45,6 @@ class Operations(Enum):
             Operations.BLT,
             Operations.BRA,
             Operations.PHI,
-            Operations.READ
+            Operations.READ,
+            Operations.RET
         }

@@ -4,6 +4,8 @@ var y, i, j; {
     let j <- i;
     let y <- 2 + 2;
 
+    return;
+
     while y < 10 do
         if i > 10 then
             let y <- 2 + 4;
@@ -12,6 +14,7 @@ var y, i, j; {
             let y <- 2 + 4;
             return
         fi;
+        let y <- 2 + 4;
     od;
     let j <- y + 2;
     call OutputNewLine();

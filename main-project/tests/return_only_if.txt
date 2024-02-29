@@ -1,0 +1,16 @@
+main
+var y, i, j; {
+    let i <- 0;
+    let j <- i;
+    let y <- 2;
+
+    if i > 10 then
+        let y <- 2 + y;
+        return
+    else
+        let y <- 2 + 4;
+    fi;
+
+    let j <- y + 2;
+    call OutputNewLine();
+}.

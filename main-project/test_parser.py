@@ -47,14 +47,14 @@ class TestInterpreter(unittest.TestCase):
 
         self.assertEqual(output_text, expected_output)
 
-    def test_while_do_not_cse_copied_var(self):
-        parser = Parser('tests/while_do_not_cse_copied_var.txt')
+    def test_cse_while_do_not_cse_copied_var(self):
+        parser = Parser('tests/cse_while_do_not_cse_copied_var.txt')
         parser.computation()
 
         visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
         output_text = visualizer.make_graph()
 
-        expected_output = read_expected_output('tests/while_do_not_cse_copied_var.dot')
+        expected_output = read_expected_output('tests/cse_while_do_not_cse_copied_var.dot')
 
         self.assertEqual(output_text, expected_output)
 
@@ -77,6 +77,17 @@ class TestInterpreter(unittest.TestCase):
         output_text = visualizer.make_graph()
 
         expected_output = read_expected_output('tests/return_middle_of_while.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    def test_return_only_if(self):
+        parser = Parser('tests/return_only_if.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/return_only_if.dot')
 
         self.assertEqual(output_text, expected_output)
 

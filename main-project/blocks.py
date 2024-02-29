@@ -216,6 +216,10 @@ class BasicBlock(Block):
         self.existing_phis_instructions = []
         self.phi_vars = set()
 
+    def reset_vars(self):
+        self.updated_vars = set()
+        self.vars = {}
+
     def set_as_return_block(self):
         self.return_block = True
 

@@ -267,6 +267,9 @@ class Parser:
         then_block.add_dom_parent(if_block)
         self.stat_sequence()
 
+        #if not then_block.get_instructions():  # empty else block
+        #    self.blocks.add_new_instr(self.in_while(), then_block, self.baseSSA.get_new_instr_id())
+
         # else part (might be empty)
         else_block = BasicBlock()
         self.utils.add_relationship(parent_block=if_block, child_block=else_block, relationship=BlockRelation.BRANCH)
@@ -335,7 +338,7 @@ class Parser:
                                       cur_block_first_instr)
         else:
             # If there are no phi instructions needed then take what will be the next instr number but do not update it
-            self.blocks.add_new_instr(self.in_while(), join_block, self.baseSSA.get_new_instr_id(), Operations.BRA,
+            self.blocks.add_new_instr(self.in_while(), branch_block, self.baseSSA.get_new_instr_id(), Operations.BRA,
                                       self.baseSSA.get_cur_instr_id() + 1)  # TODO check this branch number since might be wrong if e.g. adding new var so that instr number left is not the first
             if then_block.is_return_block() and else_block.is_return_block():
                 join_block.set_as_return_block()

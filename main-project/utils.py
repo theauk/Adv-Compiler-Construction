@@ -11,7 +11,7 @@ class Utils:
                          copy_vars=True):
         parent_block.add_child(child_block, relationship)
         child_block.add_parent(parent_block, relationship)
-        if copy_vars:
+        if not parent_block.is_return_block() and copy_vars:
             self.copy_vars(parent_block, child_block)
 
     def copy_vars(self, parent_block: BasicBlock, child_block: BasicBlock):
@@ -75,7 +75,7 @@ class Utils:
         # Remove unused phis due to return statement
         self.remove_unused_phis(join_block)
 
-        self.blocks.set_current_block(join_block)
+        #self.blocks.set_current_block(join_block)
 
     def remove_unused_phis(self, join_block):
         unused_phis = []

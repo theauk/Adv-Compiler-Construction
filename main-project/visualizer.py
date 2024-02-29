@@ -72,4 +72,6 @@ class Visualizer:
         constants = self.make_constants()
         other_blocks_text = self.make_main_blocks()
         solid_arrows = self.make_arrows()
-        return 'digraph G {\n' + constants + other_blocks_text + solid_arrows + '\n}'
+        text = 'digraph G {\n' + constants + other_blocks_text + solid_arrows
+        text = text.strip() + '\n}'
+        return text

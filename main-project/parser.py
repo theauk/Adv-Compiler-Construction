@@ -336,7 +336,7 @@ class Parser:
         else:
             # If there are no phi instructions needed then take what will be the next instr number but do not update it
             self.blocks.add_new_instr(self.in_while(), branch_block, self.baseSSA.get_new_instr_id(), Operations.BRA,
-                                      self.baseSSA.get_cur_instr_id() + 1) # TODO check this branch number since might be wrong if e.g. adding new var so that instr number left is not the first
+                                      self.baseSSA.get_cur_instr_id() + 1)  # TODO check this branch number since might be wrong if e.g. adding new var so that instr number left is not the first
 
         return
 
@@ -421,8 +421,12 @@ class Parser:
 
         return
 
-    def return_statement(self):  # TODO should I implement this??
-        return self.expression()
+    def return_statement(self):
+        x, x_var = self.expression()
+        self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
+                                  Operations.RET, x=x, x_var=x_var)
+        self.blocks.get_current_block().set_as_return_block()
+        return
 
     def designator(self):
         designator = self.token

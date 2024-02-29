@@ -60,6 +60,7 @@ class BasicBlock(Block):
         self.children: {}
         self.existing_phis_instructions = []
         self.dom_instructions = {}
+        self.return_block = False
 
     def update_join(self, join: bool):
         self.join = join
@@ -127,11 +128,12 @@ class BasicBlock(Block):
         return self.vars
 
     def add_var_assignment(self, var: int, instruction_number: int, update_var: bool = True, while_block: bool = False):
-        # TODO: does this make a difference (if not delete parameter end)
-        # if not while_block:
-        self.vars[var] = instruction_number
-        # if update_var:
-        self.updated_vars.add(var)
+        if not self.return_block:
+            # TODO: does this make a difference (if not delete parameter end)
+            # if not while_block:
+            self.vars[var] = instruction_number
+            # if update_var:
+            self.updated_vars.add(var)
 
     def copy_vars(self, new_vars: dict):
         self.vars = copy.deepcopy(new_vars)
@@ -214,6 +216,12 @@ class BasicBlock(Block):
         self.existing_phis_instructions = []
         self.phi_vars = {}
 
+    def set_as_return_block(self):
+        self.return_block = True
+
+    def is_return_block(self):
+        return self.return_block
+
 
 class Blocks:
     def __init__(self, baseSSA, initial_block):
@@ -230,6 +238,9 @@ class Blocks:
                       y: int = None, x_var: int = None, y_var: int = None) -> int:
         """
         Adds a new instruction to the given block unless it is a common subexpression.
+        :param y_var:
+        :param x_var:
+        :param in_while:
         :param block: block to add instruction to
         :param instr_id: instruction id
         :param op: operator
@@ -237,10 +248,11 @@ class Blocks:
         :param y: second instruction parameter
         :return: the instruction id of the new instruction or the common subexpression
         """
-        instr, cse = block.add_new_instr_block(in_while, instr_id, op, x, y, x_var, y_var)
-        if cse:
-            self.baseSSA.decrease_id_count()
-        return instr
+        if not block.is_return_block():
+            instr, cse = block.add_new_instr_block(in_while, instr_id, op, x, y, x_var, y_var)
+            if cse:
+                self.baseSSA.decrease_id_count()
+            return instr
 
     def get_current_block(self) -> BasicBlock:
         return self.current_block

@@ -1,5 +1,15 @@
 digraph G {
-bb0 [shape=record, label="<b>BB0 | {1: const #0|2: const #1|5: const #5|6: const #2}"];
-bb1 [shape=record, label="<b>BB1 | {3: add (1:259) (2:)|4: ret (1:259)}| {i: 1 | j: 3}"];
+bb0 [shape=record, label="<b>BB0 | {1: const #0|2: const #2|3: const #10|6: const #1}"];
+bb1 [shape=record, label="<b>BB1 | {4: cmp (2:257) (3:)|5: bge (4:257) (9:)}| {i: 1 | j: 1 | y: 2}"];
+bb2 [shape=record, label="<b>BB2 | {7: add (1:260) (6:)|11: bra (8:)}| {y: 7}"];
+bb3 [shape=record, label="<b>BB3 | {9: add (1:259) (6:)|11: ret}| {i: 9}"];
+bb4 [shape=record, label="<b>join BB4 | {8: phi (7:257) (2:257)|12: write_nl|13: end}| {i: 9 | y: 8}"];
 bb0:s -> bb1:n ;
+bb1:s -> bb2:n [label="fall-through"];
+bb1:s -> bb3:n [label="branch"];
+bb2:s -> bb4:n [label="branch"];
+bb3:s -> bb4:n [label="fall-through"];
+bb1:b -> bb2:b [color=blue, style=dotted, label="dom"];
+bb1:b -> bb3:b [color=blue, style=dotted, label="dom"];
+bb1:b -> bb4:b [color=blue, style=dotted, label="dom"];
 }

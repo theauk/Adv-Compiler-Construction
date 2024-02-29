@@ -300,7 +300,7 @@ class Parser:
                                         relationship=BlockRelation.BRANCH)
             self.utils.add_relationship(parent_block=else_block, child_block=join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
-            self.utils.add_phis_if(self.in_while(), then_block, else_block)
+            self.utils.add_phis_if(self.in_while(), if_block, then_block, else_block)
         elif not then_block.get_children():
             # Case 2: no additional conditional in then
             fall_through_block = self.blocks.get_lowest_leaf_join_block()
@@ -308,7 +308,7 @@ class Parser:
                                         relationship=BlockRelation.FALL_THROUGH)
             self.utils.add_relationship(parent_block=then_block, child_block=join_block,
                                         relationship=BlockRelation.BRANCH)
-            self.utils.add_phis_if(self.in_while(), then_block, fall_through_block)
+            self.utils.add_phis_if(self.in_while(), if_block, then_block, fall_through_block)
             branch_block = then_block
         elif not else_block.get_children():
             # Case 3: no additional conditional in else
@@ -317,7 +317,7 @@ class Parser:
                                         relationship=BlockRelation.BRANCH)
             self.utils.add_relationship(parent_block=else_block, child_block=join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
-            self.utils.add_phis_if(self.in_while(), branch_block, else_block)
+            self.utils.add_phis_if(self.in_while(), if_block, branch_block, else_block)
         else:
             # Case 4: new conditional in both then and else
             leaf_left = self.blocks.get_lowest_leaf_join_block()
@@ -327,7 +327,7 @@ class Parser:
                                         relationship=BlockRelation.BRANCH)
             self.utils.add_relationship(parent_block=leaf_right, child_block=join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
-            self.utils.add_phis_if(self.in_while(), leaf_left, leaf_right)
+            self.utils.add_phis_if(self.in_while(), if_block, leaf_left, leaf_right)
 
         cur_block_first_instr = self.blocks.get_current_block().find_first_instr()
         if cur_block_first_instr is not None:
@@ -422,10 +422,10 @@ class Parser:
         return
 
     def return_statement(self):
+        self.blocks.get_current_block().set_as_return_block()
         x, x_var = self.expression()
         self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
                                   Operations.RET, x=x, x_var=x_var)
-        self.blocks.get_current_block().set_as_return_block()
         return
 
     def designator(self):
@@ -508,6 +508,8 @@ class Parser:
             self.next_token()
             result, result_var = self.func_call()
             return result, result_var  # return what func call gives
+        elif self.blocks.get_current_block().is_return_block():
+            return None, None
         else:
             self.tokenizer.error(
                 f"SyntaxError: expected either {self.tokenizer.get_token_from_index(Tokens.IDENT), self.tokenizer.get_token_from_index(Tokens.NUMBER), self.tokenizer.get_token_from_index(Tokens.OPEN_PAREN_TOKEN), self.tokenizer.get_token_from_index(Tokens.CALL_TOKEN)} "

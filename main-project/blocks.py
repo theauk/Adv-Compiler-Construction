@@ -209,6 +209,11 @@ class BasicBlock(Block):
         del self.instructions[idn]
         del self.instruction_order_list[index]
 
+    def reset_vars(self):
+        self.vars = {}
+        self.updated_vars = {}
+        self.phi_vars = {}
+
     def reset_instructions(self):
         self.instructions = {}
         self.instruction_order_list = []
@@ -248,11 +253,13 @@ class Blocks:
         :param y: second instruction parameter
         :return: the instruction id of the new instruction or the common subexpression
         """
-        if not block.is_return_block():
+        if not block.is_return_block() or op == Operations.RET:
             instr, cse = block.add_new_instr_block(in_while, instr_id, op, x, y, x_var, y_var)
             if cse:
                 self.baseSSA.decrease_id_count()
             return instr
+        elif op != Operations.RET:
+            self.baseSSA.decrease_id_count()
 
     def get_current_block(self) -> BasicBlock:
         return self.current_block

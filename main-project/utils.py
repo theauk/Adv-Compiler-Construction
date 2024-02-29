@@ -47,9 +47,14 @@ class Utils:
                     join_block.add_var_assignment(var=child, instruction_number=phi_instruction)
                     already_added_vars.add((block1_child, block2_child))
 
-    def add_phis_if(self, in_while, then_block: BasicBlock, else_block: BasicBlock):
+    def add_phis_if(self, in_while, if_block: BasicBlock, then_block: BasicBlock, else_block: BasicBlock):
         already_added_vars = set()
         join_block: BasicBlock = self.blocks.get_current_join_block()
+
+        if then_block.is_return_block():
+            then_block = if_block
+        if else_block.is_return_block():
+            else_block = if_block
 
         # Joining var that has been updated both in then and else (or carried down from dominating blocks)
         then_vars = set(then_block.get_vars().keys())
@@ -58,13 +63,23 @@ class Utils:
         self.add_phi_instructions(in_while, then_block, else_block, intersection_then_else, already_added_vars,
                                   join_block=join_block)
 
+        # Remove unused phis due to return statement
+        self.remove_unused_phis(join_block)
+
         if already_added_vars:
             join_block.update_join(True)
         else:
             # Redundant phis
             join_block.reset_instructions()
 
-
+    def remove_unused_phis(self, join_block):
+        unused_phis = []
+        for i, instruction in enumerate(join_block.get_instruction_order_list()):
+            if instruction.op == Operations.PHI and not instruction.x:
+                unused_phis.append((instruction.get_id(), i))
+        for idn, i in unused_phis:
+            join_block.remove_instruction(idn, i)
+            self.baseSSA.decrease_id_count()  # also decrease id count to account for removed phi instructions
 
     def add_phis_while(self, in_while, while_block: BasicBlock, then_block: BasicBlock):
         already_added_vars = set()
@@ -189,7 +204,7 @@ class Utils:
                     phis.append(instruction)
 
             # Remove cse instructions
-            for (idn, i, cse_idn) in reversed(remove_instr): # to not mess with indices
+            for (idn, i, cse_idn) in reversed(remove_instr):  # to not mess with indices
                 current_block.remove_instruction(idn, i)
                 # Update the table that keeps track of the var assignments so that the var points to the cse instruction
                 for var, instr_idn in current_block.get_vars().items():
@@ -207,7 +222,6 @@ class Utils:
                     stack.append(child_block)
 
         print("")
-
 
     def fix_while_branching(self, outer_while_blocks: list[BasicBlock]):
         for block in outer_while_blocks:

@@ -340,6 +340,8 @@ class Parser:
             if then_block.is_return_block() and else_block.is_return_block():
                 join_block.set_as_return_block()
 
+        self.blocks.update_current_join_block(None)
+
         return
 
     def while_statement(self):

@@ -228,8 +228,6 @@ class Utils:
                 if child_block not in visited:
                     stack.append(child_block)
 
-        print("")
-
     def fix_while_branching(self, outer_while_blocks: list[BasicBlock]):
         for block in outer_while_blocks:
             for child_block, relationship in block.get_children().items():

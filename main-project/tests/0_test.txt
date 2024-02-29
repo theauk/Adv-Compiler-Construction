@@ -2,20 +2,16 @@ main
 var y, i, j; {
     let i <- 0;
     let j <- i;
-    let y <- 2 + 2;
+    let y <- 2;
 
-    return;
-
-    while y < 10 do
-        if i > 10 then
-            let y <- 2 + 4;
-            return
-        else
-            let y <- 2 + 4;
-            return
-        fi;
+    if i > 10 then
+        let y <- 2 + y;
+        return
+    else
         let y <- 2 + 4;
-    od;
+    fi;
+
+
     let j <- y + 2;
     call OutputNewLine();
 }.

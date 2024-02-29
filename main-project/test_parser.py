@@ -58,6 +58,28 @@ class TestInterpreter(unittest.TestCase):
 
         self.assertEqual(output_text, expected_output)
 
+    def test_return_if_in_while_then_else_returns(self):
+        parser = Parser('tests/return_if_in_while_then_else_returns.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/return_if_in_while_then_else_returns.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    def test_middle_of_while(self):
+        parser = Parser('tests/return_middle_of_while.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/return_middle_of_while.dot')
+
+        self.assertEqual(output_text, expected_output)
+
 
 if __name__ == '__main__':
     unittest.main()

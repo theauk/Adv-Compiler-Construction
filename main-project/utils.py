@@ -77,9 +77,8 @@ class Utils:
         for i, instruction in enumerate(join_block.get_instruction_order_list()):
             if instruction.op == Operations.PHI and not instruction.x:
                 unused_phis.append((instruction.get_id(), i))
-        for idn, i in unused_phis:
+        for idn, i in reversed(unused_phis):
             join_block.remove_instruction(idn, i)
-            self.baseSSA.decrease_id_count()  # also decrease id count to account for removed phi instructions
 
     def add_phis_while(self, in_while, while_block: BasicBlock, then_block: BasicBlock):
         already_added_vars = set()

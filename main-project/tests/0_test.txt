@@ -7,10 +7,11 @@ var x, y, z, i, j; {
     if y < 10 then
         let y <- j + 1;
         let y <- j + 1;
+        return
         else
         let i <- i + 1;
         return;
-        let i <- i + 1;
+
     fi;
 
     call OutputNewLine();

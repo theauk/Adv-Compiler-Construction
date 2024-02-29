@@ -51,26 +51,29 @@ class Utils:
         already_added_vars = set()
         join_block: BasicBlock = self.blocks.get_current_join_block()
 
-        if then_block.is_return_block():
-            then_block = if_block
-        if else_block.is_return_block():
-            else_block = if_block
+        if then_block.is_return_block() and else_block.is_return_block():
+            if then_block.is_return_block():
+                then_block = if_block
+            if else_block.is_return_block():
+                else_block = if_block
 
-        # Joining var that has been updated both in then and else (or carried down from dominating blocks)
-        then_vars = set(then_block.get_vars().keys())
-        else_vars = set(else_block.get_vars().keys())
-        intersection_then_else = then_vars.intersection(else_vars)
-        self.add_phi_instructions(in_while, then_block, else_block, intersection_then_else, already_added_vars,
-                                  join_block=join_block)
+            # Joining var that has been updated both in then and else (or carried down from dominating blocks)
+            then_vars = set(then_block.get_vars().keys())
+            else_vars = set(else_block.get_vars().keys())
+            intersection_then_else = then_vars.intersection(else_vars)
+            self.add_phi_instructions(in_while, then_block, else_block, intersection_then_else, already_added_vars,
+                                      join_block=join_block)
+
+            if already_added_vars:
+                join_block.update_join(True)
+            else:
+                # Redundant phis
+                join_block.reset_instructions()
 
         # Remove unused phis due to return statement
         self.remove_unused_phis(join_block)
 
-        if already_added_vars:
-            join_block.update_join(True)
-        else:
-            # Redundant phis
-            join_block.reset_instructions()
+        self.blocks.set_current_block(join_block)
 
     def remove_unused_phis(self, join_block):
         unused_phis = []
@@ -169,9 +172,11 @@ class Utils:
             for child_block, relationship in current_block.get_children().items():
                 if relationship == BlockRelation.BRANCH:
                     # Update the branching instruction
-                    branch_instr = current_block.get_instruction_order_list()[-1].get_id()
-                    child_first_instr_id = child_block.find_first_instr()
-                    current_block.update_instruction(branch_instr, x=child_first_instr_id)
+                    branch_instr = current_block.get_instruction_order_list()[-1]
+                    if branch_instr.op == Operations.BRA:
+                        branch_instr_id = branch_instr.get_id()
+                        child_first_instr_id = child_block.find_first_instr()
+                        current_block.update_instruction(branch_instr_id, x=child_first_instr_id)
 
                 if child_block not in visited:
                     stack.append(child_block)

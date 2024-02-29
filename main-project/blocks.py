@@ -209,11 +209,6 @@ class BasicBlock(Block):
         del self.instructions[idn]
         del self.instruction_order_list[index]
 
-    def reset_vars(self):
-        self.vars = {}
-        self.updated_vars = {}
-        self.phi_vars = {}
-
     def reset_instructions(self):
         self.instructions = {}
         self.instruction_order_list = []
@@ -263,6 +258,9 @@ class Blocks:
 
     def get_current_block(self) -> BasicBlock:
         return self.current_block
+
+    def set_current_block(self, block: BasicBlock):
+        self.current_block = block
 
     def get_constant_block(self) -> ConstantBlock:
         return self.constant_block

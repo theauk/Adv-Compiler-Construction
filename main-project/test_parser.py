@@ -31,7 +31,7 @@ class TestInterpreter(unittest.TestCase):
         parser = Parser('tests/0_test.txt')
         parser.computation()
 
-        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=True)
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
         text = visualizer.make_graph()
         write_to_file('tests/0_test.dot', text)
         print(text)

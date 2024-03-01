@@ -6,7 +6,7 @@ var y, i, j; {
 
     if i > 10 then
         let y <- 2 + y;
-        return
+        return j
     else
         let y <- 2 + 4;
     fi;

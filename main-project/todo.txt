@@ -1,87 +1,22 @@
-while and vars:
-do not copy instrs that have vars as x or y from while block to then block
-but do copy instr into branch for vars that do not get updated
-    would probably have to check updated var list for then before continuing to branch block
-    but what about while in while?
-        might have to propegate up the updated vars
-
-ehm hvad med add (1) (2) vs add (2) (1)??? altså hvor rækkefølge does not matter
-
-let a <- 1 + 2;
-let b <- 2 + a;
-
-while a < 2 do [a has been updated]
-    while a < 2 do [a has been updated]
-        let a <- 2 + a # not cse
-    od;
-    let a <- 2 + a # not cse [ALSO TRY WITHOUT THIS]
-od;
-
-let b <- 2 + a # not cse since a might have been updated [do not copy 2 + a down because a has been updated]
-
-let a <- 1 + 2;
-let b <- 2 + b;
-
-while a < 2 do
-    while a < 2 do
-        let a <- 2 + a # not cse
-    od;
-    let a <- 2 + a # not cse
-od;
-
-let b <- 2 + b # cse since b has not been updated [copy 2 + b down since b has NOT been updated]
-
-
-x 1. update Instr to have the vars
-x 2. when in do not cse
-x a. make it do second pass when leaving most outer while
-x b update inner phis and ensure for nested they are not just all the top
-3. second pass while
-    x make a dict (instr, instr_var) -> updated phi instr
-    x when you see phi do dict[(x, x_var)] = its phi instr
-    x when you see (x, x_var) or (y, y_var) as one of the (instr, instr_var) then update it to corresponding dict instr
-    x get vars into phi instructions
-    - update doms
-        - first block should stay the same
-4. third pass while
-    - check for cse
-    - update instr numbering if cse
-
-5. pass through all -> update outer while block instructions
-    - maybe just save them in list when that line for outer while check is entered
-    - later pass through that list and update their branching
-
-
-HUSKS:
+Stuff now:
 ______
-- phis
-- copy propagation
-- common subexpression elemination
-- der der løbende linked list halløj (?)
-- doms (også i graf)
+- Fix the phis using phis
 - Arrays
-- end instr? exit block?
+- Remove branch block when ret
 
-QUESTIONS:
+
+Stuff later:
 ______
-- Skal jeg dække return stm?
-- hvad skal der ske med branch blok med to while efter hinanden
-- skal der være end instruction?
+- Numberings after cse
+- Take out stuff related to user funcs
 
-OVERVEJELSER:
+
+Questions:
 ______
-- error handling. Like hvad hvis der er noget i check token der ikke passer. Skal det så fortsætte?
+- Phis after ret + branch after ret?
 
 
-NEXTS:
-______
-
-- make tests
-- hvad skal der ske med branch blok med to while efter hinanden
-- arrays (?!)
-
-- fix så hvis det er if then "return" og noget efter if så har den branch blok ikke en empty men det der kommer efter
-- take out stuff related to user funcs fordi du kun er en person  eller bare pass keyword
+NOTES:
 ______
 
 x fix phi numbering og factor

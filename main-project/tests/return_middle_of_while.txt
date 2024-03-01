@@ -1,12 +1,11 @@
 main
-var x, y, z, i, j; {
+var x, y, i, j; {
     let y <- 2;
     let i <- 0;
     let j <- i;
 
     while y < 10 do
         let y <- j + 1;
-        let i <- i + 1;
         return 5;
         let x <- 5 + 2
     od;

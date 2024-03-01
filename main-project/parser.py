@@ -216,8 +216,9 @@ class Parser:
         # Predefined functions
         if self.token == Tokens.INPUT_NUM_TOKEN:  # InputNum()
             self.next_token()
-            self.check_token(Tokens.OPEN_PAREN_TOKEN)
-            self.check_token(Tokens.CLOSE_PAREN_TOKEN)
+            if self.token == Tokens.OPEN_PAREN_TOKEN:
+                self.check_token(Tokens.OPEN_PAREN_TOKEN)
+                self.check_token(Tokens.CLOSE_PAREN_TOKEN)
             idn = self.baseSSA.get_new_instr_id()
             self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), idn, Operations.READ)
             return idn, None
@@ -230,8 +231,9 @@ class Parser:
                                       Operations.WRITE, x, x_var=x_var)
         elif self.token == Tokens.OUTPUT_NEW_LINE_TOKEN:  # OutputNewLine()
             self.next_token()
-            self.check_token(Tokens.OPEN_PAREN_TOKEN)
-            self.check_token(Tokens.CLOSE_PAREN_TOKEN)
+            if self.token == Tokens.OPEN_PAREN_TOKEN:
+                self.check_token(Tokens.OPEN_PAREN_TOKEN)
+                self.check_token(Tokens.CLOSE_PAREN_TOKEN)
             self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
                                       Operations.WRITE_NL)
         else:  # user funcs

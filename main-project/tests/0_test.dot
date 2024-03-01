@@ -1,19 +1,15 @@
 digraph G {
-bb0 [shape=record, label="<b>BB0 | {1: const #2|2: const #0|3: const #10|8: const #4|9: const #3|15: const #1}"];
-bb1 [shape=record, label="<b>join BB1 | {14: phi (1) (12)|4: cmp (14) (3)|5: bge (4) (16)}| {y: 14 | i: 2 | j: 2}"];
-bb2 [shape=record, label="<b>BB2 | {7: bge (6)}"];
-bb3 [shape=record, label="<b>BB3 | {10: add (8) (9)|11: ret}| {y: 10}"];
-bb4 [shape=record, label="<b>BB4 | {12: add (1) (9)|13: bra (14)}| {y: 12}"];
-bb5 [shape=record, label="<b>BB5 | {16: add (2) (15)|17: write_nl|18: end}| {y: 16}"];
+bb0 [shape=record, label="<b>BB0 | {2: const #0|3: const #1}"];
+bb1 [shape=record, label="<b>BB1 | {1: read}| {a: 1 | b: 2 | c: 3}"];
+bb2 [shape=record, label="<b>join BB2 | {10: phi (1) (9)|11: phi (2) (8)|12: phi (3) (11)|4: cmp (10) (2)|5: ble (4) (14)}| {a: 10 | b: 11 | c: 12}"];
+bb3 [shape=record, label="<b>BB3 | {6: write (11)|7: write_nl|8: add (11) (12)|9: sub (10) (3)|13: bra (10)}| {a: 9 | b: 8 | c: 2 | tmp: 2}"];
+bb4 [shape=record, label="<b>BB4 | {14: end}"];
 bb0:s -> bb1:n ;
-bb4:s -> bb1:n [label="branch"];
-bb1:s -> bb2:n [label="fall-through"];
+bb1:s -> bb2:n ;
 bb3:s -> bb2:n [label="branch"];
 bb2:s -> bb3:n [label="fall-through"];
 bb2:s -> bb4:n [label="branch"];
-bb1:s -> bb5:n [label="branch"];
 bb1:b -> bb2:b [color=blue, style=dotted, label="dom"];
 bb2:b -> bb3:b [color=blue, style=dotted, label="dom"];
 bb2:b -> bb4:b [color=blue, style=dotted, label="dom"];
-bb1:b -> bb5:b [color=blue, style=dotted, label="dom"];
 }

@@ -1,6 +1,7 @@
 Stuff now:
 ______
 - Fix the phis using phis
+- Default function calls without ()
 - Arrays
 - Remove branch block when ret
 

@@ -30,6 +30,12 @@ class Utils:
     def add_phi_instructions(self, in_while, block1: BasicBlock, block2: BasicBlock, var_set: set,
                              already_added_vars: set,
                              join_block: BasicBlock):
+        var_to_new_phi_idn = {}
+        phis = []
+        original_join_vars = join_block.get_vars().copy()
+        phis_lhs = {}
+        phis_rhs = {}
+
         for child in var_set:
             block1_child = block1.get_vars()[child]
             block2_child = block2.get_vars()[child]
@@ -43,9 +49,19 @@ class Utils:
                     else:
                         phi_instruction = self.create_phi_instruction(in_while, join_block, child, x=block1_child,
                                                                       y=block2_child)
+                    var_to_new_phi_idn[child] = phi_instruction
+                    phis.append((phi_instruction, child, block2_child))
+
+                    phis_lhs[block1_child] = phi_instruction
+                    phis_rhs[block2_child] = phi_instruction
 
                     join_block.add_var_assignment(var=child, instruction_number=phi_instruction)
                     already_added_vars.add((block1_child, block2_child))
+
+        # Check if one of the new phis use another phi
+        for rhs_instr_idn, phi_idn in phis_rhs.items():
+            if rhs_instr_idn in phis_lhs:
+                join_block.update_instruction(phi_idn, y=phis_lhs[rhs_instr_idn])
 
     def add_phis_if(self, in_while, if_block: BasicBlock, then_block: BasicBlock, else_block: BasicBlock):
         already_added_vars = set()

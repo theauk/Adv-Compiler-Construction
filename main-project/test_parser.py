@@ -69,7 +69,7 @@ class TestInterpreter(unittest.TestCase):
 
         self.assertEqual(output_text, expected_output)
 
-    def test_middle_of_while(self):
+    def test_return_middle_of_while(self):
         parser = Parser('tests/return_middle_of_while.txt')
         parser.computation()
 
@@ -99,6 +99,18 @@ class TestInterpreter(unittest.TestCase):
         output_text = visualizer.make_graph()
 
         expected_output = read_expected_output('tests/return_only_else.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    # CLASS TESTS
+    def test_fibonacci(self):
+        parser = Parser('tests/class/fibonacci.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/class/fibonacci.dot')
 
         self.assertEqual(output_text, expected_output)
 

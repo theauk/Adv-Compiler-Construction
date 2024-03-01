@@ -1,0 +1,16 @@
+main
+var a, b, c, tmp;
+{
+    let a <- call InputNum;
+    let b <- 0;
+    let c <- 1;
+
+    while a > 0 do
+        call OutputNum(b);
+        call OutputNewLine;
+        let tmp <- b;
+        let b <- b + c;
+        let c <- tmp;
+        let a <- a - 1;
+    od;
+}.

@@ -1,16 +1,15 @@
 main
-var a, b, c, tmp;
-{
-    let a <- call InputNum;
-    let b <- 0;
-    let c <- 1;
+var x, y, j; {
+    let y <- 2;
+    let i <- 0;
+    let j <- i;
 
-    while a > 0 do
-        call OutputNum(b);
-        call OutputNewLine;
-        let tmp <- b;
-        let b <- b + c;
-        let c <- tmp;
-        let a <- a - 1;
+    while y < 10 do
+        let y <- j + 1;
+        let i <- i + 1;
+        return 5;
+        let x <- 5 + 2
     od;
+    let y <- j + 1;
+    call OutputNewLine();
 }.

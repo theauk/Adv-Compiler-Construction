@@ -32,7 +32,6 @@ class Utils:
                              join_block: BasicBlock):
         var_to_new_phi_idn = {}
         phis = []
-        original_join_vars = join_block.get_vars().copy()
         phis_lhs = {}
         phis_rhs = {}
 
@@ -200,14 +199,16 @@ class Utils:
                     stack.append(child_block)
 
     def update_while_cse(self, start_while_block):
-        visited = {start_while_block}
+        visited = set()
         stack = [start_while_block]
         removed_instructions = []
         phis = []
+        removed_instr_to_cse_idn = {}
 
         # Keep going until we are back at the starting while block
         while stack:
-            current_block: BasicBlock = stack.pop()
+            stack = sorted(stack, key=lambda b: b.id)
+            current_block: BasicBlock = stack.pop(0)
 
             # Copy instructions down if dominated
             for dom_parent in current_block.get_dom_parents():
@@ -221,10 +222,20 @@ class Utils:
                         cse_idn = current_block.get_dom_instruction()[(instruction.op, instruction.x, instruction.y)]
                         remove_instr.append((instruction.id, i, cse_idn))
                         removed_instructions.append(instruction.id)
+                        if instruction.id != cse_idn:
+                            removed_instr_to_cse_idn[instruction.id] = cse_idn
                     else:
                         current_block.add_dom_instruction(instruction.id, instruction.op, instruction.x, instruction.y)
                 elif instruction.op == Operations.PHI:
                     phis.append(instruction)
+
+                if instruction.x in removed_instr_to_cse_idn:
+                    current_block.add_var_assignment(instruction.x_var, removed_instr_to_cse_idn[instruction.x])
+                    current_block.update_instruction(instruction.get_id(), removed_instr_to_cse_idn[instruction.x])
+                if instruction.y in removed_instr_to_cse_idn:
+                    current_block.add_var_assignment(instruction.y_var, removed_instr_to_cse_idn[instruction.y])
+                    current_block.update_instruction(instruction.get_id(), removed_instr_to_cse_idn[instruction.y])
+
 
             # Remove cse instructions
             for (idn, i, cse_idn) in reversed(remove_instr):  # to not mess with indices
@@ -239,9 +250,9 @@ class Utils:
                     if idn == phi.y:
                         phi.y = cse_idn
 
-            visited.add(current_block)
+            visited.add(current_block.get_id())
             for child_block, relationship in current_block.get_children().items():
-                if child_block not in visited:
+                if child_block.get_id() not in visited and child_block not in stack:
                     stack.append(child_block)
 
     def fix_while_branching(self, outer_while_blocks: list[BasicBlock]):

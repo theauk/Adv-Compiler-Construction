@@ -1,0 +1,32 @@
+main
+
+array [10] nums, prefix;
+var i;
+var last;
+
+{
+
+    let i <- 1;
+    while i < 11 do
+        let nums[i-1] <- i + 1;
+        let i <- i + 1;
+    od;
+
+    let i <- 0;
+    let last <- 0;
+    while i < 10 do
+        let prefix[i] <- nums[i] + last;
+        let last <- prefix[i];
+        let i <- i + 1;
+    od;
+
+
+    let i <- 0;
+    while i < 10 do
+        call OutputNum( prefix[i] );
+        call OutputNewLine;
+        let i <- i + 1;
+    od;
+
+}
+.

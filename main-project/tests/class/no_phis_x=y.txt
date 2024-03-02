@@ -1,0 +1,19 @@
+main
+var i, x, y, j;
+
+{
+    let i <- call InputNum();
+    let x <- 0;
+    let j <- i;
+
+    let x <- i  + 1;
+
+
+    if i > 0 then
+        let x <- i + 1;
+
+    else
+        let x <- j + 1;
+    fi;
+
+}.

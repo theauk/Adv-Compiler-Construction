@@ -1,0 +1,22 @@
+main
+var i, x, y, j; {
+    let i <- call InputNum();
+    let x <- 0;
+    let y <- 0;
+    let j <- i;
+    while x < 10 do;
+        if j < 9 then
+            let x <- i + 1;
+            let y <- j + 1;
+            let i <- i + 1;
+            while i < y do;
+                let i <- i + j;
+            od;
+        fi;
+    od;
+
+    call OutputNum(x);
+    call OutputNum(y);
+    call OutputNum(i);
+    call OutputNum(j)
+}.

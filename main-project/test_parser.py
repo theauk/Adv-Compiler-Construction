@@ -103,6 +103,17 @@ class TestInterpreter(unittest.TestCase):
         self.assertEqual(output_text, expected_output)
 
     # CLASS TESTS
+    def test_complex_while(self):
+        parser = Parser('tests/class/complex_while.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/class/complex_while.dot')
+
+        self.assertEqual(output_text, expected_output)
+
     def test_fibonacci(self):
         parser = Parser('tests/class/fibonacci.txt')
         parser.computation()

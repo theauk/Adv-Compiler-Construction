@@ -94,24 +94,36 @@ class BasicBlock(Block):
 
             # For while blocks a phi instruction should be inserted at the beginning after
             # already existing phi instructions
-            if op == Operations.PHI and self.while_block:
-                insert_index = 0
-                for i, instr in enumerate(self.instruction_order_list):
-                    if instr.op != Operations.PHI:
-                        insert_index = i
-                        break
-                self.instruction_order_list.insert(insert_index, inst)
-            else:
-                self.instruction_order_list.append(inst)
+            #if op == Operations.PHI and self.while_block:
+            #    insert_index = 0
+            #    for i, instr in enumerate(self.instruction_order_list):
+            #        if instr.op != Operations.PHI:
+            #            insert_index = i
+            #            break
+            #    self.instruction_order_list.insert(insert_index, inst)
+            #else:
+            #    self.instruction_order_list.append(inst)
 
             # For phis in if the instruction number should be incremented immediately after the assignment so
             # make a list of those instructions so that they can be updated with the x and y later
-            if op == Operations.PHI and not self.while_block:
+            if op == Operations.PHI:
                 self.existing_phis_instructions[x_var] = inst
+                if self.while_block:
+                    insert_index = 0
+                    for i, instr in enumerate(self.instruction_order_list):
+                        if instr.op != Operations.PHI:
+                            insert_index = i
+                            break
+                    self.instruction_order_list.insert(insert_index, inst)
+                else:
+                    self.instruction_order_list.append(inst)
+            else:
+                self.instruction_order_list.append(inst)
+
 
             # Add as a dominating instruction if applicable given the Operation (and not in while since they
             # will be added later)
-            if op and op not in Operations.get_no_cse_instructions() and not in_while:
+            if op and op not in Operations.get_no_cse_instructions():
                 self.add_dom_instruction(instr_id, op, x, y)
 
             return instr_id, False

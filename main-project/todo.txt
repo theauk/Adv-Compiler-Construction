@@ -6,10 +6,11 @@ ______
 - Remove branch block when ret
 
 
-Stuff later:
+Maybe Stuff later:
 ______
 - Numberings after cse
 - Take out stuff related to user funcs
+- Change so that while "prepares" phi when assignment is created in all while blocks in the while stack
 
 
 Questions:

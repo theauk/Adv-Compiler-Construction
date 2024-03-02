@@ -17,14 +17,32 @@ class Utils:
     def copy_vars(self, parent_block: BasicBlock, child_block: BasicBlock):
         child_block.copy_vars(parent_block.get_vars())
 
-    def create_phi_instruction(self, in_while, current_join_block, designator, x=None, y=None):
-        if x and y or not current_join_block.is_while():
-            current_join_block.add_phi_var(designator)
-            instr = self.baseSSA.get_new_instr_id()
-            self.blocks.add_new_instr(in_while, current_join_block, instr_id=instr, op=Operations.PHI, x=x, y=y,
-                                      x_var=designator, y_var=designator)
-            current_join_block.add_var_assignment(var=designator, instruction_number=instr)
-            return instr
+    def create_phi_instruction(self, in_while, current_join_block, designator, x=None, y=None, while_stack=None):
+
+        last_new_id = None
+
+        if while_stack:
+            for while_block in reversed(while_stack):
+                if designator not in while_block.get_phi_vars():
+                    while_block.add_phi_var(designator)
+                    instr = self.baseSSA.get_new_instr_id()
+                    self.blocks.add_new_instr(in_while, while_block, instr_id=instr, op=Operations.PHI, x=x,
+                                              y=while_block.get_vars()[designator],
+                                              x_var=designator, y_var=designator)
+                    while_block.add_var_assignment(var=designator, instruction_number=instr)
+                    last_new_id = instr
+                else:
+                    for instruction in while_block.get_instruction_order_list():
+                        if instruction.op == Operations.PHI and instruction.x_var == designator:
+                            while_block.update_instruction(instr_idn=instruction.get_id(), x=last_new_id)
+        else:
+            if designator not in current_join_block.get_phi_vars():
+                current_join_block.add_phi_var(designator)
+                instr = self.baseSSA.get_new_instr_id()
+                self.blocks.add_new_instr(in_while, current_join_block, instr_id=instr, op=Operations.PHI, x=x, y=y,
+                                          x_var=designator, y_var=designator)
+                current_join_block.add_var_assignment(var=designator, instruction_number=instr)
+                return instr
 
     def add_phi_instructions(self, in_while, block1: BasicBlock, block2: BasicBlock, var_set: set,
                              already_added_vars: set,
@@ -150,7 +168,8 @@ class Utils:
         self.update_while_phis_and_bra(start_while_block)
 
         # Second pass to do cse
-        self.update_while_cse(start_while_block)
+        # self.update_while_cse(start_while_block)
+        print("")
 
     def update_while_phis_and_bra(self, start_while_block: BasicBlock):
         visited = {start_while_block}
@@ -164,7 +183,7 @@ class Utils:
         old_to_new_instr_ids = {}
         for i in start_while_block.get_instruction_order_list():
             if i.op == Operations.PHI:
-                old_to_new_instr_ids[(i.x, i.x_var)] = i.id
+                old_to_new_instr_ids[(i.y, i.y_var)] = i.id
 
         # Check instructions in the starting while block (except for the phi instructions where the updated variables
         # are coming from)
@@ -182,13 +201,13 @@ class Utils:
 
             # Check if the instruction should be updated to match new phi value
             for i in current_block.get_instruction_order_list():
-                original_i_x = i.x
+                original_i_y = i.y
                 if (i.x, i.x_var) in old_to_new_instr_ids:
                     current_block.update_instruction(i.id, x=old_to_new_instr_ids[(i.x, i.x_var)])
                 if (i.y, i.y_var) in old_to_new_instr_ids:
                     current_block.update_instruction(i.id, y=old_to_new_instr_ids[(i.y, i.y_var)])
                 if i.op == Operations.PHI:
-                    old_to_new_instr_ids[(original_i_x, i.x_var)] = i.id
+                    old_to_new_instr_ids[(original_i_y, i.y_var)] = i.id
 
             visited.add(current_block)
 
@@ -203,8 +222,6 @@ class Utils:
 
                 if child_block not in visited and child_block not in stack:
                     stack.append(child_block)
-
-        print("")
 
     def update_while_cse(self, start_while_block):
         visited = set()

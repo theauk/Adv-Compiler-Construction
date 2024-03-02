@@ -210,8 +210,8 @@ class Parser:
             # Check if phi should be added (given we have a current join block and have not already made a phi ready
             # for a certain variable)
             current_join_block = self.blocks.get_current_join_block()
-            if current_join_block and designator not in current_join_block.get_phi_vars():
-                self.utils.create_phi_instruction(self.in_while(), current_join_block, designator)
+            if current_join_block or self.while_stack:
+                self.utils.create_phi_instruction(in_while=self.in_while(), current_join_block=current_join_block, designator=designator, x=idn, while_stack=self.while_stack)
 
         return
 
@@ -354,7 +354,6 @@ class Parser:
         return
 
     def while_statement(self):
-        self.while_stack.append("while")
         initial_current_block = self.blocks.get_current_block()
 
         # Check if there is already a block available to be used for a while block. Otherwise, make a new one.
@@ -368,6 +367,8 @@ class Parser:
             self.blocks.add_block(while_block)
             while_block.add_dom_parent(initial_current_block, self.in_while())
             self.blocks.update_current_join_block(while_block)
+
+        self.while_stack.append(while_block)
 
         # Make the cmp and branch instruction
         left_side, rel_op_instr, right_side, left_side_var, right_side_var = self.relation()
@@ -405,7 +406,7 @@ class Parser:
                 self.utils.add_relationship(parent_block=leaf_block, child_block=while_block,
                                             relationship=BlockRelation.BRANCH, copy_vars=False)
 
-        self.utils.add_phis_while(self.in_while(), while_block, then_block)
+        #self.utils.add_phis_while(self.in_while(), while_block, then_block)
 
         # Check if bra instruction should be inserted to create path out of current block if necessary
         if len(self.blocks.get_current_block().get_children()) == 0:
@@ -424,13 +425,13 @@ class Parser:
                                         relationship=BlockRelation.BRANCH)
             branch_block.add_dom_parent(while_block, self.in_while())
 
+        self.outer_while_blocks.append(while_block)
         self.blocks.update_current_join_block(None)
         self.while_stack.pop()
 
         # Do more passes on most outer while block to update phis, branching and cse if we are no longer in the while
         if not self.in_while():
             self.utils.update_while(while_block)
-            self.outer_while_blocks.append(while_block)
 
         return
 

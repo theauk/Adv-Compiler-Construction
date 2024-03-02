@@ -42,7 +42,8 @@ class Parser:
     def check_identifier(self):
         reserved = self.reserved_identifier()
         if not reserved:
-            if self.token not in self.blocks.get_current_block().get_vars():
+            if self.token not in self.blocks.get_current_block().get_vars() or \
+                    self.blocks.get_current_block().get_vars()[self.token] is None:
                 self.tokenizer.error(
                     f"SyntaxError: {self.tokenizer.last_id} has not been initialized. It is now initialized to 0")
                 self.symbolTable[self.token] = self.tokenizer.last_id
@@ -103,18 +104,20 @@ class Parser:
 
     def var_declaration(self):
         # Handle arrays
-        if self.token == Tokens.OPEN_BRACKET_TOKEN:  # TODO array
+        if self.token == Tokens.OPEN_BRACKET_TOKEN:  # TODO array - starts with "array"
             self.next_token()
             self.array_declaration()
 
         # Check if valid ident
-        self.reserved_identifier()
+        if not self.reserved_identifier():
+            self.blocks.get_current_block().add_var_assignment(self.token, None)
         self.next_token()
 
         # Check for additional idents seperated by ","
         while self.token == Tokens.COMMA_TOKEN:
             self.next_token()
-            self.reserved_identifier()
+            if not self.reserved_identifier():
+                self.blocks.get_current_block().add_var_assignment(self.token, None)
             self.next_token()
 
         self.check_token(Tokens.SEMI_TOKEN)
@@ -268,9 +271,6 @@ class Parser:
         self.blocks.add_block(then_block)
         then_block.add_dom_parent(if_block)
         self.stat_sequence()
-
-        #if not then_block.get_instructions():  # empty else block
-        #    self.blocks.add_new_instr(self.in_while(), then_block, self.baseSSA.get_new_instr_id())
 
         # else part (might be empty)
         else_block = BasicBlock()
@@ -450,7 +450,7 @@ class Parser:
                     self.next_token()
                     designator += self.expression()
                     self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
-                    return 0, "something", True
+                    return 0, True
             else:  # normal id
                 return designator, False
         else:

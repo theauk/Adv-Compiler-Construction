@@ -40,7 +40,11 @@ class Visualizer:
             filtered_vars = {key: value for key, value in block_vars.items() if key in block.updated_vars}
             if self.show_vars and filtered_vars:
                 text += '| {'
-                formatted_strings = [f"{self.symbol_table[key]}: {value}" for key, value in filtered_vars.items()]
+                formatted_strings = [
+                    f"{self.symbol_table[key]}: {value}"
+                    for key, value in filtered_vars.items()
+                    if value is not None
+                ]
                 text += ' | '.join(formatted_strings)
                 text += '}'
 

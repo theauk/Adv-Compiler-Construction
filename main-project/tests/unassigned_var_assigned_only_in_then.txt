@@ -1,8 +1,10 @@
 main
 var a, b; {
     let a <- call InputNum();
-    while a < 10
-    do
+    if a < 10
+    then
         let b <- a;
-    od;
+    else
+        let a <- (a + a)* a;
+    fi;
 }.

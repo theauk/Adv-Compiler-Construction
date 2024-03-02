@@ -23,8 +23,7 @@ class Utils:
             instr = self.baseSSA.get_new_instr_id()
             self.blocks.add_new_instr(in_while, current_join_block, instr_id=instr, op=Operations.PHI, x=x, y=y,
                                       x_var=designator, y_var=designator)
-            current_join_block.add_var_assignment(var=designator, instruction_number=instr,
-                                                  while_block=current_join_block.is_while())
+            current_join_block.add_var_assignment(var=designator, instruction_number=instr)
             return instr
 
     def add_phi_instructions(self, in_while, block1: BasicBlock, block2: BasicBlock, var_set: set,
@@ -37,7 +36,13 @@ class Utils:
 
         for child in var_set:
             block1_child = block1.get_vars()[child]
+            if not block1_child:
+                self.blocks.add_constant(0)
+                block1_child = self.blocks.get_constant_id(0)
             block2_child = block2.get_vars()[child]
+            if not block2_child:
+                self.blocks.add_constant(0)
+                block2_child = self.blocks.get_constant_id(0)
             if (block1_child, block2_child) not in already_added_vars:
 
                 if block1_child != block2_child:
@@ -141,11 +146,13 @@ class Utils:
         return branch_instr_idn
 
     def update_while(self, start_while_block: BasicBlock):
+        # Second pass to do cse
+        self.update_while_cse(start_while_block)
+
         # First pass to update phi instructions and propagate them + update bra instruction x value
         self.update_while_phis_and_bra(start_while_block)
 
-        # Second pass to do cse
-        self.update_while_cse(start_while_block)
+
 
     def update_while_phis_and_bra(self, start_while_block: BasicBlock):
         visited = {start_while_block}

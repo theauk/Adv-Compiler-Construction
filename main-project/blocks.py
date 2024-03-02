@@ -127,13 +127,11 @@ class BasicBlock(Block):
     def get_vars(self) -> dict:
         return self.vars
 
-    def add_var_assignment(self, var: int, instruction_number: int, update_var: bool = True, while_block: bool = False):
+    def add_var_assignment(self, var: int, instruction_number, update_var: bool = True):
         if not self.return_block:
-            # TODO: does this make a difference (if not delete parameter end)
-            # if not while_block:
             self.vars[var] = instruction_number
-            # if update_var:
-            self.updated_vars.add(var)
+            if update_var:
+                self.updated_vars.add(var)
 
     def copy_vars(self, new_vars: dict):
         self.vars = copy.deepcopy(new_vars)

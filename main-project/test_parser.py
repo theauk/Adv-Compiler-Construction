@@ -37,91 +37,135 @@ class TestInterpreter(unittest.TestCase):
         print(text)
 
     def test_redundant_phi_if(self):
-        parser = Parser('tests/if_redundant_phi.txt')
+        parser = Parser('tests/my_tests/if_redundant_phi.txt')
         parser.computation()
 
         visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=False, show_instr_vars=False)
         output_text = visualizer.make_graph()
 
-        expected_output = read_expected_output('tests/if_redundant_phi.dot')
+        expected_output = read_expected_output('tests/my_tests/if_redundant_phi.dot')
 
         self.assertEqual(output_text, expected_output)
 
     def test_cse_while_do_not_cse_copied_var(self):
-        parser = Parser('tests/cse_while_do_not_cse_copied_var.txt')
+        parser = Parser('tests/my_tests/cse_while_do_not_cse_copied_var.txt')
         parser.computation()
 
         visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
         output_text = visualizer.make_graph()
 
-        expected_output = read_expected_output('tests/cse_while_do_not_cse_copied_var.dot')
+        expected_output = read_expected_output('tests/my_tests/cse_while_do_not_cse_copied_var.dot')
 
         self.assertEqual(output_text, expected_output)
 
     def test_return_if_in_while_then_else_returns(self):
-        parser = Parser('tests/return_if_in_while_then_else_returns.txt')
+        parser = Parser('tests/my_tests/return_if_in_while_then_else_returns.txt')
         parser.computation()
 
         visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
         output_text = visualizer.make_graph()
 
-        expected_output = read_expected_output('tests/return_if_in_while_then_else_returns.dot')
+        expected_output = read_expected_output('tests/my_tests/return_if_in_while_then_else_returns.dot')
 
         self.assertEqual(output_text, expected_output)
 
     def test_return_middle_of_while(self):
-        parser = Parser('tests/return_middle_of_while.txt')
+        parser = Parser('tests/my_tests/return_middle_of_while.txt')
         parser.computation()
 
         visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
         output_text = visualizer.make_graph()
 
-        expected_output = read_expected_output('tests/return_middle_of_while.dot')
+        expected_output = read_expected_output('tests/my_tests/return_middle_of_while.dot')
 
         self.assertEqual(output_text, expected_output)
 
     def test_return_only_if(self):
-        parser = Parser('tests/return_only_if.txt')
+        parser = Parser('tests/my_tests/return_only_if.txt')
         parser.computation()
 
         visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
         output_text = visualizer.make_graph()
 
-        expected_output = read_expected_output('tests/return_only_if.dot')
+        expected_output = read_expected_output('tests/my_tests/return_only_if.dot')
 
         self.assertEqual(output_text, expected_output)
 
     def test_return_only_else(self):
-        parser = Parser('tests/return_only_else.txt')
+        parser = Parser('tests/my_tests/return_only_else.txt')
         parser.computation()
 
         visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
         output_text = visualizer.make_graph()
 
-        expected_output = read_expected_output('tests/return_only_else.dot')
+        expected_output = read_expected_output('tests/my_tests/return_only_else.dot')
 
         self.assertEqual(output_text, expected_output)
 
-    # CLASS TESTS
-    def test_complex_while(self):
-        parser = Parser('tests/class/complex_while.txt')
+    def test_unassigned_var_assigned_only_in_then(self):
+        parser = Parser('tests/my_tests/unassigned_var_assigned_only_in_then.txt')
         parser.computation()
 
         visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
         output_text = visualizer.make_graph()
 
-        expected_output = read_expected_output('tests/class/complex_while.dot')
+        expected_output = read_expected_output('tests/my_tests/unassigned_var_assigned_only_in_then.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    def test_uninitialized_var_in_then_else(self):
+        parser = Parser('tests/my_tests/uninitialized_var_in_then_else.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/my_tests/uninitialized_var_in_then_else.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    def test_unassigned_var_assigned_in_while(self):
+        parser = Parser('tests/my_tests/unassigned_var_assigned_in_while.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/my_tests/unassigned_var_assigned_in_while.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    # CLASS TESTS -------------------------------------
+    def test_complex_while(self):
+        parser = Parser('tests/class_tests/complex_while.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/class_tests/complex_while.dot')
 
         self.assertEqual(output_text, expected_output)
 
     def test_fibonacci(self):
-        parser = Parser('tests/class/fibonacci.txt')
+        parser = Parser('tests/class_tests/fibonacci.txt')
         parser.computation()
 
         visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
         output_text = visualizer.make_graph()
 
-        expected_output = read_expected_output('tests/class/fibonacci.dot')
+        expected_output = read_expected_output('tests/class_tests/fibonacci.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    def test_no_phis_xy(self):
+        parser = Parser('tests/class_tests/no_phis_x=y.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/class_tests/no_phis_x=y.dot')
 
         self.assertEqual(output_text, expected_output)
 

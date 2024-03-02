@@ -5,6 +5,6 @@ var a, b; {
     then
         let b <- a;
     else
-        let a <- (a + a)* a;
+        let a <- a*2;
     fi;
 }.

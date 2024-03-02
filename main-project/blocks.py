@@ -58,7 +58,7 @@ class BasicBlock(Block):
         self.phi_vars = set()
         self.parents: dict = {}
         self.children: {}
-        self.existing_phis_instructions = []
+        self.existing_phis_instructions = {}
         self.dom_instructions = {}
         self.return_block = False
 
@@ -107,7 +107,7 @@ class BasicBlock(Block):
             # For phis in if the instruction number should be incremented immediately after the assignment so
             # make a list of those instructions so that they can be updated with the x and y later
             if op == Operations.PHI and not self.while_block:
-                self.existing_phis_instructions.append(inst)
+                self.existing_phis_instructions[x_var] = inst
 
             # Add as a dominating instruction if applicable given the Operation (and not in while since they
             # will be added later)
@@ -166,13 +166,15 @@ class BasicBlock(Block):
         if y:
             instr.y = y
 
-    def get_existing_phi_instruction(self) -> int:
+    def get_existing_phi_instruction(self, var: int) -> int:
         """
         Returns the instruction id for the first already created phi instruction. Used for phi instructions in
         if-statements where the phi instructions need to be created immediately to get the correct instruction ids.
         :return: instruction id
         """
-        return self.existing_phis_instructions.pop(0).get_id()
+        idn = self.existing_phis_instructions[var].get_id()
+        del self.existing_phis_instructions[var]
+        return idn
 
     def available_exiting_phi_instruction(self) -> bool:
         return len(self.existing_phis_instructions) > 0
@@ -211,7 +213,7 @@ class BasicBlock(Block):
         self.instructions = {}
         self.instruction_order_list = []
         self.updated_vars = set()
-        self.existing_phis_instructions = []
+        self.existing_phis_instructions = {}
         self.phi_vars = set()
 
     def reset_vars(self):

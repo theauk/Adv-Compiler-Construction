@@ -47,7 +47,7 @@ class Utils:
 
                 if block1_child != block2_child:
                     if join_block.available_exiting_phi_instruction():
-                        phi_instruction = join_block.get_existing_phi_instruction()
+                        phi_instruction = join_block.get_existing_phi_instruction(child)
                         join_block.update_instruction(instr_idn=phi_instruction, x=block1_child, y=block2_child)
                         join_block.add_var_assignment(var=child, instruction_number=phi_instruction)
                     else:
@@ -152,8 +152,6 @@ class Utils:
         # Second pass to do cse
         self.update_while_cse(start_while_block)
 
-
-
     def update_while_phis_and_bra(self, start_while_block: BasicBlock):
         visited = {start_while_block}
         stack = []
@@ -179,7 +177,8 @@ class Utils:
 
         # Keep going until we are back at the starting while block
         while stack:
-            current_block = stack.pop()
+            stack = sorted(stack, key=lambda b: b.id)
+            current_block = stack.pop(0)
 
             # Check if the instruction should be updated to match new phi value
             for i in current_block.get_instruction_order_list():
@@ -202,7 +201,7 @@ class Utils:
                         child_first_instr_id = child_block.find_first_instr()
                         current_block.update_instruction(branch_instr_id, x=child_first_instr_id)
 
-                if child_block not in visited:
+                if child_block not in visited and child_block not in stack:
                     stack.append(child_block)
 
     def update_while_cse(self, start_while_block):
@@ -236,13 +235,12 @@ class Utils:
                 elif instruction.op == Operations.PHI:
                     phis.append(instruction)
 
-                if instruction.x in removed_instr_to_cse_idn:
+                if instruction.x in removed_instr_to_cse_idn and instruction.op != Operations.PHI:
                     current_block.add_var_assignment(instruction.x_var, removed_instr_to_cse_idn[instruction.x])
                     current_block.update_instruction(instruction.get_id(), removed_instr_to_cse_idn[instruction.x])
-                if instruction.y in removed_instr_to_cse_idn:
+                if instruction.y in removed_instr_to_cse_idn and instruction.op != Operations.PHI:
                     current_block.add_var_assignment(instruction.y_var, removed_instr_to_cse_idn[instruction.y])
                     current_block.update_instruction(instruction.get_id(), removed_instr_to_cse_idn[instruction.y])
-
 
             # Remove cse instructions
             for (idn, i, cse_idn) in reversed(remove_instr):  # to not mess with indices

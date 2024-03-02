@@ -1,22 +1,36 @@
 main
-var i, x, y, j; {
-    let i <- call InputNum();
-    let x <- 0;
-    let y <- 0;
-    let j <- i;
-    while x < 10 do;
-        if j < 9 then
-            let x <- i + 1;
-            let y <- j + 1;
-            let i <- i + 1;
-            while i < y do;
-                let i <- i + j;
+var a, b, c, d, e;
+{
+    let a <- call InputNum();
+    let b <- call InputNum();
+    let c <- call InputNum();
+    let d <- call InputNum();
+    let e <- a;
+
+
+    while d < 23 do
+        call OutputNum(d);
+        let e <- a + b;
+        let d <- e;
+        if a < 4 then
+            let a <- a + 1;
+        else
+            let c <- d + 1;
+            while c < 24 do
+                let c <- c + 2;
             od;
+            call OutputNum(c);
+            let b <- c;
         fi;
+        let b <- a + b + c;
+        call OutputNum(b);
+        let d <- d + 1;
     od;
 
-    call OutputNum(x);
-    call OutputNum(y);
-    call OutputNum(i);
-    call OutputNum(j)
+    call OutputNum(a);
+    call OutputNum(b);
+    call OutputNum(c);
+    call OutputNum(d);
+    call OutputNum(e);
+
 }.

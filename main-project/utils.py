@@ -46,7 +46,7 @@ class Utils:
             if (block1_child, block2_child) not in already_added_vars:
 
                 if block1_child != block2_child:
-                    if join_block.available_exiting_phi_instruction():
+                    if join_block.available_exiting_phi_instruction(child):
                         phi_instruction = join_block.get_existing_phi_instruction(child)
                         join_block.update_instruction(instr_idn=phi_instruction, x=block1_child, y=block2_child)
                         join_block.add_var_assignment(var=child, instruction_number=phi_instruction)

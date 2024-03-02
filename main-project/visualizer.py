@@ -43,7 +43,7 @@ class Visualizer:
                 formatted_strings = [
                     f"{self.symbol_table[key]}: {value}"
                     for key, value in filtered_vars.items()
-                    if value is not None
+                    if key is not None and value is not None
                 ]
                 text += ' | '.join(formatted_strings)
                 text += '}'

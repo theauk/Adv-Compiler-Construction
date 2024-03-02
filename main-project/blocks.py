@@ -92,23 +92,13 @@ class BasicBlock(Block):
             inst = Instruction(instr_id, op, x, y, x_var, y_var)
             self.instructions[instr_id] = inst
 
-            # For while blocks a phi instruction should be inserted at the beginning after
-            # already existing phi instructions
-            #if op == Operations.PHI and self.while_block:
-            #    insert_index = 0
-            #    for i, instr in enumerate(self.instruction_order_list):
-            #        if instr.op != Operations.PHI:
-            #            insert_index = i
-            #            break
-            #    self.instruction_order_list.insert(insert_index, inst)
-            #else:
-            #    self.instruction_order_list.append(inst)
-
             # For phis in if the instruction number should be incremented immediately after the assignment so
             # make a list of those instructions so that they can be updated with the x and y later
             if op == Operations.PHI:
                 self.existing_phis_instructions[x_var] = inst
                 if self.while_block:
+                    # For while blocks a phi instruction should be inserted at the beginning after
+                    # already existing phi instructions
                     insert_index = 0
                     for i, instr in enumerate(self.instruction_order_list):
                         if instr.op != Operations.PHI:
@@ -119,7 +109,6 @@ class BasicBlock(Block):
                     self.instruction_order_list.append(inst)
             else:
                 self.instruction_order_list.append(inst)
-
 
             # Add as a dominating instruction if applicable given the Operation (and not in while since they
             # will be added later)
@@ -173,9 +162,22 @@ class BasicBlock(Block):
 
     def update_instruction(self, instr_idn: int, x: int = None, y: int = None):
         instr: Instruction = self.instructions[instr_idn]
-        if x:
+        old_key = (instr.op, instr.x, instr.y)
+        if x and y:
+            if old_key in self.dom_instructions:
+                del self.dom_instructions[old_key]
+                self.dom_instructions[(instr.op, x, y)] = instr_idn
             instr.x = x
-        if y:
+            instr.y = y
+        elif x:
+            if old_key in self.dom_instructions:
+                del self.dom_instructions[old_key]
+                self.dom_instructions[(instr.op, x, instr.y)] = instr_idn
+            instr.x = x
+        elif y:
+            if old_key in self.dom_instructions:
+                del self.dom_instructions[old_key]
+                self.dom_instructions[(instr.op, instr.x, y)] = instr_idn
             instr.y = y
 
     def get_existing_phi_instruction(self, var: int) -> int:
@@ -213,7 +215,7 @@ class BasicBlock(Block):
         self.dom_instructions.update(dom_parent_instructions)
 
     def add_dom_instruction(self, instr_id, op, x, y):
-        if op != Operations.PHI:
+        if op != Operations.PHI and (op, x, y) not in self.dom_instructions:
             self.dom_instructions[(op, x, y)] = instr_id
 
     def get_dom_instruction(self):
@@ -256,9 +258,9 @@ class Blocks:
                       y: int = None, x_var: int = None, y_var: int = None) -> int:
         """
         Adds a new instruction to the given block unless it is a common subexpression.
-        :param y_var:
-        :param x_var:
-        :param in_while:
+        :param y_var: token var value for y
+        :param x_var: token var value for x
+        :param in_while: whether the block is a part of a while
         :param block: block to add instruction to
         :param instr_id: instruction id
         :param op: operator
@@ -328,7 +330,7 @@ class Blocks:
         """
         Updates leaf join list by checking if a block is a leaf join block,
         i.e., whether it is not a child of another join block.
-        :param join_block:
+        :param join_block: the current join block
         """
         if self.leaf_joins and self.leaf_joins[-1] in join_block.get_parents():
             self.leaf_joins[-1] = join_block

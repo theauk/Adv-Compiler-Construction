@@ -168,7 +168,7 @@ class Utils:
         self.update_while_phis_and_bra(start_while_block)
 
         # Second pass to do cse
-        # self.update_while_cse(start_while_block)
+        self.update_while_cse(start_while_block)
         print("")
 
     def update_while_phis_and_bra(self, start_while_block: BasicBlock):
@@ -226,9 +226,9 @@ class Utils:
     def update_while_cse(self, start_while_block):
         visited = set()
         stack = [start_while_block]
-        removed_instructions = []
         phis = []
         removed_instr_to_cse_idn = {}
+        removed_idn = []
 
         # Keep going until we are back at the starting while block
         while stack:
@@ -236,30 +236,33 @@ class Utils:
             current_block: BasicBlock = stack.pop(0)
 
             # Copy instructions down if dominated
-            for dom_parent in current_block.get_dom_parents():
-                current_block.copy_dom_instructions(dom_parent)
+            # for dom_parent in current_block.get_dom_parents():
+            #    current_block.copy_dom_instructions(dom_parent)
 
             # Check if cse
             remove_instr = []
             for i, instruction in enumerate(current_block.get_instruction_order_list()):
                 if instruction.op not in Operations.get_no_cse_instructions():
-                    if (instruction.op, instruction.x, instruction.y) in current_block.get_dom_instruction():
+                    if (instruction.op, instruction.x,
+                        instruction.y) in current_block.get_dom_instruction() and instruction.get_id() != \
+                            current_block.get_dom_instruction()[(instruction.op, instruction.x, instruction.y)]:
                         cse_idn = current_block.get_dom_instruction()[(instruction.op, instruction.x, instruction.y)]
                         remove_instr.append((instruction.id, i, cse_idn))
-                        removed_instructions.append(instruction.id)
-                        if instruction.id != cse_idn:
-                            removed_instr_to_cse_idn[instruction.id] = cse_idn
-                    else:
-                        current_block.add_dom_instruction(instruction.id, instruction.op, instruction.x, instruction.y)
-                elif instruction.op == Operations.PHI:
+                        removed_instr_to_cse_idn[instruction.id] = cse_idn
+
+                if instruction.op == Operations.PHI:
                     phis.append(instruction)
 
-                if instruction.x in removed_instr_to_cse_idn and instruction.op != Operations.PHI:
+                if instruction.x in removed_instr_to_cse_idn and instruction.y in removed_instr_to_cse_idn and instruction.op != Operations.PHI:
                     current_block.add_var_assignment(instruction.x_var, removed_instr_to_cse_idn[instruction.x])
-                    current_block.update_instruction(instruction.get_id(), removed_instr_to_cse_idn[instruction.x])
-                if instruction.y in removed_instr_to_cse_idn and instruction.op != Operations.PHI:
                     current_block.add_var_assignment(instruction.y_var, removed_instr_to_cse_idn[instruction.y])
-                    current_block.update_instruction(instruction.get_id(), removed_instr_to_cse_idn[instruction.y])
+                    current_block.update_instruction(instr_idn=instruction.get_id(), x=removed_instr_to_cse_idn[instruction.x], y=removed_instr_to_cse_idn[instruction.y])
+                elif instruction.x in removed_instr_to_cse_idn and instruction.op != Operations.PHI:
+                    current_block.add_var_assignment(instruction.x_var, removed_instr_to_cse_idn[instruction.x])
+                    current_block.update_instruction(instr_idn=instruction.get_id(), x=removed_instr_to_cse_idn[instruction.x])
+                elif instruction.y in removed_instr_to_cse_idn and instruction.op != Operations.PHI:
+                    current_block.add_var_assignment(instruction.y_var, removed_instr_to_cse_idn[instruction.y])
+                    current_block.update_instruction(instr_idn=instruction.get_id(), y=removed_instr_to_cse_idn[instruction.y])
 
             # Remove cse instructions
             for (idn, i, cse_idn) in reversed(remove_instr):  # to not mess with indices

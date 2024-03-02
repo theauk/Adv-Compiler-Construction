@@ -406,8 +406,6 @@ class Parser:
                 self.utils.add_relationship(parent_block=leaf_block, child_block=while_block,
                                             relationship=BlockRelation.BRANCH, copy_vars=False)
 
-        #self.utils.add_phis_while(self.in_while(), while_block, then_block)
-
         # Check if bra instruction should be inserted to create path out of current block if necessary
         if len(self.blocks.get_current_block().get_children()) == 0:
             bra_instr = self.baseSSA.get_new_instr_id()

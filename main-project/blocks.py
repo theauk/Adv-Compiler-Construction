@@ -177,9 +177,9 @@ class BasicBlock(Block):
         return idn
 
     def available_exiting_phi_instruction(self, var: int) -> bool:
-        if len(self.existing_phis_instructions) > 0 or var not in self.existing_phis_instructions:
-            return False
-        return True
+        if len(self.existing_phis_instructions) > 0 and var in self.existing_phis_instructions:
+            return True
+        return False
 
     def add_phi_var(self, phi_var: int):
         self.updated_vars.add(phi_var)

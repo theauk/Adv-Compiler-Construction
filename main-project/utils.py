@@ -204,6 +204,8 @@ class Utils:
                 if child_block not in visited and child_block not in stack:
                     stack.append(child_block)
 
+        print("")
+
     def update_while_cse(self, start_while_block):
         visited = set()
         stack = [start_while_block]

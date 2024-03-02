@@ -15,8 +15,12 @@ ______
 Questions:
 ______
 - Phis after ret + branch after ret?
-- Number for then branch instr. Is it okay if the number if the next number after last else instr?
+- Number for then branch instr. Is it okay if the number is the next number after last else instr?
 - Is it okay if branch instr number is after phi instr numbers? E.g. branch in while being 24 and the phi above it being 23?
+    - er lidt relateret til nedenstående
+- CHECK complex while test case:
+    can an instr have a future instr. See join 17 (since both are phi)
+    generally numbering of phis in if (me immediately) vs while (me after)
 
 
 NOTES:

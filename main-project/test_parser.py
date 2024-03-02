@@ -40,7 +40,7 @@ class TestInterpreter(unittest.TestCase):
         parser = Parser('tests/if_redundant_phi.txt')
         parser.computation()
 
-        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=False, show_instr_vars=False)
         output_text = visualizer.make_graph()
 
         expected_output = read_expected_output('tests/if_redundant_phi.dot')

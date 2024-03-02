@@ -146,11 +146,11 @@ class Utils:
         return branch_instr_idn
 
     def update_while(self, start_while_block: BasicBlock):
-        # Second pass to do cse
-        self.update_while_cse(start_while_block)
-
         # First pass to update phi instructions and propagate them + update bra instruction x value
         self.update_while_phis_and_bra(start_while_block)
+
+        # Second pass to do cse
+        self.update_while_cse(start_while_block)
 
 
 

@@ -7,7 +7,6 @@ var y, i, j; {
     while y < 10 do
         let y <- j + 1;
         let i <- i + 1;
-
     od;
     let y <- j + 1;
     call OutputNewLine();

@@ -276,7 +276,10 @@ class Parser:
                     self.tokenizer.error(f"array index has not been initialized for array {self.symbolTable[designator]}")
 
                 return result, True, indices  # TODO fix since it does not do designator like the others
+                # TODO: this will be a load instruction somewhere and you have to check for "cse" loads
+                # it will probably be fine to return the result that is there as long as you also do the load etc.
 
+            # TODO: you have to check if you need to kill
             return designator, True, indices
         else:  # normal id
             return designator, False, indices
@@ -334,9 +337,9 @@ class Parser:
 
     def factor(self):  # returns the number from either designator, number, ( expression ), or funcCall
         if self.token > self.tokenizer.max_reserved_id:
-            designator, array = self.designator()
+            designator, array, indices = self.designator()
             if array:
-                return -1, designator
+                return -1, designator  # TODO: UPDATE for arrays
             else:
                 return self.blocks.find_var_given_id(designator), designator
         elif self.token == Tokens.NUMBER:

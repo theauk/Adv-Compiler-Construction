@@ -1,10 +1,15 @@
-USE A VARIABLE IN E:G: WHILE THAT HAS NOT BEEN DEFINED ABOVE
+
 
 Stuff now:
 ______
-- Fix a + a * 5
-- Fix complicated if stmts case
 - Arrays
+    x Initial storing
+    - Initial loading
+    - Make actual loading instruction set (all that multiply, etc.)
+    - Make actual storing instruction
+    - Keep a list of already done loading instr and pass down dominating blocks
+        - Kill one if it gets updated
+        - Reuse loading instr if it is still valid
 
 
 Stuff later:

@@ -1,6 +1,6 @@
 from blocks import Blocks, BasicBlock, BlockRelation
 from operations import Operations
-from ssa import BaseSSA, Instruction
+from ssa import BaseSSA
 from tokenizer import Tokenizer
 from tokens import Tokens
 from utils import Utils
@@ -19,6 +19,7 @@ class Parser:
         self.next_token()
         self.while_stack = []
         self.outer_while_blocks = []
+        self.if_branch_blocks = []
 
     def in_while(self):
         return len(self.while_stack) > 0
@@ -106,7 +107,10 @@ class Parser:
                                       op=Operations.END)
 
             if len(self.outer_while_blocks) > 0:
-                self.utils.fix_while_branching(self.outer_while_blocks)
+                self.utils.fix_branching(self.outer_while_blocks, False)
+
+            if len(self.if_branch_blocks) > 0:
+                self.utils.fix_branching(self.if_branch_blocks, True)
 
         return
 
@@ -234,7 +238,8 @@ class Parser:
                 if current_join_block and designator not in current_join_block.get_phi_vars():
                     self.utils.create_phi_instruction(self.in_while(), current_join_block, designator)
             else:
-                self.blocks.get_current_block().store_element_in_array(self.baseSSA.get_new_instr_id(), designator, idn, indices)
+                self.blocks.get_current_block().store_element_in_array(self.baseSSA.get_new_instr_id(), designator, idn,
+                                                                       indices)
 
         return
 
@@ -273,7 +278,8 @@ class Parser:
                     result = result[index]
 
                 if not result:
-                    self.tokenizer.error(f"array index has not been initialized for array {self.symbolTable[designator]}")
+                    self.tokenizer.error(
+                        f"array index has not been initialized for array {self.symbolTable[designator]}")
 
                 return result, True, indices  # TODO fix since it does not do designator like the others
                 # TODO: this will be a load instruction somewhere and you have to check for "cse" loads
@@ -469,7 +475,6 @@ class Parser:
                                         relationship=BlockRelation.BRANCH)
             self.utils.add_relationship(parent_block=else_block, child_block=join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
-            self.utils.add_phis_if(self.in_while(), if_block, then_block, else_block)
         elif not then_block.get_children():
             # Case 2: no additional conditional in then
             fall_through_block = self.blocks.get_lowest_placed_leaf_join_block()
@@ -477,7 +482,7 @@ class Parser:
                                         relationship=BlockRelation.FALL_THROUGH)
             self.utils.add_relationship(parent_block=then_block, child_block=join_block,
                                         relationship=BlockRelation.BRANCH)
-            self.utils.add_phis_if(self.in_while(), if_block, then_block, fall_through_block)
+            else_block = fall_through_block
             branch_block = then_block
         elif not else_block.get_children():
             # Case 3: no additional conditional in else
@@ -486,32 +491,30 @@ class Parser:
                                         relationship=BlockRelation.BRANCH)
             self.utils.add_relationship(parent_block=else_block, child_block=join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
-            self.utils.add_phis_if(self.in_while(), if_block, branch_block, else_block)
+            then_block = branch_block
         else:
             # Case 4: new conditional in both then and else
-            leaf_left = self.blocks.get_lowest_placed_leaf_join_block()
-            leaf_right = self.blocks.get_lowest_placed_leaf_join_block()
-            branch_block = leaf_right
-            self.utils.add_relationship(parent_block=leaf_left, child_block=join_block,
+            then_block = self.blocks.get_lowest_placed_leaf_join_block()
+            else_block = self.blocks.get_lowest_placed_leaf_join_block()
+            branch_block = else_block
+            self.utils.add_relationship(parent_block=then_block, child_block=join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
-            self.utils.add_relationship(parent_block=leaf_right, child_block=join_block,
+            self.utils.add_relationship(parent_block=else_block, child_block=join_block,
                                         relationship=BlockRelation.BRANCH)
-            self.utils.add_phis_if(self.in_while(), if_block, leaf_left, leaf_right)
 
-        cur_block_first_instr = self.blocks.get_current_block().find_first_instr() # TODO move this up earlier to make number earlier
-        if cur_block_first_instr is not None:
-            self.blocks.add_new_instr(self.in_while(), branch_block, self.baseSSA.get_new_instr_id(), Operations.BRA,
-                                      cur_block_first_instr)
-        else:
-            # If there are no phi instructions needed then take what will be the next instr number but do not update it
-            # TODO check this branch number since might be wrong if e.g. adding new var so that instr number left is not the first
-            if then_block.is_return_block() and else_block.is_return_block():
-                self.blocks.add_new_instr(self.in_while(), join_block, self.baseSSA.get_new_instr_id(),
-                                          Operations.BRA, Instruction(self.baseSSA.get_cur_instr_id() + 1))
-                join_block.set_as_return_block()
-            else:
-                self.blocks.add_new_instr(self.in_while(), branch_block, self.baseSSA.get_new_instr_id(),
-                                          Operations.BRA, Instruction(self.baseSSA.get_cur_instr_id() + 1))
+        if not join_block.get_instructions():  # empty join block
+            self.blocks.add_new_instr(self.in_while(), then_block, self.baseSSA.get_new_instr_id())
+
+        # Add branch instruction
+        self.blocks.add_new_instr(self.in_while(), block=branch_block, instr_id=self.baseSSA.get_new_instr_id(),
+                                  op=Operations.BRA)
+
+        self.if_branch_blocks.append(branch_block)
+
+        if then_block.is_return_block() and else_block.is_return_block():
+            join_block.set_as_return_block()
+
+        self.utils.add_phis_if(self.in_while(), if_block, then_block, else_block)
 
         self.blocks.update_current_join_block(None)
 
@@ -565,7 +568,7 @@ class Parser:
                 # There are instructions below od. Add a branch from that block to top of the current while. Branch
                 # value will be updated later
                 self.blocks.add_new_instr(self.in_while(), block=leaf_block, instr_id=self.baseSSA.get_new_instr_id(),
-                                          op=Operations.BRA)  # TODO: check that x gets updated in other pass
+                                          op=Operations.BRA)
                 self.utils.add_relationship(parent_block=leaf_block, child_block=while_block,
                                             relationship=BlockRelation.BRANCH, copy_vars=False)
 
@@ -574,8 +577,7 @@ class Parser:
         # Check if bra instruction should be inserted to create path out of current block if necessary
         if len(self.blocks.get_current_block().get_children()) == 0:
             bra_instr = self.baseSSA.get_new_instr_id()
-            self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), bra_instr,
-                                      Operations.BRA)  # TODO: check that x gets updated in other pass
+            self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), bra_instr,Operations.BRA)
             self.utils.add_relationship(parent_block=self.blocks.get_current_block(), child_block=while_block,
                                         relationship=BlockRelation.BRANCH, copy_vars=False)
 

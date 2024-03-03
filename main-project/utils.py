@@ -264,11 +264,14 @@ class Utils:
                 if child_block.get_id() not in visited and child_block not in stack:
                     stack.append(child_block)
 
-    def fix_while_branching(self, outer_while_blocks: list[BasicBlock]):
-        for block in outer_while_blocks:
+    def fix_branching(self, branch_blocks: list[BasicBlock], if_blocks):
+        for block in branch_blocks:
             for child_block, relationship in block.get_children().items():
                 if relationship == BlockRelation.BRANCH:
                     # Update the branching instruction to the first instruction in the branch block
                     branch_instr = block.get_instruction_order_list()[-1]
                     child_first_instr = child_block.find_first_instr()
-                    block.update_instruction(branch_instr, y=child_first_instr)
+                    if if_blocks:
+                        block.update_instruction(branch_instr, x=child_first_instr)
+                    else:
+                        block.update_instruction(branch_instr, y=child_first_instr)

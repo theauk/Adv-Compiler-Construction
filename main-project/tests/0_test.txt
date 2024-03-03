@@ -1,5 +1,5 @@
 main
-var a, b, c, d; {
-    let c <- 0;
-	let a <- c + c * 2;
+var array [2] a, b, c, d; {
+    let c <- a[1];
+	let b <- c + 2;
 }.

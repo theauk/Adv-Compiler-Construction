@@ -11,7 +11,7 @@ class Parser:
         self.tokenizer = Tokenizer(file_name)
         self.token: int = 0
         self.symbolTable = {}  # id token -> var name
-        self.arrayTable = {}
+        self.arrayTable = {}  # designator -> [length of dim 1, length of dim 2...]
         self.baseSSA = BaseSSA()
         self.blocks = Blocks(self.baseSSA, None)
         self.setup_blocks()
@@ -43,7 +43,8 @@ class Parser:
         reserved = self.reserved_identifier()
         if not reserved:
             if self.token not in self.blocks.get_current_block().get_vars() or \
-                    self.blocks.get_current_block().get_vars()[self.token] is None:
+                    self.blocks.get_current_block().get_vars()[self.token] is None \
+                    or self.token not in self.arrayTable:
                 self.tokenizer.error(
                     f"SyntaxError: {self.tokenizer.last_id} has not been initialized. It is now initialized to 0")
                 self.symbolTable[self.token] = self.tokenizer.last_id
@@ -76,6 +77,8 @@ class Parser:
             while self.token > self.tokenizer.max_reserved_id or self.token == Tokens.ARR_TOKEN:
                 self.var_declaration()
 
+            self.check_token(Tokens.SEMI_TOKEN)
+
             # { funcDecl } -> [ "void" ] "function"...
             while self.token == Tokens.VOID_TOKEN or self.token == Tokens.FUNC_TOKEN:
                 self.next_token()
@@ -104,32 +107,45 @@ class Parser:
 
     def var_declaration(self):
         # Handle arrays
-        if self.token == Tokens.OPEN_BRACKET_TOKEN:  # TODO array - starts with "array"
-            self.next_token()
+        if self.token == Tokens.ARR_TOKEN:
             self.array_declaration()
-
-        # Check if valid ident
-        if not self.reserved_identifier():
-            self.blocks.get_current_block().add_var_assignment(self.token, None)
-        self.next_token()
-
-        # Check for additional idents seperated by ","
-        while self.token == Tokens.COMMA_TOKEN:
-            self.next_token()
+        else:
+            # Handle non-array parameters
+            # Check if valid ident
             if not self.reserved_identifier():
                 self.blocks.get_current_block().add_var_assignment(self.token, None)
+                self.symbolTable[self.token] = self.tokenizer.last_id
             self.next_token()
 
-        self.check_token(Tokens.SEMI_TOKEN)
+        # Check for additional idents seperated by ","
+        if self.token == Tokens.COMMA_TOKEN:
+            self.next_token()
+            self.var_declaration()
 
         return
 
     def array_declaration(self):
-        while self.check_token(Tokens.OPEN_BRACKET_TOKEN):
+        lengths_of_dimensions = []
+        self.next_token()
+        self.check_token(Tokens.OPEN_BRACKET_TOKEN)
+        self.check_token(Tokens.NUMBER)
+        lengths_of_dimensions.append(self.tokenizer.last_number)
+        self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
+
+        while self.token == Tokens.OPEN_BRACKET_TOKEN:
+            self.next_token()
             self.check_token(Tokens.NUMBER)
+            lengths_of_dimensions.append(self.tokenizer.last_number)
             self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
 
-        return
+        # Check if valid ident
+        if not self.reserved_identifier():
+            self.blocks.get_current_block().add_var_assignment(self.token, None)
+            self.symbolTable[self.token] = self.tokenizer.last_id
+
+        self.arrayTable[self.token] = lengths_of_dimensions
+
+        self.next_token()
 
     def func_declaration(self):
         self.check_identifier()
@@ -197,9 +213,8 @@ class Parser:
 
     def assignment(self):
         if not self.reserved_identifier():
-            designator = self.token  # TODO ARRAY distinguish
+            designator, is_array = self.designator(lhs=True)
 
-            self.symbolTable[designator] = self.tokenizer.last_id
             self.next_token()
             # "<-"
             self.check_token(Tokens.BECOMES_TOKEN)
@@ -214,6 +229,117 @@ class Parser:
                 self.utils.create_phi_instruction(self.in_while(), current_join_block, designator)
 
         return
+
+    def return_statement(self):
+        self.blocks.get_current_block().set_as_return_block()
+        x, x_var = self.expression()
+        self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
+                                  Operations.RET, x=x, x_var=x_var)
+        return
+
+    def designator(self, lhs=False):
+        designator = self.token
+
+        if not lhs:
+            self.check_identifier()  # TODO need to check if specific index has been initialized
+
+        if self.token == Tokens.OPEN_BRACKET_TOKEN:  # array
+            while self.token == Tokens.OPEN_BRACKET_TOKEN:
+                self.check_token(Tokens.OPEN_BRACKET_TOKEN)
+                exp = self.expression()
+                self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
+
+            designator_array = -1
+            return designator_array, True
+        else:  # normal id
+            return designator, False
+
+    def expression(self):
+        idn_left, idn_left_var = self.term()
+
+        while self.token == Tokens.PLUS_TOKEN or self.token == Tokens.MINUS_TOKEN:
+            if self.token == Tokens.PLUS_TOKEN:
+                self.next_token()
+                idn_right, idn_right_var = self.term()
+                # = idn_left so that if we e.g. have 2 + 2 + 2 then the id for the first 2 * 2 becomes the next left
+                idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
+                                                     self.baseSSA.get_new_instr_id(), Operations.ADD, idn_left,
+                                                     idn_right, x_var=idn_left_var, y_var=idn_right_var)
+                idn_left_var = None  # TODO check that it is not a problem that idn_left_var is not updated
+            elif self.token == Tokens.MINUS_TOKEN:
+                self.next_token()
+                idn_right, idn_right_var = self.term()
+                idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
+                                                     self.baseSSA.get_new_instr_id(), Operations.SUB, idn_left,
+                                                     idn_right, x_var=idn_left_var, y_var=idn_right_var)
+                idn_left_var = None  # TODO check that it is not a problem that idn_left_var is not updated
+
+        return idn_left, idn_left_var
+
+    def term(self):
+        idn_left, idn_left_var = self.factor()
+
+        while self.token == Tokens.TIMES_TOKEN or self.token == Tokens.DIV_TOKEN:
+            if self.token == Tokens.TIMES_TOKEN:
+                self.next_token()
+                idn_right, idn_right_var = self.factor()
+                idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
+                                                     self.baseSSA.get_new_instr_id(), Operations.MUL, idn_left,
+                                                     idn_right, x_var=idn_left_var, y_var=idn_right_var)
+                idn_left_var = None  # TODO check that it is not a problem that idn_left_var is not updated
+            elif self.token == Tokens.DIV_TOKEN:
+                self.next_token()
+                idn_right, idn_right_var = self.factor()
+                idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
+                                                     self.baseSSA.get_new_instr_id(), Operations.DIV, idn_left,
+                                                     idn_right, x_var=idn_left_var, y_var=idn_right_var)
+                idn_left_var = None  # TODO check that it is not a problem that idn_left_var is not updated
+
+        return idn_left, idn_left_var
+
+    def factor(self):  # returns the number from either designator, number, ( expression ), or funcCall
+        if self.token > self.tokenizer.max_reserved_id:
+            designator, array = self.designator()
+            if array:
+                return -1, designator
+            else:
+                return self.blocks.find_var_given_id(designator), designator
+        elif self.token == Tokens.NUMBER:
+            num = self.tokenizer.last_number
+            self.blocks.add_constant(num)
+            constant_id = self.blocks.get_constant_id(num)
+            self.next_token()
+            return constant_id, None  # return the id for the constant when it is directly a number
+        elif self.token == Tokens.OPEN_PAREN_TOKEN:
+            self.next_token()
+            result, result_var = self.expression()
+            self.check_token(Tokens.CLOSE_PAREN_TOKEN)
+            return result, result_var  # return whatever the expression gives (ends up in factor as well)
+        elif self.token == Tokens.CALL_TOKEN:
+            self.next_token()
+            result, result_var = self.func_call()
+            return result, result_var  # return what func call gives
+        elif self.blocks.get_current_block().is_return_block():
+            return None, None
+        else:
+            self.tokenizer.error(
+                f"SyntaxError: expected either {self.tokenizer.get_token_from_index(Tokens.IDENT), self.tokenizer.get_token_from_index(Tokens.NUMBER), self.tokenizer.get_token_from_index(Tokens.OPEN_PAREN_TOKEN), self.tokenizer.get_token_from_index(Tokens.CALL_TOKEN)} "
+                f"got {self.tokenizer.get_token_from_index(self.token)}")
+            self.next_token()
+            return None, None
+
+    def relation(self):
+        left_side, left_side_var = self.expression()
+        if self.token > 25 or self.token < 20:
+            self.tokenizer.error(
+                f"SyntaxError: expected relOp got {self.tokenizer.get_token_from_index(self.token)}")
+            return
+        else:
+            rel_op = self.token
+            rel_op_instr = self.baseSSA.rel_op_to_instruction(rel_op)
+            self.next_token()
+            right_side, right_side_var = self.expression()
+            return left_side, rel_op_instr, right_side, left_side_var, right_side_var
 
     def func_call(self):
         # Predefined functions
@@ -433,112 +559,3 @@ class Parser:
             self.outer_while_blocks.append(while_block)
 
         return
-
-    def return_statement(self):
-        self.blocks.get_current_block().set_as_return_block()
-        x, x_var = self.expression()
-        self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), self.baseSSA.get_new_instr_id(),
-                                  Operations.RET, x=x, x_var=x_var)
-        return
-
-    def designator(self):
-        designator = self.token
-
-        if self.check_identifier():
-            if self.token == Tokens.OPEN_BRACKET_TOKEN:  # array
-                while self.token == Tokens.OPEN_BRACKET_TOKEN:  # TODO arrays
-                    self.next_token()
-                    designator += self.expression()
-                    self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
-                    return 0, True
-            else:  # normal id
-                return designator, False
-        else:
-            return
-
-    def expression(self):
-        idn_left, idn_left_var = self.term()
-
-        while self.token == Tokens.PLUS_TOKEN or self.token == Tokens.MINUS_TOKEN:
-            if self.token == Tokens.PLUS_TOKEN:
-                self.next_token()
-                idn_right, idn_right_var = self.term()
-                # = idn_left so that if we e.g. have 2 + 2 + 2 then the id for the first 2 * 2 becomes the next left
-                idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
-                                                     self.baseSSA.get_new_instr_id(), Operations.ADD, idn_left,
-                                                     idn_right, x_var=idn_left_var, y_var=idn_right_var)
-                idn_left_var = None  # TODO check that it is not a problem that idn_left_var is not updated
-            elif self.token == Tokens.MINUS_TOKEN:
-                self.next_token()
-                idn_right, idn_right_var = self.term()
-                idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
-                                                     self.baseSSA.get_new_instr_id(), Operations.SUB, idn_left,
-                                                     idn_right, x_var=idn_left_var, y_var=idn_right_var)
-                idn_left_var = None  # TODO check that it is not a problem that idn_left_var is not updated
-
-        return idn_left, idn_left_var
-
-    def term(self):
-        idn_left, idn_left_var = self.factor()
-
-        while self.token == Tokens.TIMES_TOKEN or self.token == Tokens.DIV_TOKEN:
-            if self.token == Tokens.TIMES_TOKEN:
-                self.next_token()
-                idn_right, idn_right_var = self.factor()
-                idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
-                                                     self.baseSSA.get_new_instr_id(), Operations.MUL, idn_left,
-                                                     idn_right, x_var=idn_left_var, y_var=idn_right_var)
-                idn_left_var = None  # TODO check that it is not a problem that idn_left_var is not updated
-            elif self.token == Tokens.DIV_TOKEN:
-                self.next_token()
-                idn_right, idn_right_var = self.factor()
-                idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
-                                                     self.baseSSA.get_new_instr_id(), Operations.DIV, idn_left,
-                                                     idn_right, x_var=idn_left_var, y_var=idn_right_var)
-                idn_left_var = None  # TODO check that it is not a problem that idn_left_var is not updated
-
-        return idn_left, idn_left_var
-
-    def factor(self):  # returns the number from either designator, number, ( expression ), or funcCall
-        if self.token > self.tokenizer.max_reserved_id:
-            designator, array = self.designator()
-            if array:
-                pass  # TODO array
-            else:
-                return self.blocks.find_var_given_id(designator), designator
-        elif self.token == Tokens.NUMBER:
-            num = self.tokenizer.last_number
-            self.blocks.add_constant(num)
-            constant_id = self.blocks.get_constant_id(num)
-            self.next_token()
-            return constant_id, None  # return the id for the constant when it is directly a number
-        elif self.token == Tokens.OPEN_PAREN_TOKEN:
-            self.next_token()
-            result, result_var = self.expression()
-            self.check_token(Tokens.CLOSE_PAREN_TOKEN)
-            return result, result_var  # return whatever the expression gives (ends up in factor as well)
-        elif self.token == Tokens.CALL_TOKEN:
-            self.next_token()
-            result, result_var = self.func_call()
-            return result, result_var  # return what func call gives
-        elif self.blocks.get_current_block().is_return_block():
-            return None, None
-        else:
-            self.tokenizer.error(
-                f"SyntaxError: expected either {self.tokenizer.get_token_from_index(Tokens.IDENT), self.tokenizer.get_token_from_index(Tokens.NUMBER), self.tokenizer.get_token_from_index(Tokens.OPEN_PAREN_TOKEN), self.tokenizer.get_token_from_index(Tokens.CALL_TOKEN)} "
-                f"got {self.tokenizer.get_token_from_index(self.token)}")
-            self.next_token()
-            return None, None
-
-    def relation(self):
-        left_side, left_side_var = self.expression()
-        if self.token > 25 or self.token < 20:
-            self.tokenizer.error(
-                f"SyntaxError: expected relOp got {self.tokenizer.get_token_from_index(self.token)}")
-            return
-        else:
-            rel_op = self.token
-            rel_op_instr = self.baseSSA.rel_op_to_instruction(rel_op)
-            self.next_token()
-            right_side, right_side_var = self.expression()
-            return left_side, rel_op_instr, right_side, left_side_var, right_side_var

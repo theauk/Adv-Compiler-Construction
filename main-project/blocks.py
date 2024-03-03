@@ -310,6 +310,7 @@ class Blocks:
         return self.current_join_block
 
     def get_lowest_placed_leaf_join_block(self) -> BasicBlock:
+        # The lowest placed is the one with the highest id
         highest_id = self.leaf_joins[0].get_id()
         highest_id_block = self.leaf_joins[0]
 

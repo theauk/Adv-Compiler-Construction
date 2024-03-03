@@ -135,6 +135,17 @@ class TestInterpreter(unittest.TestCase):
 
         self.assertEqual(output_text, expected_output)
 
+    def test_if_sequential_ifs_in_if(self):
+        parser = Parser('tests/my_tests/if_sequential_ifs_in_if.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/my_tests/if_sequential_ifs_in_if.dot')
+
+        self.assertEqual(output_text, expected_output)
+
     # CLASS TESTS -------------------------------------
     def test_complex_while(self):
         parser = Parser('tests/class_tests/complex_while.txt')

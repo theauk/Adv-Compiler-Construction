@@ -29,26 +29,33 @@ class BaseSSA:
 
 
 class Instruction:
-    def __init__(self, id_count, op: Operations, x=None, y=None, x_var=None, y_var=None):
+    def __init__(self, id_count, op: Operations = None, x: 'Instruction' = None, y: 'Instruction' = None, x_var=None,
+                 y_var=None, constant=None):
         self.id = id_count
         self.op = op
         self.x = x
         self.y = y
         self.x_var = x_var
         self.y_var = y_var
+        self.constant = constant
 
     def get_id(self):
         return self.id
 
+    def set_constant(self, constant: int):
+        self.constant = constant
+
     def __str__(self):
-        if not self.x and not self.y and not self.op:
+        if self.constant is not None:
+            return f"{self.id}: const #{self.constant}"
+        elif not self.x and not self.y and not self.op:
             return f"{self.id}: \<empty\>"
         elif not self.x and not self.y:
             return f"{self.id}: {self.op}"
         elif not self.y:
-            return f"{self.id}: {self.op} ({self.x})"
+            return f"{self.id}: {self.op} ({self.x.get_id()})"
         else:
-            return f"{self.id}: {self.op} ({self.x}) ({self.y})"
+            return f"{self.id}: {self.op} ({self.x.get_id()}) ({self.y.get_id()})"
 
     def print_debug(self):
         if not self.x and not self.y and not self.op:
@@ -56,6 +63,19 @@ class Instruction:
         elif not self.x and not self.y:
             return f"{self.id}: {self.op}"
         elif not self.y:
-            return f"{self.id}: {self.op} ({self.x}:{self.x_var if self.x_var else ''})"
+            return f"{self.id}: {self.op} ({self.x.get_id()}:{self.x_var if self.x_var else ''})"
         else:
-            return f"{self.id}: {self.op} ({self.x}:{self.x_var if self.x_var else ''}) ({self.y}:{self.y_var if self.y_var else ''})"
+            return f"{self.id}: {self.op} ({self.x.get_id()}:{self.x_var if self.x_var else ''}) ({self.y.get_id()}:{self.y_var if self.y_var else ''})"
+
+    def __eq__(self, other):
+        if isinstance(other, Instruction):
+            return self.id == other.id
+        return False
+
+    def __lt__(self, other):
+        if isinstance(other, Instruction):
+            return self.id < other.id
+        return NotImplemented
+
+    def __hash__(self):
+        return hash(self.id)

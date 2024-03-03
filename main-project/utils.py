@@ -1,5 +1,6 @@
 from blocks import BasicBlock, BlockRelation
 from operations import Operations
+from ssa import Instruction
 
 
 class Utils:
@@ -17,7 +18,8 @@ class Utils:
     def copy_vars(self, parent_block: BasicBlock, child_block: BasicBlock):
         child_block.copy_vars(parent_block.get_vars())
 
-    def create_phi_instruction(self, in_while, current_join_block, designator, x=None, y=None):
+    def create_phi_instruction(self, in_while, current_join_block, designator, x: Instruction = None,
+                               y: Instruction = None):
         if x and y or not current_join_block.is_while():
             current_join_block.add_phi_var(designator)
             instr = self.baseSSA.get_new_instr_id()
@@ -38,17 +40,17 @@ class Utils:
             block1_child = block1.get_vars()[child]
             if not block1_child:
                 self.blocks.add_constant(0)
-                block1_child = self.blocks.get_constant_id(0)
+                block1_child = self.blocks.get_constant_instr(0)
             block2_child = block2.get_vars()[child]
             if not block2_child:
                 self.blocks.add_constant(0)
-                block2_child = self.blocks.get_constant_id(0)
+                block2_child = self.blocks.get_constant_instr(0)
             if (block1_child, block2_child) not in already_added_vars:
 
                 if block1_child != block2_child:
                     if join_block.available_exiting_phi_instruction(child):
                         phi_instruction = join_block.get_existing_phi_instruction(child)
-                        join_block.update_instruction(instr_idn=phi_instruction, x=block1_child, y=block2_child)
+                        join_block.update_instruction(instr=phi_instruction, x=block1_child, y=block2_child)
                         join_block.add_var_assignment(var=child, instruction_number=phi_instruction)
                     else:
                         phi_instruction = self.create_phi_instruction(in_while, join_block, child, x=block1_child,
@@ -101,7 +103,7 @@ class Utils:
         unused_phis = []
         for i, instruction in enumerate(join_block.get_instruction_order_list()):
             if instruction.op == Operations.PHI and not instruction.x:
-                unused_phis.append((instruction.get_id(), i))
+                unused_phis.append((instruction, i))
         for idn, i in reversed(unused_phis):
             join_block.remove_instruction(idn, i)
 
@@ -171,9 +173,9 @@ class Utils:
         for i in start_while_block.get_instructions().values():
             if i.op != Operations.PHI:
                 if (i.x, i.x_var) in old_to_new_instr_ids:
-                    start_while_block.update_instruction(i.id, x=old_to_new_instr_ids[(i.x, i.x_var)])
+                    start_while_block.update_instruction(i, x=old_to_new_instr_ids[(i.x, i.x_var)])
                 if (i.y, i.y_var) in old_to_new_instr_ids:
-                    start_while_block.update_instruction(i.id, y=old_to_new_instr_ids[(i.y, i.y_var)])
+                    start_while_block.update_instruction(i, y=old_to_new_instr_ids[(i.y, i.y_var)])
 
         # Keep going until we are back at the starting while block
         while stack:
@@ -184,9 +186,9 @@ class Utils:
             for i in current_block.get_instruction_order_list():
                 original_i_x = i.x
                 if (i.x, i.x_var) in old_to_new_instr_ids:
-                    current_block.update_instruction(i.id, x=old_to_new_instr_ids[(i.x, i.x_var)])
+                    current_block.update_instruction(i, x=old_to_new_instr_ids[(i.x, i.x_var)])
                 if (i.y, i.y_var) in old_to_new_instr_ids:
-                    current_block.update_instruction(i.id, y=old_to_new_instr_ids[(i.y, i.y_var)])
+                    current_block.update_instruction(i, y=old_to_new_instr_ids[(i.y, i.y_var)])
                 if i.op == Operations.PHI:
                     old_to_new_instr_ids[(original_i_x, i.x_var)] = i.id
 
@@ -197,14 +199,12 @@ class Utils:
                     # Update the branching instruction
                     branch_instr = current_block.get_instruction_order_list()[-1]
                     if branch_instr.op == Operations.BRA:
-                        branch_instr_id = branch_instr.get_id()
-                        child_first_instr_id = child_block.find_first_instr()
-                        current_block.update_instruction(branch_instr_id, x=child_first_instr_id)
+                        branch_instr = branch_instr
+                        child_first_instr = child_block.find_first_instr()
+                        current_block.update_instruction(branch_instr, x=child_first_instr)
 
                 if child_block not in visited and child_block not in stack:
                     stack.append(child_block)
-
-        print("")
 
     def update_while_cse(self, start_while_block):
         visited = set()
@@ -267,6 +267,6 @@ class Utils:
             for child_block, relationship in block.get_children().items():
                 if relationship == BlockRelation.BRANCH:
                     # Update the branching instruction to the first instruction in the branch block
-                    branch_instr = block.get_instruction_order_list()[-1].get_id()
-                    child_first_instr_id = child_block.find_first_instr()
-                    block.update_instruction(branch_instr, y=child_first_instr_id)
+                    branch_instr = block.get_instruction_order_list()[-1]
+                    child_first_instr = child_block.find_first_instr()
+                    block.update_instruction(branch_instr, y=child_first_instr)

@@ -38,10 +38,10 @@ class ConstantBlock(Block):
         self.id = idn
         self.constants = {}
 
-    def add_constant(self, idn: int, constant: int):
-        self.constants[constant] = idn
+    def add_constant(self, instr: Instruction, constant: int):
+        self.constants[constant] = instr
 
-    def get_constant_id(self, constant: int) -> int:
+    def get_constant_id(self, constant: int) -> Instruction:
         return self.constants[constant]
 
 
@@ -72,7 +72,7 @@ class BasicBlock(Block):
     def is_while(self) -> bool:
         return self.while_block
 
-    def is_cse(self, op: Operations = None, x: int = None, y: int = None):
+    def is_cse(self, op: Operations = None, x: Instruction = None, y: Instruction = None):
         """
         Checks if the instruction is a common subexpression. If yes, returns the corresponding instruction id
         otherwise None
@@ -86,7 +86,7 @@ class BasicBlock(Block):
         else:
             return None
 
-    def add_new_instr_block(self, in_while, instr_id: int, op: Operations = None, x: int = None, y: int = None,
+    def add_new_instr_block(self, in_while, instr_id: int, op: Operations = None, x: Instruction = None, y: Instruction = None,
                             x_var: int = None, y_var: int = None) -> (
             int, bool):
         if in_while or (op, x, y) not in self.dom_instructions:
@@ -115,7 +115,7 @@ class BasicBlock(Block):
             if op and op not in Operations.get_no_cse_instructions() and not in_while:
                 self.add_dom_instruction(instr_id, op, x, y)
 
-            return instr_id, False
+            return inst, False
         else:
             return self.dom_instructions[(op, x, y)], True
 
@@ -158,24 +158,24 @@ class BasicBlock(Block):
     def find_first_instr(self):
         if not self.instructions:
             return None
-        return self.instruction_order_list[0].get_id()
+        return self.instruction_order_list[0]
 
-    def update_instruction(self, instr_idn: int, x: int = None, y: int = None):
-        instr: Instruction = self.instructions[instr_idn]
+    def update_instruction(self, instr: Instruction, x: Instruction = None, y: Instruction = None):
+        instr: Instruction = self.instructions[instr.get_id()]
         if x:
             instr.x = x
         if y:
             instr.y = y
 
-    def get_existing_phi_instruction(self, var: int) -> int:
+    def get_existing_phi_instruction(self, var: int) -> Instruction:
         """
         Returns the instruction id for the first already created phi instruction. Used for phi instructions in
         if-statements where the phi instructions need to be created immediately to get the correct instruction ids.
         :return: instruction id
         """
-        idn = self.existing_phis_instructions[var].get_id()
+        instr = self.existing_phis_instructions[var]
         del self.existing_phis_instructions[var]
-        return idn
+        return instr
 
     def available_exiting_phi_instruction(self, var: int) -> bool:
         if len(self.existing_phis_instructions) > 0 and var in self.existing_phis_instructions:
@@ -208,8 +208,8 @@ class BasicBlock(Block):
     def get_dom_instruction(self):
         return self.dom_instructions
 
-    def remove_instruction(self, idn, index):
-        del self.instructions[idn]
+    def remove_instruction(self, instr: Instruction, index):
+        del self.instructions[instr.get_id()]
         del self.instruction_order_list[index]
 
     def reset_instructions(self):
@@ -265,9 +265,10 @@ class Blocks:
         self.current_join_block = None
         self.leaf_joins = []
         self.leaf_joins_while = []
+        self.instructions = []
 
-    def add_new_instr(self, in_while, block: BasicBlock, instr_id: int, op: Operations = None, x: int = None,
-                      y: int = None, x_var: int = None, y_var: int = None) -> int:
+    def add_new_instr(self, in_while, block: BasicBlock, instr_id: int, op: Operations = None, x: Instruction = None,
+                      y: Instruction = None, x_var: int = None, y_var: int = None) -> int:
         """
         Adds a new instruction to the given block unless it is a common subexpression.
         :param y_var:
@@ -284,6 +285,8 @@ class Blocks:
             instr, cse = block.add_new_instr_block(in_while, instr_id, op, x, y, x_var, y_var)
             if cse:
                 self.baseSSA.decrease_id_count()
+            else:
+                self.instructions.append(instr)
             return instr
         elif op != Operations.RET:
             self.baseSSA.decrease_id_count()
@@ -318,9 +321,11 @@ class Blocks:
 
     def add_constant(self, constant: int):
         if constant not in self.constant_block.constants:
-            self.constant_block.add_constant(self.baseSSA.get_new_instr_id(), constant)
+            instr = Instruction(id_count=self.baseSSA.get_new_instr_id(), constant=constant)
+            self.constant_block.add_constant(instr, constant)
+            self.instructions.append(instr)
 
-    def get_constant_id(self, constant: int) -> int:
+    def get_constant_instr(self, constant: int) -> Instruction:
         return self.constant_block.get_constant_id(constant)
 
     def add_var_to_current_block(self, var: int, instruction_number: int):

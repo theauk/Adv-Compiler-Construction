@@ -14,8 +14,8 @@ class Visualizer:
         sorted_dict = dict(sorted(constant_block_constants.items(), key=lambda x: x[1]))
         constants_text = []
 
-        for constant, idn in sorted_dict.items():
-            constants_text.append(f'{idn}: const #{constant}')
+        for instr in sorted_dict.values():
+            constants_text.append(str(instr))
         constant_complete_text += '|'.join(constants_text)
         constant_complete_text += '}"];\n'
         return constant_complete_text
@@ -41,7 +41,7 @@ class Visualizer:
             if self.show_vars and filtered_vars:
                 text += '| {'
                 formatted_strings = [
-                    f"{self.symbol_table[key]}: {value}"
+                    f"{self.symbol_table[key]}: {value.get_id()}"
                     for key, value in filtered_vars.items()
                     if value is not None
                 ]

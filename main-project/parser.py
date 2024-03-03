@@ -1,6 +1,6 @@
 from blocks import Blocks, BasicBlock, BlockRelation
 from operations import Operations
-from ssa import BaseSSA
+from ssa import BaseSSA, Instruction
 from tokenizer import Tokenizer
 from tokens import Tokens
 from utils import Utils
@@ -49,7 +49,7 @@ class Parser:
                         f"SyntaxError: {self.tokenizer.last_id} has not been initialized. It is now initialized to 0")
                     self.symbolTable[self.token] = self.tokenizer.last_id
                     self.blocks.add_constant(0)
-                    self.blocks.add_var_to_current_block(self.token, self.blocks.get_constant_id(0))
+                    self.blocks.add_var_to_current_block(self.token, self.blocks.get_constant_instr(0))
 
                 else:
                     if self.blocks.get_current_block().get_array_assignment()[self.token] is None:
@@ -345,9 +345,9 @@ class Parser:
         elif self.token == Tokens.NUMBER:
             num = self.tokenizer.last_number
             self.blocks.add_constant(num)
-            constant_id = self.blocks.get_constant_id(num)
+            constant_instr = self.blocks.get_constant_instr(num)
             self.next_token()
-            return constant_id, None  # return the id for the constant when it is directly a number
+            return constant_instr, None  # return the instr for the constant when it is directly a number
         elif self.token == Tokens.OPEN_PAREN_TOKEN:
             self.next_token()
             result, result_var = self.expression()
@@ -507,11 +507,11 @@ class Parser:
             # TODO check this branch number since might be wrong if e.g. adding new var so that instr number left is not the first
             if then_block.is_return_block() and else_block.is_return_block():
                 self.blocks.add_new_instr(self.in_while(), join_block, self.baseSSA.get_new_instr_id(),
-                                          Operations.BRA, self.baseSSA.get_cur_instr_id() + 1)
+                                          Operations.BRA, Instruction(self.baseSSA.get_cur_instr_id() + 1))
                 join_block.set_as_return_block()
             else:
                 self.blocks.add_new_instr(self.in_while(), branch_block, self.baseSSA.get_new_instr_id(),
-                                          Operations.BRA, self.baseSSA.get_cur_instr_id() + 1)
+                                          Operations.BRA, Instruction(self.baseSSA.get_cur_instr_id() + 1))
 
         self.blocks.update_current_join_block(None)
 

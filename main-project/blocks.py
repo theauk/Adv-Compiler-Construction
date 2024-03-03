@@ -5,6 +5,11 @@ from operations import Operations
 from ssa import Instruction
 
 
+class BlockType(Enum):
+    WHILE = 1
+    IF = 2
+
+
 class BlockRelation(Enum):
     NORMAL = 1
     BRANCH = 2
@@ -46,7 +51,7 @@ class ConstantBlock(Block):
 
 
 class BasicBlock(Block):
-    def __init__(self, idn: int = None, join: bool = False, while_block: bool = False):
+    def __init__(self, idn: int = None, join: bool = False, while_block: bool = False, block_type: BlockType = None):
         super().__init__(idn)
         self.dom_parents = set()
         self.join = join
@@ -61,6 +66,13 @@ class BasicBlock(Block):
         self.existing_phis_instructions = {}
         self.dom_instructions = {}
         self.return_block = False
+        self.block_type = block_type
+
+    def update_block_type(self, block_type: BlockType):
+        self.block_type = block_type
+
+    def get_block_type(self):
+        return self.block_type
 
     def update_join(self, join: bool):
         self.join = join

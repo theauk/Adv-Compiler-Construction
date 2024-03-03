@@ -1,4 +1,4 @@
-from blocks import BasicBlock, BlockRelation
+from blocks import BasicBlock, BlockRelation, BlockType
 from operations import Operations
 
 
@@ -19,7 +19,10 @@ class Utils:
 
     def create_phi_instruction(self, in_while, current_join_block, designator, x=None, y=None, while_stack=None):
 
-        if while_stack:
+        test = self.blocks.get_current_block()
+        print(test)
+
+        if self.blocks.get_current_block().get_block_type() != BlockType.IF and (in_while and while_stack):
             for while_block in reversed(while_stack):
                 if designator not in while_block.get_phi_vars() and while_block.get_vars()[designator]:
                     while_block.add_phi_var(designator)
@@ -28,18 +31,33 @@ class Utils:
                                               y=while_block.get_vars()[designator],
                                               x_var=designator, y_var=designator)
                     while_block.add_var_assignment(var=designator, instruction_number=instr)
-                else:
-                    for instruction in while_block.get_instruction_order_list():
-                        if instruction.op == Operations.PHI and instruction.x_var == designator:
-                            while_block.update_instruction(instr_idn=instruction.get_id(), x=x)
+                #else:
+                #    for instruction in while_block.get_instruction_order_list():
+                #        if instruction.op == Operations.PHI and instruction.x_var == designator:
+                #            while_block.update_instruction(instr_idn=instruction.get_id(), x=x)
         else:
             if designator not in current_join_block.get_phi_vars():
                 current_join_block.add_phi_var(designator)
-                instr = self.baseSSA.get_new_instr_id()
-                self.blocks.add_new_instr(in_while, current_join_block, instr_id=instr, op=Operations.PHI, x=x, y=y,
+                instr_if = self.baseSSA.get_new_instr_id()
+                self.blocks.add_new_instr(in_while, current_join_block, instr_id=instr_if, op=Operations.PHI, x=x, y=y,
                                           x_var=designator, y_var=designator)
-                current_join_block.add_var_assignment(var=designator, instruction_number=instr)
-                return instr
+                current_join_block.add_var_assignment(var=designator, instruction_number=instr_if)
+
+                if in_while and while_stack:
+                    for while_block in reversed(while_stack):
+                        if designator not in while_block.get_phi_vars() and while_block.get_vars()[designator]:
+                            while_block.add_phi_var(designator)
+                            instr = self.baseSSA.get_new_instr_id()
+                            self.blocks.add_new_instr(in_while, while_block, instr_id=instr, op=Operations.PHI, x=instr_if,
+                                                      y=while_block.get_vars()[designator],
+                                                      x_var=designator, y_var=designator)
+                            while_block.add_var_assignment(var=designator, instruction_number=instr)
+                        else:
+                            for instruction in while_block.get_instruction_order_list():
+                                if instruction.op == Operations.PHI and instruction.x_var == designator:
+                                    while_block.update_instruction(instr_idn=instruction.get_id(), x=instr_if)
+
+                return instr_if
 
     def add_phi_instructions(self, in_while, block1: BasicBlock, block2: BasicBlock, var_set: set,
                              already_added_vars: set,
@@ -178,9 +196,6 @@ class Utils:
         # Gather the instructions to update
         old_to_new_instr_ids = {}
 
-        # Check instructions in the starting while block (except for the phi instructions where the updated variables
-        # are coming from)
-
         # Keep going until we are back at the starting while block
         while stack:
             stack = sorted(stack, key=lambda b: b.id)
@@ -271,10 +286,10 @@ class Utils:
                     if instr_idn == idn:
                         current_block.add_var_assignment(var, cse_idn)
 
-                # Check phis above
+                # Check phis above to see if they have x var instruction id that was deleted and should be the cse id
                 for phi in phis:
-                    if idn == phi.y:
-                        phi.y = cse_idn
+                    if idn == phi.x:
+                        phi.x = cse_idn
 
             visited.add(current_block.get_id())
             for child_block, relationship in current_block.get_children().items():

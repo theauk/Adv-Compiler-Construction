@@ -3,7 +3,6 @@ USE A VARIABLE IN E:G: WHILE THAT HAS NOT BEEN DEFINED ABOVE
 Stuff now:
 ______
 - Arrays
-- Remove branch block when ret
 
 
 Maybe Stuff later:
@@ -15,13 +14,18 @@ ______
 
 Questions:
 ______
-- Phis after ret + branch after ret?
-- Number for then branch instr. Is it okay if the number is the next number after last else instr?
-- Is it okay if branch instr number is after phi instr numbers? E.g. branch in while being 24 and the phi above it being 23?
-    - er lidt relateret til nedenstående
-- CHECK complex while test case:
-    can an instr have a future instr. See join 17 (since both are phi)
-    generally numbering of phis in if (me immediately) vs while (me after)
+
+- Is it okay if branch instr number is the last for both then and else? E.g. then last instr before branch is 16 then all other else instr and then "then" branch with 32?
+    - see complex while
+- hvad med temp i fib – skal der være phi for den? Andet eksempel: vi bør vel lave phi for b med 0 som den anden val?
+main
+var a, b; {
+    let a <- call InputNum();
+    while a < 10
+    do
+        let b <- a;
+    od;
+}.
 
 
 NOTES:

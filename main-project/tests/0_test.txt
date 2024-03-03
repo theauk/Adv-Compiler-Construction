@@ -1,16 +1,36 @@
 main
-var a, b, c, tmp;
+var a, b, c, d, e;
 {
-    let a <- call InputNum;
-    let b <- 0;
-    let c <- 1;
+    let a <- call InputNum();
+    let b <- call InputNum();
+    let c <- call InputNum();
+    let d <- call InputNum();
+    let e <- a;
 
-    while a > 0 do
+
+    while d < 23 do
+        call OutputNum(d);
+        let e <- a + b;
+        let d <- e;
+        if a < 4 then
+            let a <- a + 1;
+        else
+            let c <- d + 1;
+            while c < 24 do
+                let c <- c + 2;
+            od;
+            call OutputNum(c);
+            let b <- c;
+        fi;
+        let b <- a + b + c;
         call OutputNum(b);
-        call OutputNewLine;
-        let tmp <- b;
-        let b <- b + c;
-        let c <- tmp;
-        let a <- a - 1;
+        let d <- d + 1;
     od;
+
+    call OutputNum(a);
+    call OutputNum(b);
+    call OutputNum(c);
+    call OutputNum(d);
+    call OutputNum(e);
+
 }.

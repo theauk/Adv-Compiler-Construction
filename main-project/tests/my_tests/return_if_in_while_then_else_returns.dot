@@ -1,12 +1,12 @@
 digraph G {
 bb0 [shape=record, label="<b>BB0 | {1: const #0|2: const #2|4: const #10|9: const #4}"];
 bb1 [shape=record, label="<b>BB1 | {3: add (2) (2)}| {y: 3 | i: 1 | j: 1}"];
-bb2 [shape=record, label="<b>BB2 | {5: cmp (3) (4)|6: bge (5) (16)}"];
+bb2 [shape=record, label="<b>BB2 | {11: phi (13) (3)|5: cmp (11) (4)|6: bge (5) (16)}| {y: 11}"];
 bb3 [shape=record, label="<b>BB3 | {7: cmp (1) (4)|8: ble (7) (13)}"];
 bb4 [shape=record, label="<b>BB4 | {10: add (2) (9)|12: ret}| {y: 10}"];
 bb5 [shape=record, label="<b>BB5 | {13: add (2) (9)|14: ret}| {y: 13}"];
-bb6 [shape=record, label="<b>BB6 | {15: bra (5)}"];
-bb7 [shape=record, label="<b>BB7 | {16: add (3) (2)|17: write_nl|18: end}| {j: 16}"];
+bb6 [shape=record, label="<b>BB6 | {15: bra (11)}"];
+bb7 [shape=record, label="<b>BB7 | {16: add (11) (2)|17: write_nl|18: end}| {j: 16}"];
 bb0:s -> bb1:n ;
 bb1:s -> bb2:n ;
 bb6:s -> bb2:n [label="branch"];

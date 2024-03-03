@@ -1,4 +1,4 @@
-from blocks import Blocks, BasicBlock, BlockRelation
+from blocks import Blocks, BasicBlock, BlockRelation, BlockType
 from operations import Operations
 from ssa import BaseSSA
 from tokenizer import Tokenizer
@@ -258,6 +258,7 @@ class Parser:
         # if part
         left_side, rel_op_instr, right_side, left_side_var, right_side_var = self.relation()
         if_block = self.blocks.get_current_block()
+        if_block.update_block_type(BlockType.IF)
         branch_instr_idn = self.utils.make_relation(if_block, left_side, right_side, rel_op_instr, left_side_var,
                                                     right_side_var, self.in_while())
 
@@ -265,7 +266,7 @@ class Parser:
 
         # then part
         self.check_token(Tokens.THEN_TOKEN)
-        then_block = BasicBlock()
+        then_block = BasicBlock(block_type=BlockType.IF)
         self.utils.add_relationship(parent_block=if_block, child_block=then_block,
                                     relationship=BlockRelation.FALL_THROUGH)
         self.blocks.add_block(then_block)
@@ -273,7 +274,7 @@ class Parser:
         self.stat_sequence()
 
         # else part (might be empty)
-        else_block = BasicBlock()
+        else_block = BasicBlock(block_type=BlockType.IF)
         self.utils.add_relationship(parent_block=if_block, child_block=else_block, relationship=BlockRelation.BRANCH)
         self.blocks.add_block(else_block)
         else_block.add_dom_parent(if_block)
@@ -361,7 +362,7 @@ class Parser:
             while_block = self.blocks.get_current_block()
             while_block.set_while(True)
         else:
-            while_block = BasicBlock(while_block=True)
+            while_block = BasicBlock(while_block=True, block_type=BlockType.WHILE)
             self.utils.add_relationship(parent_block=self.blocks.get_current_block(), child_block=while_block,
                                         relationship=BlockRelation.NORMAL)
             self.blocks.add_block(while_block)
@@ -378,7 +379,7 @@ class Parser:
         self.check_token(Tokens.DO_TOKEN)
 
         # Make new then block
-        then_block = BasicBlock()
+        then_block = BasicBlock(block_type=BlockType.WHILE)
         self.utils.add_relationship(parent_block=while_block, child_block=then_block,
                                     relationship=BlockRelation.FALL_THROUGH)
         self.blocks.add_block(then_block)
@@ -416,7 +417,7 @@ class Parser:
 
         if BlockRelation.BRANCH not in while_block.get_children().values():
             # Handle the branch block
-            branch_block = BasicBlock()
+            branch_block = BasicBlock(block_type=BlockType.WHILE)
             self.utils.copy_vars(parent_block=while_block, child_block=branch_block)
             self.blocks.add_block(branch_block)
             self.utils.add_relationship(parent_block=while_block, child_block=branch_block,

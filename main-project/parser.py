@@ -11,7 +11,7 @@ class Parser:
         self.tokenizer = Tokenizer(file_name)
         self.token: int = 0
         self.symbolTable = {}  # id token -> var name
-        self.arrayTable = {}  # designator -> [length of dim 1, length of dim 2...]
+        self.arrayTable = {}  # designator -> (length of dim 1, length of dim 2...)
         self.baseSSA = BaseSSA()
         self.blocks = Blocks(self.baseSSA, None)
         self.setup_blocks()
@@ -43,13 +43,18 @@ class Parser:
         reserved = self.reserved_identifier()
         if not reserved:
             if self.token not in self.blocks.get_current_block().get_vars() or \
-                    self.blocks.get_current_block().get_vars()[self.token] is None \
-                    or self.token not in self.arrayTable:
-                self.tokenizer.error(
-                    f"SyntaxError: {self.tokenizer.last_id} has not been initialized. It is now initialized to 0")
-                self.symbolTable[self.token] = self.tokenizer.last_id
-                self.blocks.add_constant(0)
-                self.blocks.add_var_to_current_block(self.token, self.blocks.get_constant_id(0))
+                    self.blocks.get_current_block().get_vars()[self.token] is None:
+                if self.token not in self.arrayTable:
+                    self.tokenizer.error(
+                        f"SyntaxError: {self.tokenizer.last_id} has not been initialized. It is now initialized to 0")
+                    self.symbolTable[self.token] = self.tokenizer.last_id
+                    self.blocks.add_constant(0)
+                    self.blocks.add_var_to_current_block(self.token, self.blocks.get_constant_id(0))
+
+                else:
+                    if self.blocks.get_current_block().get_array_assignment()[self.token] is None:
+                        self.tokenizer.error(
+                            f"SyntaxError: {self.tokenizer.last_id} has not been initialized.")
                 self.next_token()
                 return True
             else:
@@ -143,7 +148,9 @@ class Parser:
             self.blocks.get_current_block().add_var_assignment(self.token, None)
             self.symbolTable[self.token] = self.tokenizer.last_id
 
-        self.arrayTable[self.token] = lengths_of_dimensions
+        self.symbolTable[self.token] = self.tokenizer.last_id
+        self.arrayTable[self.token] = tuple(lengths_of_dimensions)
+        self.blocks.get_current_block().add_array(self.token, lengths_of_dimensions)
 
         self.next_token()
 
@@ -213,20 +220,21 @@ class Parser:
 
     def assignment(self):
         if not self.reserved_identifier():
-            designator, is_array = self.designator(lhs=True)
-
-            self.next_token()
+            designator, is_array, indices = self.designator(lhs=True)
             # "<-"
             self.check_token(Tokens.BECOMES_TOKEN)
             idn, idn_var = self.expression()
 
-            self.blocks.add_var_to_current_block(designator, idn)
+            if not is_array:
+                self.blocks.add_var_to_current_block(designator, idn)
 
-            # Check if phi should be added (given we have a current join block and have not already made a phi ready
-            # for a certain variable)
-            current_join_block = self.blocks.get_current_join_block()
-            if current_join_block and designator not in current_join_block.get_phi_vars():
-                self.utils.create_phi_instruction(self.in_while(), current_join_block, designator)
+                # Check if phi should be added (given we have a current join block and have not already made a phi ready
+                # for a certain variable)
+                current_join_block = self.blocks.get_current_join_block()
+                if current_join_block and designator not in current_join_block.get_phi_vars():
+                    self.utils.create_phi_instruction(self.in_while(), current_join_block, designator)
+            else:
+                self.blocks.get_current_block().store_element_in_array(self.baseSSA.get_new_instr_id(), designator, idn, indices)
 
         return
 
@@ -241,18 +249,45 @@ class Parser:
         designator = self.token
 
         if not lhs:
-            self.check_identifier()  # TODO need to check if specific index has been initialized
+            self.check_identifier()
+        else:
+            self.next_token()
 
+        indices = []
         if self.token == Tokens.OPEN_BRACKET_TOKEN:  # array
             while self.token == Tokens.OPEN_BRACKET_TOKEN:
                 self.check_token(Tokens.OPEN_BRACKET_TOKEN)
                 exp = self.expression()
+                indices.append(exp[0])
                 self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
 
-            designator_array = -1
-            return designator_array, True
+            array = self.blocks.get_current_block().get_array(designator)
+            self.is_valid_array_dimension(tuple(indices), self.arrayTable[designator], designator)
+
+            if not lhs:
+                instr = self.baseSSA.get_new_instr_id()
+                self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), instr, Operations.LOAD, -1)
+
+                result = array
+                for index in indices:
+                    result = result[index]
+
+                if not result:
+                    self.tokenizer.error(f"array index has not been initialized for array {self.symbolTable[designator]}")
+
+                return result, True, indices  # TODO fix since it does not do designator like the others
+
+            return designator, True, indices
         else:  # normal id
-            return designator, False
+            return designator, False, indices
+
+    def is_valid_array_dimension(self, cur_array, stored_array, designator):
+        if len(cur_array) != len(stored_array):
+            self.tokenizer.error(f"Invalid index for array {designator}")
+
+        for num1, num2 in zip(cur_array, stored_array):
+            if num1 >= num2:
+                self.tokenizer.error(f"Invalid index for array {designator}")
 
     def expression(self):
         idn_left, idn_left_var = self.term()

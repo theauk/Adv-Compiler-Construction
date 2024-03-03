@@ -61,6 +61,7 @@ class BasicBlock(Block):
         self.existing_phis_instructions = {}
         self.dom_instructions = {}
         self.return_block = False
+        self.array_assignments = {}  # model multiple dimension array as a single long array
 
     def update_join(self, join: bool):
         self.join = join
@@ -227,6 +228,31 @@ class BasicBlock(Block):
 
     def is_return_block(self):
         return self.return_block
+
+    def add_array(self, var: int, lengths: list[int]):
+        array = None
+        for length in reversed(lengths):
+            array = [None] * length if array is None else [array.copy() for _ in range(length)]
+        self.array_assignments[var] = array
+
+    def get_array(self, token):
+        return self.array_assignments[token]
+
+    def get_array_assignment(self):
+        return self.array_assignments
+
+    def add_store_instruction(self, idn, x, x_var):
+        instr = Instruction(idn, Operations.STORE, x=x, x_var=x_var)
+        self.instructions[idn] = instr
+        self.instruction_order_list.append(instr)
+
+    def store_element_in_array(self, idn, array_token, element, indices):
+        current_array = self.array_assignments[array_token]
+        for index in indices[:-1]:
+            current_array = current_array[index]
+        current_array[indices[-1]] = element
+
+        self.add_store_instruction(idn, -1, 400)
 
 
 class Blocks:

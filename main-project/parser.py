@@ -491,14 +491,14 @@ class Parser:
             # Case 4: new conditional in both then and else
             leaf_left = self.blocks.get_lowest_placed_leaf_join_block()
             leaf_right = self.blocks.get_lowest_placed_leaf_join_block()
-            branch_block = leaf_left
+            branch_block = leaf_right
             self.utils.add_relationship(parent_block=leaf_left, child_block=join_block,
-                                        relationship=BlockRelation.BRANCH)
-            self.utils.add_relationship(parent_block=leaf_right, child_block=join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
+            self.utils.add_relationship(parent_block=leaf_right, child_block=join_block,
+                                        relationship=BlockRelation.BRANCH)
             self.utils.add_phis_if(self.in_while(), if_block, leaf_left, leaf_right)
 
-        cur_block_first_instr = self.blocks.get_current_block().find_first_instr()
+        cur_block_first_instr = self.blocks.get_current_block().find_first_instr() # TODO move this up earlier to make number earlier
         if cur_block_first_instr is not None:
             self.blocks.add_new_instr(self.in_while(), branch_block, self.baseSSA.get_new_instr_id(), Operations.BRA,
                                       cur_block_first_instr)

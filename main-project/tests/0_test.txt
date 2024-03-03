@@ -4,11 +4,17 @@ main
     let y <- 2;
     let z <- 2;
 
-    while z < 10 do
-        let y <- j + 1;
-        let z <- j + 1;
-
-    od;
-    let y <- j + 1;
-    call OutputNewLine();
-    }.
+    if y < 0 then
+        if y < 1 then
+            let z <- 2 + 3;
+        else
+            let y <- 3 + 4;
+        fi;
+    else
+        if y < 2 then
+            let y <- 2 + 5;
+        else
+            let j <- 3 + 7;
+        fi;
+    fi;
+}.

@@ -219,10 +219,6 @@ class BasicBlock(Block):
         self.existing_phis_instructions = {}
         self.phi_vars = set()
 
-    def reset_vars(self):
-        self.updated_vars = set()
-        self.vars = {}
-
     def set_as_return_block(self):
         self.return_block = True
 
@@ -357,6 +353,7 @@ class Blocks:
                 highest_id = current_id
                 highest_id_block = block
 
+        self.leaf_joins.remove(highest_id_block)
         return highest_id_block
 
     def update_leaf_joins(self, join_block: BasicBlock):

@@ -113,7 +113,7 @@ class BasicBlock(Block):
             # Add as a dominating instruction if applicable given the Operation (and not in while since they
             # will be added later)
             if op and op not in Operations.get_no_cse_instructions() and not in_while:
-                self.add_dom_instruction(instr_id, op, x, y)
+                self.add_dom_instruction(inst, op, x, y)
 
             return inst, False
         else:
@@ -128,9 +128,9 @@ class BasicBlock(Block):
     def get_vars(self) -> dict:
         return self.vars
 
-    def add_var_assignment(self, var: int, instruction_number, update_var: bool = True):
+    def add_var_assignment(self, var: int, instruction, update_var: bool = True):
         if not self.return_block:
-            self.vars[var] = instruction_number
+            self.vars[var] = instruction
             if update_var:
                 self.updated_vars.add(var)
 
@@ -201,9 +201,9 @@ class BasicBlock(Block):
         dom_parent_instructions = dom_parent.dom_instructions
         self.dom_instructions.update(dom_parent_instructions)
 
-    def add_dom_instruction(self, instr_id, op, x, y):
+    def add_dom_instruction(self, instr: Instruction, op: Operations, x: Instruction, y: Instruction):
         if op != Operations.PHI:
-            self.dom_instructions[(op, x, y)] = instr_id
+            self.dom_instructions[(op, x, y)] = instr
 
     def get_dom_instruction(self):
         return self.dom_instructions
@@ -265,7 +265,11 @@ class Blocks:
         self.current_join_block = None
         self.leaf_joins = []
         self.leaf_joins_while = []
-        self.instructions = []
+        self.instructions = {}
+        self.removed_instructions = []
+
+    def remove_instruction_from_all_list(self, instr: Instruction):
+        self.removed_instructions.append(instr)
 
     def add_new_instr(self, in_while, block: BasicBlock, instr_id: int, op: Operations = None, x: Instruction = None,
                       y: Instruction = None, x_var: int = None, y_var: int = None) -> int:
@@ -286,7 +290,7 @@ class Blocks:
             if cse:
                 self.baseSSA.decrease_id_count()
             else:
-                self.instructions.append(instr)
+                self.instructions[instr_id] = instr
             return instr
         elif op != Operations.RET:
             self.baseSSA.decrease_id_count()
@@ -321,17 +325,18 @@ class Blocks:
 
     def add_constant(self, constant: int):
         if constant not in self.constant_block.constants:
-            instr = Instruction(id_count=self.baseSSA.get_new_instr_id(), constant=constant)
+            instr_id = self.baseSSA.get_new_instr_id()
+            instr = Instruction(id_count=instr_id, constant=constant)
             self.constant_block.add_constant(instr, constant)
-            self.instructions.append(instr)
+            self.instructions[instr_id] = instr
 
     def get_constant_instr(self, constant: int) -> Instruction:
         return self.constant_block.get_constant_id(constant)
 
-    def add_var_to_current_block(self, var: int, instruction_number: int):
-        self.current_block.add_var_assignment(var, instruction_number)
+    def add_var_to_current_block(self, var: int, instruction: Instruction):
+        self.current_block.add_var_assignment(var, instruction)
 
-    def find_var_given_id(self, var: int) -> int:
+    def find_var_given_id(self, var: int) -> Instruction:
         return self.current_block.get_vars()[var]
 
     def update_current_join_block(self, block):
@@ -367,3 +372,4 @@ class Blocks:
 
     def get_leaf_joins(self) -> list[BasicBlock]:
         return self.leaf_joins
+

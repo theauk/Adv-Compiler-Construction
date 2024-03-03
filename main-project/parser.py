@@ -266,7 +266,7 @@ class Parser:
 
             if not lhs:
                 instr = self.baseSSA.get_new_instr_id()
-                self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), instr, Operations.LOAD, -1)
+                self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), instr, Operations.LOAD)
 
                 result = array
                 for index in indices:
@@ -387,8 +387,8 @@ class Parser:
                 self.check_token(Tokens.OPEN_PAREN_TOKEN)
                 self.check_token(Tokens.CLOSE_PAREN_TOKEN)
             idn = self.baseSSA.get_new_instr_id()
-            self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), idn, Operations.READ)
-            return idn, None
+            instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), idn, Operations.READ)
+            return instr, None
         elif self.token == Tokens.OUTPUT_NUM_TOKEN:  # OutputNum(x)
             self.next_token()
             self.check_token(Tokens.OPEN_PAREN_TOKEN)

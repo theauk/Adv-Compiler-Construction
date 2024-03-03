@@ -22,10 +22,10 @@ class Utils:
                                y: Instruction = None):
         if x and y or not current_join_block.is_while():
             current_join_block.add_phi_var(designator)
-            instr = self.baseSSA.get_new_instr_id()
-            self.blocks.add_new_instr(in_while, current_join_block, instr_id=instr, op=Operations.PHI, x=x, y=y,
+            instr_id = self.baseSSA.get_new_instr_id()
+            instr = self.blocks.add_new_instr(in_while, current_join_block, instr_id=instr_id, op=Operations.PHI, x=x, y=y,
                                       x_var=designator, y_var=designator)
-            current_join_block.add_var_assignment(var=designator, instruction_number=instr)
+            current_join_block.add_var_assignment(var=designator, instruction=instr)
             return instr
 
     def add_phi_instructions(self, in_while, block1: BasicBlock, block2: BasicBlock, var_set: set,
@@ -51,17 +51,18 @@ class Utils:
                     if join_block.available_exiting_phi_instruction(child):
                         phi_instruction = join_block.get_existing_phi_instruction(child)
                         join_block.update_instruction(instr=phi_instruction, x=block1_child, y=block2_child)
-                        join_block.add_var_assignment(var=child, instruction_number=phi_instruction)
+                        join_block.add_var_assignment(var=child, instruction=phi_instruction)
                     else:
                         phi_instruction = self.create_phi_instruction(in_while, join_block, child, x=block1_child,
                                                                       y=block2_child)
+
                     var_to_new_phi_idn[child] = phi_instruction
                     phis.append((phi_instruction, child, block2_child))
 
-                    phis_lhs[block1_child] = phi_instruction
-                    phis_rhs[block2_child] = phi_instruction
+                    phis_lhs[block1_child.get_id()] = phi_instruction
+                    phis_rhs[block2_child.get_id()] = phi_instruction
 
-                    join_block.add_var_assignment(var=child, instruction_number=phi_instruction)
+                    join_block.add_var_assignment(var=child, instruction=phi_instruction)
                     already_added_vars.add((block1_child, block2_child))
 
         # Check if one of the new phis use another phi
@@ -86,6 +87,7 @@ class Utils:
             self.add_phi_instructions(in_while, then_block, else_block, intersection_then_else, already_added_vars,
                                       join_block=join_block)
 
+            self.remove_unused_phis(join_block)
             if already_added_vars:
                 join_block.update_join(True)
             else:
@@ -93,9 +95,8 @@ class Utils:
                 join_block.reset_instructions()
         else:
             join_block.reset_instructions()
-
-        # Remove unused phis due to return statement
-        self.remove_unused_phis(join_block)
+            # Remove unused phis due to return statement
+            self.remove_unused_phis(join_block)
 
         self.blocks.set_current_block(join_block)
 
@@ -104,8 +105,9 @@ class Utils:
         for i, instruction in enumerate(join_block.get_instruction_order_list()):
             if instruction.op == Operations.PHI and not instruction.x:
                 unused_phis.append((instruction, i))
-        for idn, i in reversed(unused_phis):
-            join_block.remove_instruction(idn, i)
+        for instruction, i in reversed(unused_phis):
+            join_block.remove_instruction(instruction, i)
+            self.blocks.remove_instruction_from_all_list(instruction)
 
     def add_phis_while(self, in_while, while_block: BasicBlock, then_block: BasicBlock):
         already_added_vars = set()
@@ -134,18 +136,18 @@ class Utils:
         # Check if potential cmp instr is a common subexpression
         cse_instr = if_block.is_cse(op=rel_op_instr, x=left_side, y=right_side)
         if not cse_instr:
-            cmp_instr_idn = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(),
+            cmp_instr = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(),
                                                       Operations.CMP, left_side, right_side, left_side_var,
                                                       right_side_var)
             # Add the branch instr (y added later when known)
-            branch_instr_idn = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(),
-                                                         op=rel_op_instr, x=cmp_instr_idn, x_var=left_side_var)
+            branch_instr = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(),
+                                                         op=rel_op_instr, x=cmp_instr, x_var=left_side_var)
         else:
             # Common subexpression so only add the branch instruction
-            branch_instr_idn = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(),
+            branch_instr = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(),
                                                          op=rel_op_instr, x=cse_instr, x_var=left_side_var)
 
-        return branch_instr_idn
+        return branch_instr
 
     def update_while(self, start_while_block: BasicBlock):
         # First pass to update phi instructions and propagate them + update bra instruction x value
@@ -166,7 +168,7 @@ class Utils:
         old_to_new_instr_ids = {}
         for i in start_while_block.get_instruction_order_list():
             if i.op == Operations.PHI:
-                old_to_new_instr_ids[(i.x, i.x_var)] = i.id
+                old_to_new_instr_ids[(i.x, i.x_var)] = i
 
         # Check instructions in the starting while block (except for the phi instructions where the updated variables
         # are coming from)
@@ -190,7 +192,7 @@ class Utils:
                 if (i.y, i.y_var) in old_to_new_instr_ids:
                     current_block.update_instruction(i, y=old_to_new_instr_ids[(i.y, i.y_var)])
                 if i.op == Operations.PHI:
-                    old_to_new_instr_ids[(original_i_x, i.x_var)] = i.id
+                    old_to_new_instr_ids[(original_i_x, i.x_var)] = i
 
             visited.add(current_block)
 
@@ -227,13 +229,13 @@ class Utils:
             for i, instruction in enumerate(current_block.get_instruction_order_list()):
                 if instruction.op not in Operations.get_no_cse_instructions():
                     if (instruction.op, instruction.x, instruction.y) in current_block.get_dom_instruction():
-                        cse_idn = current_block.get_dom_instruction()[(instruction.op, instruction.x, instruction.y)]
-                        remove_instr.append((instruction.id, i, cse_idn))
+                        cse_instr = current_block.get_dom_instruction()[(instruction.op, instruction.x, instruction.y)]
+                        remove_instr.append((instruction, i, cse_instr))
                         removed_instructions.append(instruction.id)
-                        if instruction.id != cse_idn:
-                            removed_instr_to_cse_idn[instruction.id] = cse_idn
+                        if instruction.id != cse_instr.id:
+                            removed_instr_to_cse_idn[instruction.id] = cse_instr
                     else:
-                        current_block.add_dom_instruction(instruction.id, instruction.op, instruction.x, instruction.y)
+                        current_block.add_dom_instruction(instruction, instruction.op, instruction.x, instruction.y)
                 elif instruction.op == Operations.PHI:
                     phis.append(instruction)
 
@@ -245,17 +247,17 @@ class Utils:
                     current_block.update_instruction(instruction.get_id(), removed_instr_to_cse_idn[instruction.y])
 
             # Remove cse instructions
-            for (idn, i, cse_idn) in reversed(remove_instr):  # to not mess with indices
-                current_block.remove_instruction(idn, i)
+            for (instr, i, cse_instr) in reversed(remove_instr):  # to not mess with indices
+                current_block.remove_instruction(instr, i)
                 # Update the table that keeps track of the var assignments so that the var points to the cse instruction
                 for var, instr_idn in current_block.get_vars().items():
-                    if instr_idn == idn:
-                        current_block.add_var_assignment(var, cse_idn)
+                    if instr_idn == instr:
+                        current_block.add_var_assignment(var, cse_instr)
 
                 # Check phis above
                 for phi in phis:
-                    if idn == phi.y:
-                        phi.y = cse_idn
+                    if instr == phi.y:
+                        phi.y = cse_instr
 
             visited.add(current_block.get_id())
             for child_block, relationship in current_block.get_children().items():

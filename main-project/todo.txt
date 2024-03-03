@@ -2,14 +2,16 @@ USE A VARIABLE IN E:G: WHILE THAT HAS NOT BEEN DEFINED ABOVE
 
 Stuff now:
 ______
+- Fix a + a * 5
+- Fix complicated if stmts case
 - Arrays
-- Remove branch block when ret
 
 
 Stuff later:
 ______
 - Numberings after cse
 - Take out stuff related to user funcs
+- Remove branch block when ret???
 
 
 Questions:

@@ -308,7 +308,7 @@ class Parser:
             self.utils.add_phis_if(self.in_while(), if_block, then_block, else_block)
         elif not then_block.get_children():
             # Case 2: no additional conditional in then
-            fall_through_block = self.blocks.get_lowest_leaf_join_block()
+            fall_through_block = self.blocks.get_lowest_placed_leaf_join_block()
             self.utils.add_relationship(parent_block=fall_through_block, child_block=join_block,
                                         relationship=BlockRelation.FALL_THROUGH)
             self.utils.add_relationship(parent_block=then_block, child_block=join_block,
@@ -317,7 +317,7 @@ class Parser:
             branch_block = then_block
         elif not else_block.get_children():
             # Case 3: no additional conditional in else
-            branch_block = self.blocks.get_lowest_leaf_join_block()
+            branch_block = self.blocks.get_lowest_placed_leaf_join_block()
             self.utils.add_relationship(parent_block=branch_block, child_block=join_block,
                                         relationship=BlockRelation.BRANCH)
             self.utils.add_relationship(parent_block=else_block, child_block=join_block,
@@ -325,8 +325,8 @@ class Parser:
             self.utils.add_phis_if(self.in_while(), if_block, branch_block, else_block)
         else:
             # Case 4: new conditional in both then and else
-            leaf_left = self.blocks.get_lowest_leaf_join_block()
-            leaf_right = self.blocks.get_lowest_leaf_join_block()
+            leaf_left = self.blocks.get_lowest_placed_leaf_join_block()
+            leaf_right = self.blocks.get_lowest_placed_leaf_join_block()
             branch_block = leaf_left
             self.utils.add_relationship(parent_block=leaf_left, child_block=join_block,
                                         relationship=BlockRelation.BRANCH)
@@ -389,7 +389,7 @@ class Parser:
 
         # Handle dangling blocks and potential instructions below od
         if len(self.blocks.get_leaf_joins()) > 0:
-            leaf_block: BasicBlock = self.blocks.get_lowest_leaf_join_block()
+            leaf_block: BasicBlock = self.blocks.get_lowest_placed_leaf_join_block()
             leaf_block_parent: BasicBlock = list(leaf_block.get_parents().keys())[0]
             # There are no instructions below od but the block is inside another while.
             # Remove the branch block (since it is not needed) and branch to the while above.

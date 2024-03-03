@@ -309,8 +309,18 @@ class Blocks:
     def get_current_join_block(self):
         return self.current_join_block
 
-    def get_lowest_leaf_join_block(self) -> BasicBlock:
-        return self.leaf_joins.pop(0)
+    def get_lowest_placed_leaf_join_block(self) -> BasicBlock:
+        highest_id = self.leaf_joins[0].get_id()
+        highest_id_block = self.leaf_joins[0]
+
+        for block in self.leaf_joins[1:]:
+            current_id = block.get_id()
+
+            if current_id > highest_id:
+                highest_id = current_id
+                highest_id_block = block
+
+        return highest_id_block
 
     def update_leaf_joins(self, join_block: BasicBlock):
         """

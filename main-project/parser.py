@@ -112,6 +112,8 @@ class Parser:
             if len(self.if_branch_blocks) > 0:
                 self.utils.fix_branching(self.if_branch_blocks, True)
 
+            self.utils.fix_id_numbering()
+
         return
 
     def var_declaration(self):

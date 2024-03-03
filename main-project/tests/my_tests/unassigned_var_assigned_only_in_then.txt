@@ -1,9 +1,9 @@
 main
 var a, b; {
-    let a <- call InputNum();
+    let a <- 2;
     if a < 10
     then
-        let b <- a;
+        let b <- 3;
     else
         let a <- a*2;
     fi;

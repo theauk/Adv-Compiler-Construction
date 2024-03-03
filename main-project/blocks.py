@@ -264,8 +264,11 @@ class Blocks:
         self.instructions = {}
         self.removed_instructions = []
 
-    def remove_instruction_from_all_list(self, instr: Instruction):
+    def add_removed_instruction(self, instr: Instruction):
         self.removed_instructions.append(instr)
+
+    def remove_instruction(self, idn: int):
+        del self.instructions[idn]
 
     def add_new_instr(self, in_while, block: BasicBlock, instr_id: int, op: Operations = None, x: Instruction = None,
                       y: Instruction = None, x_var: int = None, y_var: int = None) -> int:

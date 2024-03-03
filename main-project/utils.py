@@ -107,7 +107,7 @@ class Utils:
                 unused_phis.append((instruction, i))
         for instruction, i in reversed(unused_phis):
             join_block.remove_instruction(instruction, i)
-            self.blocks.remove_instruction_from_all_list(instruction)
+            self.blocks.add_removed_instruction(instruction)
 
     def add_phis_while(self, in_while, while_block: BasicBlock, then_block: BasicBlock):
         already_added_vars = set()
@@ -231,7 +231,7 @@ class Utils:
                     if (instruction.op, instruction.x, instruction.y) in current_block.get_dom_instruction():
                         cse_instr = current_block.get_dom_instruction()[(instruction.op, instruction.x, instruction.y)]
                         remove_instr.append((instruction, i, cse_instr))
-                        removed_instructions.append(instruction.id)
+                        removed_instructions.append(instruction)
                         if instruction.id != cse_instr.id:
                             removed_instr_to_cse_idn[instruction.id] = cse_instr
                     else:
@@ -264,14 +264,32 @@ class Utils:
                 if child_block.get_id() not in visited and child_block not in stack:
                     stack.append(child_block)
 
+        for instr in removed_instructions:
+            self.blocks.add_removed_instruction(instr)
+
     def fix_branching(self, branch_blocks: list[BasicBlock], if_blocks):
         for block in branch_blocks:
             for child_block, relationship in block.get_children().items():
                 if relationship == BlockRelation.BRANCH:
                     # Update the branching instruction to the first instruction in the branch block
                     branch_instr = block.get_instruction_order_list()[-1]
-                    child_first_instr = child_block.find_first_instr()
-                    if if_blocks:
-                        block.update_instruction(branch_instr, x=child_first_instr)
-                    else:
-                        block.update_instruction(branch_instr, y=child_first_instr)
+                    if branch_instr.op == Operations.BRA:
+                        child_first_instr = child_block.find_first_instr()
+                        if if_blocks:
+                            block.update_instruction(branch_instr, x=child_first_instr)
+                        else:
+                            block.update_instruction(branch_instr, y=child_first_instr)
+
+    def fix_id_numbering(self):
+        # Sort the list of removed instructions in descending order
+        self.blocks.removed_instructions.sort(reverse=True)
+
+        # Update the instruction IDs in the dictionary
+        for old_id, instruction in self.blocks.instructions.items():
+            new_id = old_id
+            for removed_instr in self.blocks.removed_instructions:
+                if old_id > removed_instr.get_id():
+                    new_id -= 1
+
+            instruction.id = new_id
+

@@ -462,7 +462,7 @@ class Parser:
         while self.token == Tokens.PLUS_TOKEN or self.token == Tokens.MINUS_TOKEN:
             if self.token == Tokens.PLUS_TOKEN:
                 self.next_token()
-                idn_right, idn_right_var = self.factor()
+                idn_right, idn_right_var = self.term()
                 # = idn_left so that if we e.g. have 2 + 2 + 2 then the id for the first 2 * 2 becomes the next left
                 idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                      self.baseSSA.get_new_instr_id(), Operations.ADD, idn_left,
@@ -470,7 +470,7 @@ class Parser:
                 idn_left_var = None  # TODO check that it is not a problem that idn_left_var is not updated
             elif self.token == Tokens.MINUS_TOKEN:
                 self.next_token()
-                idn_right, idn_right_var = self.factor()
+                idn_right, idn_right_var = self.term()
                 idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                      self.baseSSA.get_new_instr_id(), Operations.SUB, idn_left,
                                                      idn_right, x_var=idn_left_var, y_var=idn_right_var)

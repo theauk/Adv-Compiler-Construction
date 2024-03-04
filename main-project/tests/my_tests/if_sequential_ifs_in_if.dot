@@ -5,14 +5,14 @@ bb2 [shape=record, label="<b>BB2 | {9: add (2) (5)|11: cmp (9) (5)|12: ble (11) 
 bb3 [shape=record, label="<b>BB3 | {14: cmp (6) (13)|15: ble (14) (18)}"];
 bb4 [shape=record, label="<b>BB4 | {19: bra (17)}| {d: 16}"];
 bb5 [shape=record, label="<b>BB5 | {18: \<empty\>}"];
-bb6 [shape=record, label="<b>join BB6 | {17: phi (16) (6)|24: bra (21)}| {d: 17}"];
+bb6 [shape=record, label="<b>join BB6 | {17: phi (16) (6)|23: bra (21)}| {d: 17}"];
 bb7 [shape=record, label="<b>BB7 | {22: \<empty\>}| {a: 20}"];
-bb8 [shape=record, label="<b>join BB8 | {21: phi (2) (20)|23: phi (17) (6)|26: cmp (25) (21)|27: bge (26) (30)}| {a: 21 | c: 25 | d: 23}"];
+bb8 [shape=record, label="<b>join BB8 | {21: phi (2) (20)|24: phi (17) (6)|26: cmp (25) (21)|27: bge (26) (30)}| {a: 21 | c: 25 | d: 24}"];
 bb9 [shape=record, label="<b>BB9 | {31: bra (29)}| {d: 28}"];
 bb10 [shape=record, label="<b>BB10 | {30: \<empty\>}"];
-bb11 [shape=record, label="<b>join BB11 | {29: phi (28) (23)|35: bra (10)}| {d: 29}"];
+bb11 [shape=record, label="<b>join BB11 | {29: phi (28) (24)|33: bra (10)}| {d: 29}"];
 bb12 [shape=record, label="<b>BB12 | {32: \<empty\>}| {c: 2}"];
-bb13 [shape=record, label="<b>join BB13 | {10: phi (25) (2)|33: phi (21) (2)|34: phi (29) (6)|36: end}| {a: 33 | c: 10 | d: 34}"];
+bb13 [shape=record, label="<b>join BB13 | {10: phi (25) (2)|34: phi (21) (2)|35: phi (29) (6)|36: end}| {a: 34 | c: 10 | d: 35}"];
 bb0:s -> bb1:n ;
 bb1:s -> bb2:n [label="fall-through"];
 bb2:s -> bb3:n [label="fall-through"];

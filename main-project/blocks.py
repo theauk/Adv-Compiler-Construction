@@ -128,8 +128,8 @@ class BasicBlock(Block):
     def get_vars(self) -> dict:
         return self.vars
 
-    def add_var_assignment(self, var: int, instruction, update_var: bool = True):
-        if not self.return_block:
+    def add_var_assignment(self, var: int, instruction, update_var: bool = True, skip_return_check=False):
+        if not self.return_block or skip_return_check:
             self.vars[var] = instruction
             if update_var:
                 self.updated_vars.add(var)

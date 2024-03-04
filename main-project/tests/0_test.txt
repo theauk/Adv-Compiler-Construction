@@ -1,16 +1,15 @@
 main
-var y, i, j; {
+var x, y, j, i; {
+    let y <- 2;
     let i <- 0;
     let j <- i;
-    let y <- 2;
 
-    if i > 10 then
-        let y <- 2 + y;
-        return j
-    else
-        let y <- 2 + 4;
-    fi;
-
-    let j <- y + 2;
+    while y < 10 do
+        let y <- j + 1;
+        let i <- i + 1;
+        return 5;
+        let x <- 5 + 2
+    od;
+    let y <- j + 1;
     call OutputNewLine();
 }.

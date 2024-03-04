@@ -507,16 +507,19 @@ class Parser:
         if not join_block.get_instructions():  # empty join block
             self.blocks.add_new_instr(self.in_while(), then_block, self.baseSSA.get_new_instr_id())
 
-        # Add branch instruction
-        self.blocks.add_new_instr(self.in_while(), block=branch_block, instr_id=self.baseSSA.get_new_instr_id(),
-                                  op=Operations.BRA)
-
-        self.if_branch_blocks.append(branch_block)
-
         if then_block.is_return_block() and else_block.is_return_block():
+            join_block.reset_instructions()
+            # Remove unused phis due to return statement
+            self.utils.remove_unused_phis(join_block)
+            self.if_branch_blocks.append(join_block)
+            self.blocks.add_new_instr(self.in_while(), block=join_block, instr_id=self.baseSSA.get_new_instr_id(),
+                                      op=Operations.BRA)
             join_block.set_as_return_block()
-
-        self.utils.add_phis_if(self.in_while(), if_block, then_block, else_block)
+        else:
+            self.if_branch_blocks.append(branch_block)
+            self.blocks.add_new_instr(self.in_while(), block=branch_block, instr_id=self.baseSSA.get_new_instr_id(),
+                                      op=Operations.BRA)
+            self.utils.add_phis_if(self.in_while(), if_block, then_block, else_block)
 
         self.blocks.update_current_join_block(None)
 

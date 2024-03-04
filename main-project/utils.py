@@ -74,29 +74,24 @@ class Utils:
         already_added_vars = set()
         join_block: BasicBlock = self.blocks.get_current_join_block()
 
-        if not (then_block.is_return_block() and else_block.is_return_block()):
-            if then_block.is_return_block():
-                then_block = if_block
-            if else_block.is_return_block():
-                else_block = if_block
+        if then_block.is_return_block():
+            then_block = if_block
+        if else_block.is_return_block():
+            else_block = if_block
 
-            # Joining var that has been updated both in then and else (or carried down from dominating blocks)
-            then_vars = set(then_block.get_vars().keys())
-            else_vars = set(else_block.get_vars().keys())
-            intersection_then_else = then_vars.intersection(else_vars)
-            self.add_phi_instructions(in_while, then_block, else_block, intersection_then_else, already_added_vars,
-                                      join_block=join_block)
+        # Joining var that has been updated both in then and else (or carried down from dominating blocks)
+        then_vars = set(then_block.get_vars().keys())
+        else_vars = set(else_block.get_vars().keys())
+        intersection_then_else = then_vars.intersection(else_vars)
+        self.add_phi_instructions(in_while, then_block, else_block, intersection_then_else, already_added_vars,
+                                  join_block=join_block)
 
-            self.remove_unused_phis(join_block)
-            if already_added_vars:
-                join_block.update_join(True)
-            else:
-                # Redundant phis
-                join_block.reset_instructions()
+        self.remove_unused_phis(join_block)
+        if already_added_vars:
+            join_block.update_join(True)
         else:
+            # Redundant phis
             join_block.reset_instructions()
-            # Remove unused phis due to return statement
-            self.remove_unused_phis(join_block)
 
         self.blocks.set_current_block(join_block)
 
@@ -252,7 +247,8 @@ class Utils:
                 # Update the table that keeps track of the var assignments so that the var points to the cse instruction
                 for var, instr_idn in current_block.get_vars().items():
                     if instr_idn == instr:
-                        current_block.add_var_assignment(var, cse_instr)
+                        # Even though the block might be a return block we still have to update the var assignments in case we do cse
+                        current_block.add_var_assignment(var, cse_instr, skip_return_check=True)
 
                 # Check phis above
                 for phi in phis:
@@ -273,12 +269,12 @@ class Utils:
                 if relationship == BlockRelation.BRANCH:
                     # Update the branching instruction to the first instruction in the branch block
                     branch_instr = block.get_instruction_order_list()[-1]
-                    if branch_instr.op == Operations.BRA:
-                        child_first_instr = child_block.find_first_instr()
-                        if if_blocks:
+                    child_first_instr = child_block.find_first_instr()
+                    if if_blocks:
+                        if branch_instr.op == Operations.BRA:
                             block.update_instruction(branch_instr, x=child_first_instr)
-                        else:
-                            block.update_instruction(branch_instr, y=child_first_instr)
+                    else:
+                        block.update_instruction(branch_instr, y=child_first_instr)
 
     def fix_id_numbering(self):
         # Sort the list of removed instructions in descending order

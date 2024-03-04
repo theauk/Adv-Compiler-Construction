@@ -3,12 +3,12 @@ bb0 [shape=record, label="<b>BB0 | {5: const #23|10: const #4|13: const #1|18: c
 bb1 [shape=record, label="<b>BB1 | {1: read|2: read|3: read|4: read}| {a: 1 | b: 2 | c: 3 | d: 4 | e: 1}"];
 bb2 [shape=record, label="<b>join BB2 | {33: phi (1) (15)|34: phi (2) (29)|35: phi (3) (17)|36: phi (4) (31)|37: phi (1) (9)|6: cmp (36) (5)|7: bge (6) (38)}| {a: 33 | b: 34 | c: 35 | d: 36 | e: 37}"];
 bb3 [shape=record, label="<b>BB3 | {8: write (36)|9: add (33) (34)|11: cmp (33) (10)|12: bge (11) (16)}| {d: 9 | e: 9}"];
-bb4 [shape=record, label="<b>BB4 | {14: add (33) (13)|27: bra (15)}| {a: 14}"];
+bb4 [shape=record, label="<b>BB4 | {14: add (33) (13)|26: bra (15)}| {a: 14}"];
 bb5 [shape=record, label="<b>BB5 | {16: add (9) (13)}| {c: 16}"];
 bb6 [shape=record, label="<b>join BB6 | {23: phi (16) (22)|19: cmp (23) (18)|20: bge (19)}| {c: 23}"];
 bb7 [shape=record, label="<b>BB7 | {22: add (23) (21)|24: bra (23)}| {c: 22}"];
 bb8 [shape=record, label="<b>BB8 | {25: write (23)}| {b: 23}"];
-bb9 [shape=record, label="<b>join BB9 | {15: phi (14) (33)|17: phi (35) (23)|26: phi (34) (23)|28: add (15) (26)|29: add (28) (17)|30: write (29)|31: add (9) (13)|32: bra (33)}| {a: 15 | b: 29 | c: 17 | d: 31}"];
+bb9 [shape=record, label="<b>join BB9 | {15: phi (14) (33)|17: phi (35) (23)|27: phi (34) (23)|28: add (15) (27)|29: add (28) (17)|30: write (29)|31: add (9) (13)|32: bra (33)}| {a: 15 | b: 29 | c: 17 | d: 31}"];
 bb10 [shape=record, label="<b>BB10 | {38: write (33)|39: write (34)|40: write (35)|41: write (36)|42: write (37)|43: end}"];
 bb0:s -> bb1:n ;
 bb1:s -> bb2:n ;

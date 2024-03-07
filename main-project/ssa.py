@@ -38,12 +38,30 @@ class Instruction:
         self.x_var = x_var
         self.y_var = y_var
         self.constant = constant
+        self.originates_from_read = self.set_originates_from_read()
 
     def get_id(self):
         return self.id
 
     def set_constant(self, constant: int):
         self.constant = constant
+
+    def set_originates_from_read(self):
+        if self.op == Operations.READ:
+            return True
+        elif self.x and self.x.originates_from_read:
+            return True
+        elif self.y and self.y.originates_from_read:
+            return True
+        else:
+            return False
+
+    def update_parameters(self, x, y):
+        if x:
+            self.x = x
+        if y:
+            self.y = y
+        self.originates_from_read = self.set_originates_from_read()
 
     def __str__(self):
         if self.constant is not None:

@@ -162,10 +162,7 @@ class BasicBlock(Block):
 
     def update_instruction(self, instr: Instruction, x: Instruction = None, y: Instruction = None):
         instr: Instruction = self.instructions[instr.get_id()]
-        if x:
-            instr.x = x
-        if y:
-            instr.y = y
+        instr.update_parameters(x, y)
 
     def get_existing_phi_instruction(self, var: int) -> Instruction:
         """

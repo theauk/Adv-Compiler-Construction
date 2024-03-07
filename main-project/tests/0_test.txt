@@ -1,19 +1,9 @@
 main
-var a, b, c;
+array[2] a;
+var i, j, k;
 {
-    let a <- call InputNum();
-    let b <- call InputNum();
-    let c <- 2 + 3;
-
-
-    if a < 4 then
-            let a <- c + 1;
-        else
-            let a <- a + 2;
-        fi;
-
-    call OutputNum(a);
-    call OutputNum(b);
-    call OutputNum(c);
+    let i <- 2;
+    let j <- 3;
+    let a[i + j] <- call InputNum();
 
 }.

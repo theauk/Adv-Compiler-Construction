@@ -62,6 +62,7 @@ class BasicBlock(Block):
         self.dom_instructions = {}
         self.return_block = False
         self.array_assignments = {}  # model multiple dimension array as a single long array
+        self.array_instructions = {}
 
     def update_join(self, join: bool):
         self.join = join
@@ -246,6 +247,12 @@ class BasicBlock(Block):
         current_array[indices[-1]] = element
 
         self.add_store_instruction(idn, -1, 400)
+
+    def add_array_instruction(self, var: int, instruction: Instruction):
+        if not self.array_assignments[var]:
+            self.array_assignments[var] = [instruction]
+        else:
+            self.array_assignments[var].append(instruction)
 
 
 class Blocks:

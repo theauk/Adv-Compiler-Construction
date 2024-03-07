@@ -77,13 +77,11 @@ class Parser:
 
     def computation(self):
         if self.check_token(Tokens.MAIN_TOKEN):
-            self.next_token()
 
             # { varDecl } which starts with typeDecl starting with either "var" or "array"
-            while self.token > self.tokenizer.max_reserved_id or self.token == Tokens.ARR_TOKEN:
+            while self.token == Tokens.VAR_TOKEN or self.token == Tokens.ARR_TOKEN:
                 self.var_declaration()
-
-            self.check_token(Tokens.SEMI_TOKEN)
+                self.check_token(Tokens.SEMI_TOKEN)
 
             # { funcDecl } -> [ "void" ] "function"...
             while self.token == Tokens.VOID_TOKEN or self.token == Tokens.FUNC_TOKEN:
@@ -121,6 +119,7 @@ class Parser:
         if self.token == Tokens.ARR_TOKEN:
             self.array_declaration()
         else:
+            self.next_token()
             # Handle non-array parameters
             # Check if valid ident
             if not self.reserved_identifier():
@@ -130,7 +129,6 @@ class Parser:
 
         # Check for additional idents seperated by ","
         if self.token == Tokens.COMMA_TOKEN:
-            self.next_token()
             self.var_declaration()
 
         return
@@ -269,7 +267,6 @@ class Parser:
                 self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
 
             array = self.blocks.get_current_block().get_array(designator)
-            self.is_valid_array_dimension(tuple(indices), self.arrayTable[designator], designator)
 
             if not lhs:
                 instr = self.baseSSA.get_new_instr_id()
@@ -291,14 +288,6 @@ class Parser:
             return designator, True, indices
         else:  # normal id
             return designator, False, indices
-
-    def is_valid_array_dimension(self, cur_array, stored_array, designator):
-        if len(cur_array) != len(stored_array):
-            self.tokenizer.error(f"Invalid index for array {designator}")
-
-        for num1, num2 in zip(cur_array, stored_array):
-            if num1 >= num2:
-                self.tokenizer.error(f"Invalid index for array {designator}")
 
     def expression(self):
         idn_left, idn_left_var = self.term()

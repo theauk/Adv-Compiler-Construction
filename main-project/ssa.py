@@ -29,7 +29,8 @@ class BaseSSA:
 
 
 class Instruction:
-    def __init__(self, id_count, op: Operations = None, x: 'Instruction' = None, y: 'Instruction' = None, x_var=None,
+    def __init__(self, id_count=None, op: Operations = None, x: 'Instruction' = None, y: 'Instruction' = None,
+                 x_var=None,
                  y_var=None, constant=None):
         self.id = id_count
         self.op = op
@@ -73,7 +74,10 @@ class Instruction:
         elif not self.y:
             return f"{self.id}: {self.op} ({self.x.get_id()})"
         else:
-            return f"{self.id}: {self.op} ({self.x.get_id()}) ({self.y.get_id()})"
+            if self.x.op == Operations.BASE:
+                return f"{self.id}: {self.op} (BASE) ({self.y.get_id()})"
+            else:
+                return f"{self.id}: {self.op} ({self.x.get_id()}) ({self.y.get_id()})"
 
     def print_debug(self):
         if not self.x and not self.y and not self.op:

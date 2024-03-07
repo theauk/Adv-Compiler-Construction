@@ -1,9 +1,7 @@
 main
-array[2] a;
+array[2][3] a;
 var i, j, k;
 {
-    let i <- 2;
-    let j <- 3;
-    let a[i + j] <- call InputNum();
+    let j <- a[0][1];
 
 }.

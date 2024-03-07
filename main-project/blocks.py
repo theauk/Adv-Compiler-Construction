@@ -38,10 +38,10 @@ class ConstantBlock(Block):
         self.id = idn
         self.constants = {}
 
-    def add_constant(self, instr: Instruction, constant: int):
+    def add_constant(self, instr: Instruction, constant):
         self.constants[constant] = instr
 
-    def get_constant_id(self, constant: int) -> Instruction:
+    def get_constant_id(self, constant) -> Instruction:
         return self.constants[constant]
 
 
@@ -89,7 +89,7 @@ class BasicBlock(Block):
 
     def add_new_instr_block(self, in_while, instr_id: int, op: Operations = None, x: Instruction = None, y: Instruction = None,
                             x_var: int = None, y_var: int = None) -> (
-            int, bool):
+            Instruction, bool):
         if in_while or (op, x, y) not in self.dom_instructions:
             inst = Instruction(instr_id, op, x, y, x_var, y_var)
             self.instructions[instr_id] = inst
@@ -223,36 +223,26 @@ class BasicBlock(Block):
     def is_return_block(self):
         return self.return_block
 
-    def add_array(self, var: int, lengths: list[int]):
-        array = None
-        for length in reversed(lengths):
-            array = [None] * length if array is None else [array.copy() for _ in range(length)]
-        self.array_assignments[var] = array
+    def add_array(self, var: int):
+        self.array_instructions[var] = []
 
-    def get_array(self, token):
-        return self.array_assignments[token]
+    def get_array_instructions(self):
+        return self.array_instructions
 
-    def get_array_assignment(self):
-        return self.array_assignments
+    def add_store_instruction(self, array_var, idn, x, x_var, address):
+        instr = Instruction(idn, Operations.STORE, x=x, x_var=x_var, y=address)
+        self.add_array_instruction(array_var, instr)
 
-    def add_store_instruction(self, idn, x, x_var):
-        instr = Instruction(idn, Operations.STORE, x=x, x_var=x_var)
-        self.instructions[idn] = instr
-        self.instruction_order_list.append(instr)
-
-    def store_element_in_array(self, idn, array_token, element, indices):
-        current_array = self.array_assignments[array_token]
-        for index in indices[:-1]:
-            current_array = current_array[index]
-        current_array[indices[-1]] = element
-
-        self.add_store_instruction(idn, -1, 400)
+    #def store_element_in_array(self, idn, array_token, element, indices):
+    #    current_array = self.array_assignments[array_token]
+    #    for index in indices[:-1]:
+    #        current_array = current_array[index]
+    #    current_array[indices[-1]] = element
+    #    self.add_store_instruction(idn, -1, 400)
 
     def add_array_instruction(self, var: int, instruction: Instruction):
-        if not self.array_assignments[var]:
-            self.array_assignments[var] = [instruction]
-        else:
-            self.array_assignments[var].append(instruction)
+        # TODO: might have to check here if array has been created initially
+        self.array_instructions[var].append(instruction)
 
 
 class Blocks:
@@ -275,7 +265,7 @@ class Blocks:
         del self.instructions[idn]
 
     def add_new_instr(self, in_while, block: BasicBlock, instr_id: int, op: Operations = None, x: Instruction = None,
-                      y: Instruction = None, x_var: int = None, y_var: int = None) -> int:
+                      y: Instruction = None, x_var: int = None, y_var: int = None) -> Instruction:
         """
         Adds a new instruction to the given block unless it is a common subexpression.
         :param y_var:
@@ -326,12 +316,15 @@ class Blocks:
         self.current_block = self.blocks_list[-1]
         self.id_count -= 1
 
-    def add_constant(self, constant: int):
+    def add_constant(self, constant):
         if constant not in self.constant_block.constants:
             instr_id = self.baseSSA.get_new_instr_id()
             instr = Instruction(id_count=instr_id, constant=constant)
             self.constant_block.add_constant(instr, constant)
             self.instructions[instr_id] = instr
+            return instr
+        else:
+            return self.get_constant_instr(constant)
 
     def get_constant_instr(self, constant: int) -> Instruction:
         return self.constant_block.get_constant_id(constant)

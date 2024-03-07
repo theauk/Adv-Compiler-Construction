@@ -1,6 +1,6 @@
 from blocks import Blocks, BasicBlock, BlockRelation
 from operations import Operations
-from ssa import BaseSSA
+from ssa import BaseSSA, Instruction
 from tokenizer import Tokenizer
 from tokens import Tokens
 from utils import Utils
@@ -20,6 +20,7 @@ class Parser:
         self.while_stack = []
         self.outer_while_blocks = []
         self.if_branch_blocks = []
+        self.base_instruction = Instruction(op=Operations.BASE)
 
     def in_while(self):
         return len(self.while_stack) > 0
@@ -53,7 +54,7 @@ class Parser:
                     self.blocks.add_var_to_current_block(self.token, self.blocks.get_constant_instr(0))
 
                 else:
-                    if self.blocks.get_current_block().get_array_assignment()[self.token] is None:
+                    if self.blocks.get_current_block().get_array_instructions()[self.token] is None:
                         self.tokenizer.error(
                             f"SyntaxError: {self.tokenizer.last_id} has not been initialized.")
                 self.next_token()
@@ -153,8 +154,8 @@ class Parser:
             self.symbolTable[self.token] = self.tokenizer.last_id
 
         self.symbolTable[self.token] = self.tokenizer.last_id
-        self.arrayTable[self.token] = tuple(lengths_of_dimensions)
-        self.blocks.get_current_block().add_array(self.token, lengths_of_dimensions)
+        self.arrayTable[self.token] = lengths_of_dimensions
+        self.blocks.get_current_block().add_array(self.token)
 
         self.next_token()
 
@@ -224,7 +225,7 @@ class Parser:
 
     def assignment(self):
         if not self.reserved_identifier():
-            designator, is_array, indices = self.designator(lhs=True)
+            designator, is_array = self.designator(lhs=True)
             # "<-"
             self.check_token(Tokens.BECOMES_TOKEN)
             idn, idn_var = self.expression()
@@ -238,8 +239,14 @@ class Parser:
                 if current_join_block and designator not in current_join_block.get_phi_vars():
                     self.utils.create_phi_instruction(self.in_while(), current_join_block, designator)
             else:
-                self.blocks.get_current_block().store_element_in_array(self.baseSSA.get_new_instr_id(), designator, idn,
-                                                                       indices)
+                # TODO: FIND THE SINGLE STORE INDEX for  multidimensional
+                address = 0
+                # TODO: check if cse
+                if "cse" == True:
+                    print("")
+                else:
+                    self.blocks.get_current_block().add_store_instruction(designator, self.baseSSA.get_new_instr_id(),
+                                                                          idn, idn_var, address)
 
         return
 
@@ -266,28 +273,58 @@ class Parser:
                 indices.append(exp[0])
                 self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
 
-            array = self.blocks.get_current_block().get_array(designator)
+            dimensions = self.arrayTable[designator]
 
-            if not lhs:
-                instr = self.baseSSA.get_new_instr_id()
-                self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), instr, Operations.LOAD)
+            if len(dimensions) != len(indices):
+                self.tokenizer.error(f"index error: specified {len(indices)} but array has {len(dimensions)} dimensions")
 
-                result = array
-                for index in indices:
-                    result = result[index]
+            to_add = []
 
-                if not result:
-                    self.tokenizer.error(
-                        f"array index has not been initialized for array {self.symbolTable[designator]}")
+            # Multiply indices and dimensions
+            for i in range(len(indices) - 1):
+                last_multiplier = self.blocks.add_constant(dimensions[-1])
 
-                return result, True, indices  # TODO fix since it does not do designator like the others
-                # TODO: this will be a load instruction somewhere and you have to check for "cse" loads
-                # it will probably be fine to return the result that is there as long as you also do the load etc.
+                for j in range(len(dimensions) - 2, i, -1):
+                    new_multiplier_constant = self.blocks.add_constant(dimensions[j])
+                    new_multiplier = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
+                                                               self.baseSSA.get_new_instr_id(), Operations.MUL,
+                                                               x=last_multiplier, y=new_multiplier_constant)
+                    last_multiplier = new_multiplier
 
-            # TODO: you have to check if you need to kill
-            return designator, True, indices
+                mul_by_index = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
+                                                         self.baseSSA.get_new_instr_id(), Operations.MUL,
+                                                         x=last_multiplier, y=indices[i])
+                to_add.append(mul_by_index)
+
+            to_add.append(indices[-1])
+
+            # Add the above
+            last_add = to_add[0]
+            for i in range(1, len(to_add)):
+                new_add = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
+                                                    self.baseSSA.get_new_instr_id(), Operations.ADD, x=last_add,
+                                                    y=to_add[i])
+                last_add = new_add
+
+            # Multiply it all by 4
+            multiplied_by_four_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
+                                                                 self.baseSSA.get_new_instr_id(),
+                                                                 Operations.MUL, x=last_add,
+                                                                 y=self.blocks.add_constant(4))
+
+            # Base add instruction
+            array_base = self.blocks.add_constant(f"{self.symbolTable[designator]}_addr")
+            add_base_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
+                                                       self.baseSSA.get_new_instr_id(), Operations.ADD,
+                                                       x=self.base_instruction, y=array_base)
+
+            final_array_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
+                                                          self.baseSSA.get_new_instr_id(), Operations.ADDA,
+                                                          x=multiplied_by_four_instr, y=add_base_instr)
+
+            return final_array_instr, True
         else:  # normal id
-            return designator, False, indices
+            return designator, False
 
     def expression(self):
         idn_left, idn_left_var = self.term()
@@ -334,9 +371,10 @@ class Parser:
 
     def factor(self):  # returns the number from either designator, number, ( expression ), or funcCall
         if self.token > self.tokenizer.max_reserved_id:
-            designator, array, indices = self.designator()
+            designator, array = self.designator()
             if array:
-                return -1, designator  # TODO: UPDATE for arrays
+                # TODO: do load
+                return designator, None  # TODO: UPDATE for arrays
             else:
                 return self.blocks.find_var_given_id(designator), designator
         elif self.token == Tokens.NUMBER:
@@ -571,7 +609,7 @@ class Parser:
         # Check if bra instruction should be inserted to create path out of current block if necessary
         if len(self.blocks.get_current_block().get_children()) == 0:
             bra_instr = self.baseSSA.get_new_instr_id()
-            self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), bra_instr,Operations.BRA)
+            self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(), bra_instr, Operations.BRA)
             self.utils.add_relationship(parent_block=self.blocks.get_current_block(), child_block=while_block,
                                         relationship=BlockRelation.BRANCH, copy_vars=False)
 

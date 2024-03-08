@@ -245,8 +245,8 @@ class Parser:
                     print("")
                 else:
                     store_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
-                                              self.baseSSA.get_new_instr_id(), Operations.STORE, x=idn, y=designator,
-                                              x_var=idn_var)
+                                                            self.baseSSA.get_new_instr_id(), Operations.STORE, x=idn,
+                                                            y=designator, x_var=idn_var)
                     self.blocks.get_current_block().add_array_instruction(original_designator, store_instr)
 
         return
@@ -294,8 +294,8 @@ class Parser:
                     last_multiplier = new_multiplier
 
                 mul_by_index = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
-                                                         self.baseSSA.get_new_instr_id(), Operations.MUL,
-                                                         x=indices[i], y=last_multiplier)
+                                                         self.baseSSA.get_new_instr_id(), Operations.MUL, x=indices[i],
+                                                         y=last_multiplier)
                 to_add.append(mul_by_index)
 
             to_add.append(indices[-1])
@@ -310,9 +310,8 @@ class Parser:
 
             # Multiply it all by 4
             multiplied_by_four_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
-                                                                 self.baseSSA.get_new_instr_id(),
-                                                                 Operations.MUL, x=last_add,
-                                                                 y=self.blocks.add_constant(4))
+                                                                 self.baseSSA.get_new_instr_id(), Operations.MUL,
+                                                                 x=last_add, y=self.blocks.add_constant(4))
 
             # Base add instruction
             array_base = self.blocks.add_constant(f"{self.symbolTable[designator]}_addr")
@@ -339,14 +338,14 @@ class Parser:
                 idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                      self.baseSSA.get_new_instr_id(), Operations.ADD, idn_left,
                                                      idn_right, x_var=idn_left_var, y_var=idn_right_var)
-                idn_left_var = None  # TODO check that it is not a problem that idn_left_var is not updated
+                idn_left_var = None
             elif self.token == Tokens.MINUS_TOKEN:
                 self.next_token()
                 idn_right, idn_right_var = self.term()
                 idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                      self.baseSSA.get_new_instr_id(), Operations.SUB, idn_left,
                                                      idn_right, x_var=idn_left_var, y_var=idn_right_var)
-                idn_left_var = None  # TODO check that it is not a problem that idn_left_var is not updated
+                idn_left_var = None
 
         return idn_left, idn_left_var
 
@@ -360,14 +359,14 @@ class Parser:
                 idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                      self.baseSSA.get_new_instr_id(), Operations.MUL, idn_left,
                                                      idn_right, x_var=idn_left_var, y_var=idn_right_var)
-                idn_left_var = None  # TODO check that it is not a problem that idn_left_var is not updated
+                idn_left_var = None
             elif self.token == Tokens.DIV_TOKEN:
                 self.next_token()
                 idn_right, idn_right_var = self.factor()
                 idn_left = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                      self.baseSSA.get_new_instr_id(), Operations.DIV, idn_left,
                                                      idn_right, x_var=idn_left_var, y_var=idn_right_var)
-                idn_left_var = None  # TODO check that it is not a problem that idn_left_var is not updated
+                idn_left_var = None
 
         return idn_left, idn_left_var
 
@@ -376,11 +375,10 @@ class Parser:
             original_designator = self.token
             designator, array = self.designator()
             if array:
-                # TODO: do load
                 load_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
-                                                       self.baseSSA.get_new_instr_id(), Operations.LOAD, x=designator)
+                                                       self.baseSSA.get_new_instr_id(), Operations.LOAD, x=designator, array=original_designator)
                 self.blocks.get_current_block().add_array_instruction(original_designator, load_instr)
-                return load_instr, None  # TODO: UPDATE for arrays
+                return load_instr, None
             else:
                 return self.blocks.find_var_given_id(designator), designator
         elif self.token == Tokens.NUMBER:

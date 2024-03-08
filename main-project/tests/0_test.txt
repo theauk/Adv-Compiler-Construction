@@ -1,8 +1,14 @@
 main
-array[1] x;
-array[1][2] y;
-array[1][2][3] z;
-array[1][2][3][4] m;
+array[2] a;
+var i, j, x, y, z;
 {
-    let x[0] <- 2 + 2;
+    let i <- call InputNum();
+    let j <- call InputNum();
+
+    let x <- a[i];
+    let y <- a[i];
+
+    let a[j] <- 2;
+
+    let z <- a[i];
 }.

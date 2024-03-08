@@ -87,10 +87,11 @@ class BasicBlock(Block):
         else:
             return None
 
-    def add_new_instr_block(self, in_while, instr_id: int, op: Operations = None, x: Instruction = None, y: Instruction = None,
-                            x_var: int = None, y_var: int = None) -> (
+    def add_new_instr_block(self, in_while, instr_id: int, op: Operations = None, x: Instruction = None,
+                            y: Instruction = None,
+                            x_var: int = None, y_var: int = None, array=None) -> (
             Instruction, bool):
-        if in_while or (op, x, y) not in self.dom_instructions:
+        if (in_while or (op, x, y) not in self.dom_instructions) and op != Operations.LOAD:
             inst = Instruction(instr_id, op, x, y, x_var, y_var)
             self.instructions[instr_id] = inst
 
@@ -116,6 +117,20 @@ class BasicBlock(Block):
             if op and op not in Operations.get_no_cse_instructions() and not in_while:
                 self.add_dom_instruction(inst, op, x, y)
 
+            return inst, False
+        elif op == Operations.LOAD:
+            for instr in reversed(self.array_instructions[array]):
+                if instr.op == Operations.KILL:
+                    break
+                elif instr.op == Operations.STORE and (x.originates_from_read or y.originates_from_read):
+                    break
+                elif instr.op == Operations.LOAD:
+                    if instr.x == x and instr.y == y:
+                        return instr, True
+
+            inst = Instruction(instr_id, op, x, y, x_var, y_var)
+            self.instructions[instr_id] = inst
+            self.instruction_order_list.append(inst)
             return inst, False
         else:
             return self.dom_instructions[(op, x, y)], True
@@ -199,6 +214,9 @@ class BasicBlock(Block):
         dom_parent_instructions = dom_parent.dom_instructions
         self.dom_instructions.update(dom_parent_instructions)
 
+        dom_parent_array_instructions = dom_parent.array_instructions
+        self.array_instructions = copy.deepcopy(dom_parent_array_instructions)
+
     def add_dom_instruction(self, instr: Instruction, op: Operations, x: Instruction, y: Instruction):
         if op != Operations.PHI:
             self.dom_instructions[(op, x, y)] = instr
@@ -233,6 +251,11 @@ class BasicBlock(Block):
         # TODO: might have to check here if array has been created initially
         self.array_instructions[var].append(instruction)
 
+        if instruction.op == Operations.STORE:
+            if instruction.x.originates_from_read or instruction.y.originates_from_read:
+                kill_instr = Instruction(Operations.KILL)
+                self.array_instructions[var].append(kill_instr)
+
 
 class Blocks:
     def __init__(self, baseSSA, initial_block):
@@ -254,9 +277,10 @@ class Blocks:
         del self.instructions[idn]
 
     def add_new_instr(self, in_while, block: BasicBlock, instr_id: int, op: Operations = None, x: Instruction = None,
-                      y: Instruction = None, x_var: int = None, y_var: int = None) -> Instruction:
+                      y: Instruction = None, x_var: int = None, y_var: int = None, array=None) -> Instruction:
         """
         Adds a new instruction to the given block unless it is a common subexpression.
+        :param array:
         :param y_var:
         :param x_var:
         :param in_while:
@@ -268,7 +292,7 @@ class Blocks:
         :return: the instruction id of the new instruction or the common subexpression
         """
         if not block.is_return_block() or op == Operations.RET:
-            instr, cse = block.add_new_instr_block(in_while, instr_id, op, x, y, x_var, y_var)
+            instr, cse = block.add_new_instr_block(in_while, instr_id, op, x, y, x_var, y_var, array)
             if cse:
                 self.baseSSA.decrease_id_count()
             else:
@@ -358,4 +382,3 @@ class Blocks:
 
     def get_leaf_joins(self) -> list[BasicBlock]:
         return self.leaf_joins
-

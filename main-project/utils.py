@@ -23,8 +23,8 @@ class Utils:
         if x and y or not current_join_block.is_while():
             current_join_block.add_phi_var(designator)
             instr_id = self.baseSSA.get_new_instr_id()
-            instr = self.blocks.add_new_instr(in_while, current_join_block, instr_id=instr_id, op=Operations.PHI, x=x, y=y,
-                                      x_var=designator, y_var=designator)
+            instr = self.blocks.add_new_instr(in_while, current_join_block, instr_id=instr_id, op=Operations.PHI, x=x,
+                                              y=y, x_var=designator, y_var=designator)
             current_join_block.add_var_assignment(var=designator, instruction=instr)
             return instr
 
@@ -131,16 +131,15 @@ class Utils:
         # Check if potential cmp instr is a common subexpression
         cse_instr = if_block.is_cse(op=rel_op_instr, x=left_side, y=right_side)
         if not cse_instr:
-            cmp_instr = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(),
-                                                      Operations.CMP, left_side, right_side, left_side_var,
-                                                      right_side_var)
+            cmp_instr = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(), Operations.CMP,
+                                                  left_side, right_side, left_side_var, right_side_var)
             # Add the branch instr (y added later when known)
             branch_instr = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(),
-                                                         op=rel_op_instr, x=cmp_instr, x_var=left_side_var)
+                                                     op=rel_op_instr, x=cmp_instr, x_var=left_side_var)
         else:
             # Common subexpression so only add the branch instruction
             branch_instr = self.blocks.add_new_instr(in_while, if_block, self.baseSSA.get_new_instr_id(),
-                                                         op=rel_op_instr, x=cse_instr, x_var=left_side_var)
+                                                     op=rel_op_instr, x=cse_instr, x_var=left_side_var)
 
         return branch_instr
 

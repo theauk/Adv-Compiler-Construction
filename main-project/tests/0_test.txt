@@ -10,5 +10,7 @@ var i, j, x, y, z;
 
     let a[j] <- 2;
 
+    let i <- 2;
+
     let z <- a[i];
 }.

@@ -122,7 +122,9 @@ class BasicBlock(Block):
             for instr in reversed(self.array_instructions[array]):
                 if instr.op == Operations.KILL:
                     break
-                elif instr.op == Operations.STORE and (x.originates_from_read or y.originates_from_read):
+                elif instr.op == Operations.STORE and (x and x.originates_from_read):
+                    break
+                elif instr.op == Operations.STORE and (y and y.originates_from_read):
                     break
                 elif instr.op == Operations.LOAD:
                     if instr.x == x and instr.y == y:

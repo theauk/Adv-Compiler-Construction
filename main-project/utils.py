@@ -208,6 +208,7 @@ class Utils:
         removed_instructions = []
         phis = []
         removed_instr_to_cse_idn = {}
+        loads = {}
 
         # Keep going until we are back at the starting while block
         while stack:
@@ -228,17 +229,42 @@ class Utils:
                         removed_instructions.append(instruction)
                         if instruction.id != cse_instr.id:
                             removed_instr_to_cse_idn[instruction.id] = cse_instr
+
+                    elif instruction.op == Operations.ADDA and instruction.x.get_id() in removed_instr_to_cse_idn and instruction.y.get_id() in removed_instr_to_cse_idn:
+                        cse_instr = current_block.get_dom_instruction()[(
+                            instruction.op, removed_instr_to_cse_idn[instruction.x.get_id()],
+                            removed_instr_to_cse_idn[instruction.y.get_id()])]
+
+                        remove_instr.append((instruction, i, cse_instr))
+                        removed_instructions.append(instruction)
+
+                        if instruction.id != cse_instr.id:
+                            removed_instr_to_cse_idn[instruction.id] = cse_instr
+
                     else:
                         current_block.add_dom_instruction(instruction, instruction.op, instruction.x, instruction.y)
                 elif instruction.op == Operations.PHI:
                     phis.append(instruction)
 
-                if instruction.x in removed_instr_to_cse_idn and instruction.op != Operations.PHI:
-                    current_block.add_var_assignment(instruction.x_var, removed_instr_to_cse_idn[instruction.x])
-                    current_block.update_instruction(instruction.get_id(), removed_instr_to_cse_idn[instruction.x])
-                if instruction.y in removed_instr_to_cse_idn and instruction.op != Operations.PHI:
-                    current_block.add_var_assignment(instruction.y_var, removed_instr_to_cse_idn[instruction.y])
-                    current_block.update_instruction(instruction.get_id(), removed_instr_to_cse_idn[instruction.y])
+                if instruction.x and instruction.x.get_id() in removed_instr_to_cse_idn and instruction.op != Operations.PHI:
+                    current_block.update_instruction(instruction, x=removed_instr_to_cse_idn[instruction.x.get_id()])
+                if instruction.y and instruction.y.get_id() in removed_instr_to_cse_idn and instruction.op != Operations.PHI:
+                    current_block.update_instruction(instruction, y=removed_instr_to_cse_idn[instruction.y.get_id()])
+
+                if instruction.op == Operations.LOAD:
+                    for array_i in reversed(current_block.get_array_instructions()[instruction.x_var]):
+                        if array_i.get_id() is not None and array_i.get_id() < instruction.get_id():
+                            if array_i.op == Operations.KILL:
+                                break
+                            elif array_i.op == Operations.STORE and (instruction.x and instruction.x.originates_from_read):
+                                break
+                            elif array_i.op == Operations.STORE and (instruction.y and instruction.y.originates_from_read):
+                                break
+                            elif array_i.op == Operations.LOAD:
+                                if array_i.x == instruction.x and array_i.y == instruction.y:
+                                    remove_instr.append((instruction, i, array_i))
+                                    removed_instructions.append(instruction)
+                    print("")
 
             # Remove cse instructions
             for (instr, i, cse_instr) in reversed(remove_instr):  # to not mess with indices
@@ -287,4 +313,3 @@ class Utils:
                     new_id -= 1
 
             instruction.id = new_id
-

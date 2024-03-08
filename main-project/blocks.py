@@ -89,9 +89,25 @@ class BasicBlock(Block):
 
     def add_new_instr_block(self, in_while, instr_id: int, op: Operations = None, x: Instruction = None,
                             y: Instruction = None,
-                            x_var: int = None, y_var: int = None, array=None) -> (
+                            x_var: int = None, y_var: int = None) -> (
             Instruction, bool):
-        if (in_while or (op, x, y) not in self.dom_instructions) and op != Operations.LOAD:
+        if op == Operations.LOAD:
+            for instr in reversed(self.array_instructions[x_var]):
+                if instr.op == Operations.KILL:
+                    break
+                elif instr.op == Operations.STORE and (x and x.originates_from_read):
+                    break
+                elif instr.op == Operations.STORE and (y and y.originates_from_read):
+                    break
+                elif instr.op == Operations.LOAD:
+                    if instr.x == x and instr.y == y:
+                        return instr, True
+
+            inst = Instruction(instr_id, op, x, y, x_var, y_var)
+            self.instructions[instr_id] = inst
+            self.instruction_order_list.append(inst)
+            return inst, False
+        elif (in_while or (op, x, y) not in self.dom_instructions) and op != Operations.LOAD:
             inst = Instruction(instr_id, op, x, y, x_var, y_var)
             self.instructions[instr_id] = inst
 
@@ -117,22 +133,6 @@ class BasicBlock(Block):
             if op and op not in Operations.get_no_cse_instructions() and not in_while:
                 self.add_dom_instruction(inst, op, x, y)
 
-            return inst, False
-        elif op == Operations.LOAD:
-            for instr in reversed(self.array_instructions[array]):
-                if instr.op == Operations.KILL:
-                    break
-                elif instr.op == Operations.STORE and (x and x.originates_from_read):
-                    break
-                elif instr.op == Operations.STORE and (y and y.originates_from_read):
-                    break
-                elif instr.op == Operations.LOAD:
-                    if instr.x == x and instr.y == y:
-                        return instr, True
-
-            inst = Instruction(instr_id, op, x, y, x_var, y_var)
-            self.instructions[instr_id] = inst
-            self.instruction_order_list.append(inst)
             return inst, False
         else:
             return self.dom_instructions[(op, x, y)], True
@@ -212,12 +212,14 @@ class BasicBlock(Block):
         if not in_while:
             self.copy_dom_instructions(dom_parent)
 
+        dom_parent_array_instructions = dom_parent.array_instructions
+        self.array_instructions = copy.deepcopy(dom_parent_array_instructions)
+
     def copy_dom_instructions(self, dom_parent):
         dom_parent_instructions = dom_parent.dom_instructions
         self.dom_instructions.update(dom_parent_instructions)
 
-        dom_parent_array_instructions = dom_parent.array_instructions
-        self.array_instructions = copy.deepcopy(dom_parent_array_instructions)
+
 
     def add_dom_instruction(self, instr: Instruction, op: Operations, x: Instruction, y: Instruction):
         if op != Operations.PHI:
@@ -279,7 +281,7 @@ class Blocks:
         del self.instructions[idn]
 
     def add_new_instr(self, in_while, block: BasicBlock, instr_id: int, op: Operations = None, x: Instruction = None,
-                      y: Instruction = None, x_var: int = None, y_var: int = None, array=None) -> Instruction:
+                      y: Instruction = None, x_var: int = None, y_var: int = None) -> Instruction:
         """
         Adds a new instruction to the given block unless it is a common subexpression.
         :param array:
@@ -294,7 +296,7 @@ class Blocks:
         :return: the instruction id of the new instruction or the common subexpression
         """
         if not block.is_return_block() or op == Operations.RET:
-            instr, cse = block.add_new_instr_block(in_while, instr_id, op, x, y, x_var, y_var, array)
+            instr, cse = block.add_new_instr_block(in_while, instr_id, op, x, y, x_var, y_var)
             if cse:
                 self.baseSSA.decrease_id_count()
             else:

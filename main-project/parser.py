@@ -20,7 +20,7 @@ class Parser:
         self.while_stack = []
         self.outer_while_blocks = []
         self.if_branch_blocks = []
-        self.base_instruction = Instruction(op=Operations.BASE)
+        self.base_instruction = Instruction(id_count=-1, op=Operations.BASE)
 
     def in_while(self):
         return len(self.while_stack) > 0
@@ -54,9 +54,10 @@ class Parser:
                     self.blocks.add_var_to_current_block(self.token, self.blocks.get_constant_instr(0))
 
                 else:
-                    if self.blocks.get_current_block().get_array_instructions()[self.token] is None:
+                    if self.token not in self.blocks.get_current_block().get_array_instructions():
                         self.tokenizer.error(
-                            f"SyntaxError: {self.tokenizer.last_id} has not been initialized.")
+                            f"SyntaxError: {self.tokenizer.last_id} has not been initialized. Initializing it")
+                        self.blocks.current_block.array_instructions[self.token] = []
                 self.next_token()
                 return True
             else:
@@ -277,8 +278,8 @@ class Parser:
         if self.token == Tokens.OPEN_BRACKET_TOKEN:  # array
             while self.token == Tokens.OPEN_BRACKET_TOKEN:
                 self.check_token(Tokens.OPEN_BRACKET_TOKEN)
-                exp = self.expression()
-                indices.append(exp[0])
+                exp, exp_var = self.expression()
+                indices.append(exp)
                 self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
 
             dimensions = self.arrayTable[designator]
@@ -297,11 +298,13 @@ class Parser:
                     new_multiplier_constant = self.blocks.add_constant(dimensions[j])
                     new_multiplier = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                                self.baseSSA.get_new_instr_id(), Operations.MUL,
-                                                               x=new_multiplier_constant, y=last_multiplier)
+                                                               x=new_multiplier_constant, x_var=designator,
+                                                               y=last_multiplier)
                     last_multiplier = new_multiplier
 
                 mul_by_index = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                          self.baseSSA.get_new_instr_id(), Operations.MUL, x=indices[i],
+                                                         x_var=designator,
                                                          y=last_multiplier)
                 to_add.append(mul_by_index)
 
@@ -312,23 +315,27 @@ class Parser:
             for i in range(1, len(to_add)):
                 new_add = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                     self.baseSSA.get_new_instr_id(), Operations.ADD, x=last_add,
+                                                    x_var=designator,
                                                     y=to_add[i])
                 last_add = new_add
 
             # Multiply it all by 4
             multiplied_by_four_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                                  self.baseSSA.get_new_instr_id(), Operations.MUL,
-                                                                 x=last_add, y=self.blocks.add_constant(4))
+                                                                 x=last_add, x_var=designator,
+                                                                 y=self.blocks.add_constant(4),
+                                                                 )
 
             # Base add instruction
             array_base = self.blocks.add_constant(f"{self.symbolTable[designator]}_addr")
             add_base_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                        self.baseSSA.get_new_instr_id(), Operations.ADD,
-                                                       x=self.base_instruction, y=array_base)
+                                                       x=self.base_instruction, x_var=designator, y=array_base)
 
             final_array_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                           self.baseSSA.get_new_instr_id(), Operations.ADDA,
-                                                          x=multiplied_by_four_instr, y=add_base_instr)
+                                                          x=multiplied_by_four_instr, x_var=designator,
+                                                          y=add_base_instr)
 
             return final_array_instr, True
         else:  # normal id
@@ -383,7 +390,8 @@ class Parser:
             designator, array = self.designator()
             if array:
                 load_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
-                                                       self.baseSSA.get_new_instr_id(), Operations.LOAD, x=designator, array=original_designator)
+                                                       self.baseSSA.get_new_instr_id(), Operations.LOAD, x=designator,
+                                                       x_var=original_designator)
                 self.blocks.get_current_block().add_array_instruction(original_designator, load_instr)
                 return load_instr, None
             else:

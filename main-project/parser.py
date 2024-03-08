@@ -239,7 +239,7 @@ class Parser:
                 if current_join_block and designator not in current_join_block.get_phi_vars():
                     self.utils.create_phi_instruction(self.in_while(), current_join_block, designator)
             else:
-                # TODO: FIND THE SINGLE STORE INDEX for  multidimensional
+                # TODO: STORE if array lhs at designator
                 address = 0
                 # TODO: check if cse
                 if "cse" == True:
@@ -276,24 +276,28 @@ class Parser:
             dimensions = self.arrayTable[designator]
 
             if len(dimensions) != len(indices):
-                self.tokenizer.error(f"index error: specified {len(indices)} but array has {len(dimensions)} dimensions")
+                self.tokenizer.error(
+                    f"index error: specified {len(indices)} dimensions but array has {len(dimensions)} dimensions")
 
             to_add = []
 
+            if len(indices) == 4:
+                print("")
+
             # Multiply indices and dimensions
             for i in range(len(indices) - 1):
-                last_multiplier = self.blocks.add_constant(dimensions[-1])
+                last_multiplier = self.blocks.add_constant(dimensions[i + 1])  # -1
 
-                for j in range(len(dimensions) - 2, i, -1):
+                for j in range(i + 2, len(dimensions)):  # for j in range(len(dimensions) - 2, i, -1):
                     new_multiplier_constant = self.blocks.add_constant(dimensions[j])
                     new_multiplier = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                                self.baseSSA.get_new_instr_id(), Operations.MUL,
-                                                               x=last_multiplier, y=new_multiplier_constant)
+                                                               x=new_multiplier_constant, y=last_multiplier)
                     last_multiplier = new_multiplier
 
                 mul_by_index = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                          self.baseSSA.get_new_instr_id(), Operations.MUL,
-                                                         x=last_multiplier, y=indices[i])
+                                                         x=indices[i], y=last_multiplier)
                 to_add.append(mul_by_index)
 
             to_add.append(indices[-1])
@@ -374,7 +378,9 @@ class Parser:
             designator, array = self.designator()
             if array:
                 # TODO: do load
-                return designator, None  # TODO: UPDATE for arrays
+                load_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
+                                                       self.baseSSA.get_new_instr_id(), Operations.LOAD, x=designator)
+                return load_instr, None  # TODO: UPDATE for arrays
             else:
                 return self.blocks.find_var_given_id(designator), designator
         elif self.token == Tokens.NUMBER:

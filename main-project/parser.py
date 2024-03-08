@@ -20,7 +20,7 @@ class Parser:
         self.while_stack = []
         self.outer_while_blocks = []
         self.if_branch_blocks = []
-        self.base_instruction = Instruction(id_count=-1, op=Operations.BASE)
+        self.base_instruction = Instruction(op=Operations.BASE)
 
     def in_while(self):
         return len(self.while_stack) > 0

@@ -205,10 +205,10 @@ class Utils:
     def update_while_cse(self, start_while_block):
         visited = set()
         stack = [start_while_block]
-        removed_instructions = []
+        all_removed_instructions = []
         phis = []
         removed_instr_to_cse_idn = {}
-        loads = {}
+        removed_ids = set()
 
         # Keep going until we are back at the starting while block
         while stack:
@@ -220,40 +220,30 @@ class Utils:
                 current_block.copy_dom_instructions(dom_parent)
 
             # Check if cse
-            remove_instr = []
+            current_block_removed_instructions = []
             for i, instruction in enumerate(current_block.get_instruction_order_list()):
-                if instruction.op not in Operations.get_no_cse_instructions():
-                    if (instruction.op, instruction.x, instruction.y) in current_block.get_dom_instruction():
-                        cse_instr = current_block.get_dom_instruction()[(instruction.op, instruction.x, instruction.y)]
-                        remove_instr.append((instruction, i, cse_instr))
-                        removed_instructions.append(instruction)
-                        if instruction.id != cse_instr.id:
-                            removed_instr_to_cse_idn[instruction.id] = cse_instr
-
-                    elif instruction.op == Operations.ADDA and instruction.x.get_id() in removed_instr_to_cse_idn and instruction.y.get_id() in removed_instr_to_cse_idn:
-                        cse_instr = current_block.get_dom_instruction()[(
-                            instruction.op, removed_instr_to_cse_idn[instruction.x.get_id()],
-                            removed_instr_to_cse_idn[instruction.y.get_id()])]
-
-                        remove_instr.append((instruction, i, cse_instr))
-                        removed_instructions.append(instruction)
-
-                        if instruction.id != cse_instr.id:
-                            removed_instr_to_cse_idn[instruction.id] = cse_instr
-
-                    else:
-                        current_block.add_dom_instruction(instruction, instruction.op, instruction.x, instruction.y)
-                elif instruction.op == Operations.PHI:
-                    phis.append(instruction)
-
                 if instruction.x and instruction.x.get_id() in removed_instr_to_cse_idn and instruction.op != Operations.PHI:
                     current_block.update_instruction(instruction, x=removed_instr_to_cse_idn[instruction.x.get_id()])
                 if instruction.y and instruction.y.get_id() in removed_instr_to_cse_idn and instruction.op != Operations.PHI:
                     current_block.update_instruction(instruction, y=removed_instr_to_cse_idn[instruction.y.get_id()])
 
+                if instruction.op not in Operations.get_no_cse_instructions():
+                    if (instruction.op, instruction.x, instruction.y) in current_block.get_dom_instruction():
+                        cse_instr = current_block.get_dom_instruction()[(instruction.op, instruction.x, instruction.y)]
+                        all_removed_instructions.append(instruction)
+                        if instruction.get_id() not in removed_ids:
+                            current_block_removed_instructions.append((instruction, i, cse_instr))
+                            removed_ids.add(instruction.get_id())
+                        if instruction.id != cse_instr.id:
+                            removed_instr_to_cse_idn[instruction.id] = cse_instr
+                    else:
+                        current_block.add_dom_instruction(instruction, instruction.op, instruction.x, instruction.y)
+                elif instruction.op == Operations.PHI:
+                    phis.append(instruction)
+
                 if instruction.op == Operations.LOAD:
                     for array_i in reversed(current_block.get_array_instructions()[instruction.x_var]):
-                        if array_i.get_id() is not None and array_i.get_id() < instruction.get_id():
+                        if array_i.get_id() < instruction.get_id():
                             if array_i.op == Operations.KILL:
                                 break
                             elif array_i.op == Operations.STORE and (instruction.x and instruction.x.originates_from_read):
@@ -262,12 +252,13 @@ class Utils:
                                 break
                             elif array_i.op == Operations.LOAD:
                                 if array_i.x == instruction.x and array_i.y == instruction.y:
-                                    remove_instr.append((instruction, i, array_i))
-                                    removed_instructions.append(instruction)
-                    print("")
+                                    if instruction.get_id() not in removed_ids:
+                                        current_block_removed_instructions.append((instruction, i, array_i))
+                                        removed_ids.add(instruction.get_id())
+                                    all_removed_instructions.append(instruction)
 
             # Remove cse instructions
-            for (instr, i, cse_instr) in reversed(remove_instr):  # to not mess with indices
+            for (instr, i, cse_instr) in reversed(current_block_removed_instructions):  # to not mess with indices
                 current_block.remove_instruction(instr, i)
                 # Update the table that keeps track of the var assignments so that the var points to the cse instruction
                 for var, instr_idn in current_block.get_vars().items():
@@ -285,7 +276,7 @@ class Utils:
                 if child_block.get_id() not in visited and child_block not in stack:
                     stack.append(child_block)
 
-        for instr in removed_instructions:
+        for instr in all_removed_instructions:
             self.blocks.add_removed_instruction(instr)
 
     def fix_branching(self, branch_blocks: list[BasicBlock], if_blocks):

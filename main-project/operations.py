@@ -52,5 +52,7 @@ class Operations(Enum):
             Operations.RET,
             Operations.KILL.BASE,
             Operations.STORE,
-            Operations.LOAD
+            Operations.LOAD,
+            Operations.WRITE,
+            Operations.WRITE_NL
         }

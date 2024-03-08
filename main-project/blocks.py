@@ -229,17 +229,6 @@ class BasicBlock(Block):
     def get_array_instructions(self):
         return self.array_instructions
 
-    def add_store_instruction(self, array_var, idn, x, x_var, address):
-        instr = Instruction(idn, Operations.STORE, x=x, x_var=x_var, y=address)
-        self.add_array_instruction(array_var, instr)
-
-    #def store_element_in_array(self, idn, array_token, element, indices):
-    #    current_array = self.array_assignments[array_token]
-    #    for index in indices[:-1]:
-    #        current_array = current_array[index]
-    #    current_array[indices[-1]] = element
-    #    self.add_store_instruction(idn, -1, 400)
-
     def add_array_instruction(self, var: int, instruction: Instruction):
         # TODO: might have to check here if array has been created initially
         self.array_instructions[var].append(instruction)

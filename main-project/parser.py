@@ -225,6 +225,7 @@ class Parser:
 
     def assignment(self):
         if not self.reserved_identifier():
+            original_designator = self.token
             designator, is_array = self.designator(lhs=True)
             # "<-"
             self.check_token(Tokens.BECOMES_TOKEN)
@@ -239,14 +240,14 @@ class Parser:
                 if current_join_block and designator not in current_join_block.get_phi_vars():
                     self.utils.create_phi_instruction(self.in_while(), current_join_block, designator)
             else:
-                # TODO: STORE if array lhs at designator
-                address = 0
                 # TODO: check if cse
-                if "cse" == True:
+                if "cse" == False:
                     print("")
                 else:
-                    self.blocks.get_current_block().add_store_instruction(designator, self.baseSSA.get_new_instr_id(),
-                                                                          idn, idn_var, address)
+                    store_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
+                                              self.baseSSA.get_new_instr_id(), Operations.STORE, x=idn, y=designator,
+                                              x_var=idn_var)
+                    self.blocks.get_current_block().add_array_instruction(original_designator, store_instr)
 
         return
 
@@ -280,9 +281,6 @@ class Parser:
                     f"index error: specified {len(indices)} dimensions but array has {len(dimensions)} dimensions")
 
             to_add = []
-
-            if len(indices) == 4:
-                print("")
 
             # Multiply indices and dimensions
             for i in range(len(indices) - 1):
@@ -375,11 +373,13 @@ class Parser:
 
     def factor(self):  # returns the number from either designator, number, ( expression ), or funcCall
         if self.token > self.tokenizer.max_reserved_id:
+            original_designator = self.token
             designator, array = self.designator()
             if array:
                 # TODO: do load
                 load_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                        self.baseSSA.get_new_instr_id(), Operations.LOAD, x=designator)
+                self.blocks.get_current_block().add_array_instruction(original_designator, load_instr)
                 return load_instr, None  # TODO: UPDATE for arrays
             else:
                 return self.blocks.find_var_given_id(designator), designator

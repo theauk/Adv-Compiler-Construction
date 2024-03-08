@@ -50,5 +50,7 @@ class Operations(Enum):
             Operations.PHI,
             Operations.READ,
             Operations.RET,
-            Operations.KILL
+            Operations.KILL.BASE,
+            Operations.STORE,
+            Operations.LOAD
         }

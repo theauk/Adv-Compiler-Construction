@@ -1,20 +1,14 @@
 main
-array[10] a,b;
-var i, j, k;
+
+array[5] a;
+var b, x;
+
 {
-    let i <- 8;
-    let j <- call InputNum();
-    let k <- i + 1;
-
-    let a[i + 1] <- 1;
-    call OutputNum(a[i+1]);
-    call OutputNum(a[k]);
-
-    if  j < 10 then
-        let a[j] <- 2;
-    fi;
-
-    call OutputNum(a[i+1]);
-    call OutputNum(a[k]);
-
+    let a[0] <- call InputNum();
+    let a[1] <- a[0];
+    let b <- a[1];
+    let a[2] <- b;
+    let a[3] <- b;
+    let a[4] <- a[1];
+    call OutputNum(b);
 }.

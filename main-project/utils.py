@@ -244,11 +244,13 @@ class Utils:
                 if instruction.op == Operations.LOAD:
                     for array_i in reversed(current_block.get_array_instructions()[instruction.x_var]):
                         if array_i.get_id() < instruction.get_id():
-                            if array_i.op == Operations.KILL:
+                            if array_i.op == Operations.STORE and array_i.y.originates_from_read:
                                 break
-                            elif array_i.op == Operations.STORE and (instruction.x and instruction.x.originates_from_read):
+                            elif array_i.op == Operations.STORE and (
+                                    instruction.x and instruction.x.originates_from_read):
                                 break
-                            elif array_i.op == Operations.STORE and (instruction.y and instruction.y.originates_from_read):
+                            elif array_i.op == Operations.STORE and (
+                                    instruction.y and instruction.y.originates_from_read):
                                 break
                             elif array_i.op == Operations.LOAD:
                                 if array_i.x == instruction.x and array_i.y == instruction.y:
@@ -256,6 +258,15 @@ class Utils:
                                         current_block_removed_instructions.append((instruction, i, array_i))
                                         removed_ids.add(instruction.get_id())
                                     all_removed_instructions.append(instruction)
+                                    if instruction.id != array_i.id:
+                                        removed_instr_to_cse_idn[instruction.id] = array_i
+                            elif array_i.op == Operations.STORE and array_i.y == instruction.x:
+                                if instruction.get_id() not in removed_ids:
+                                    current_block_removed_instructions.append((instruction, i, array_i))
+                                    removed_ids.add(instruction.get_id())
+                                all_removed_instructions.append(instruction)
+                                if instruction.id != array_i.id:
+                                    removed_instr_to_cse_idn[instruction.id] = array_i.x  # store instruction y address
 
             # Remove cse instructions
             for (instr, i, cse_instr) in reversed(current_block_removed_instructions):  # to not mess with indices

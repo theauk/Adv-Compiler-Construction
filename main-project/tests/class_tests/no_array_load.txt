@@ -11,4 +11,4 @@ var b;
     let a[3] <- b;
     let a[4] <- a[1];
     call OutputNum(b);
-}
+}.

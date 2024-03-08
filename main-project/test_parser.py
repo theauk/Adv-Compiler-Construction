@@ -146,6 +146,50 @@ class TestInterpreter(unittest.TestCase):
 
         self.assertEqual(output_text, expected_output)
 
+    def test_array_i_j_not_read(self):
+        parser = Parser('tests/my_tests/array_i_j_not_read.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/my_tests/array_i_j_not_read.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    def test_array_i_j_read(self):
+        parser = Parser('tests/my_tests/array_i_j_read.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/my_tests/array_i_j_read.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    def test_array_i_not_j_read(self):
+        parser = Parser('tests/my_tests/array_i_not_j_read.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/my_tests/array_i_not_j_read.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    def test_array_i_read_j_not(self):
+        parser = Parser('tests/my_tests/array_i_read_j_not.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/my_tests/array_i_read_j_not.dot')
+
+        self.assertEqual(output_text, expected_output)
+
     # CLASS TESTS -------------------------------------
     def test_complex_while(self):
         parser = Parser('tests/class_tests/complex_while.txt')
@@ -169,6 +213,28 @@ class TestInterpreter(unittest.TestCase):
 
         self.assertEqual(output_text, expected_output)
 
+    def test_NestedWhileIf(self):
+        parser = Parser('tests/class_tests/NestedWhileIf.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/class_tests/NestedWhileIf.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    def test_no_array_load(self):
+        parser = Parser('tests/class_tests/no_array_load.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/class_tests/no_array_load.dot')
+
+        self.assertEqual(output_text, expected_output)
+
     def test_no_phis_xy(self):
         parser = Parser('tests/class_tests/no_phis_x=y.txt')
         parser.computation()
@@ -177,6 +243,28 @@ class TestInterpreter(unittest.TestCase):
         output_text = visualizer.make_graph()
 
         expected_output = read_expected_output('tests/class_tests/no_phis_x=y.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    def test_prefix_sum(self):
+        parser = Parser('tests/class_tests/prefix_sum.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/class_tests/prefix_sum.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    def test_RedundantLoad(self):
+        parser = Parser('tests/class_tests/RedundantLoad.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/class_tests/RedundantLoad.dot')
 
         self.assertEqual(output_text, expected_output)
 

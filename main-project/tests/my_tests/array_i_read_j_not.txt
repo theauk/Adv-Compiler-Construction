@@ -1,0 +1,14 @@
+main
+array[2] a;
+var i, j, x, y, z;
+{
+    let i <- call InputNum();
+    let j <- 1;
+
+    let x <- a[i];
+    let y <- a[i];
+
+    let a[j] <- 2;
+
+    let z <- a[i];
+}.

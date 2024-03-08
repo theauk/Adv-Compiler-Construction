@@ -255,7 +255,7 @@ class BasicBlock(Block):
 
         if instruction.op == Operations.STORE:
             if instruction.x.originates_from_read or instruction.y.originates_from_read:
-                kill_instr = Instruction(Operations.KILL)
+                kill_instr = Instruction(op=Operations.KILL)
                 self.array_instructions[var].append(kill_instr)
 
 

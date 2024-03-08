@@ -159,6 +159,13 @@ class Parser:
 
         self.next_token()
 
+        while self.token == Tokens.COMMA_TOKEN:
+            self.next_token()
+            self.symbolTable[self.token] = self.tokenizer.last_id
+            self.arrayTable[self.token] = lengths_of_dimensions
+            self.blocks.get_current_block().add_array(self.token)
+            self.next_token()
+
     def func_declaration(self):
         self.check_identifier()
         self.formal_parameter()

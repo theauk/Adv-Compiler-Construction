@@ -548,7 +548,7 @@ class Parser:
                                         relationship=BlockRelation.BRANCH)
 
         if not join_block.get_instructions():  # empty join block
-            self.blocks.add_new_instr(self.in_while(), then_block, self.baseSSA.get_new_instr_id())
+            self.blocks.add_new_instr(self.in_while(), join_block, self.baseSSA.get_new_instr_id())
 
         if then_block.is_return_block() and else_block.is_return_block():
             join_block.reset_instructions()

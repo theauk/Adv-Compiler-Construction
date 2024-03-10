@@ -1,0 +1,15 @@
+main
+array[2] a, b;
+var i, j, x, y, z, m;
+{
+    let y <- 2;
+    let i <- 0;
+    let j <- i;
+
+    while y < 10 do
+        let y <- a[j + 1];
+        let i <- a[i + 1];
+    od;
+    let y <- j + 1;
+    call OutputNewLine();
+}.

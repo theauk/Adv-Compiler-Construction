@@ -1,0 +1,18 @@
+main
+array[2] a, b;
+var i, j, x, y, z, m;
+{
+    let i <- 2;
+    let j <- 3;
+    let x <- 4;
+    let z <- 5;
+
+    let z <- a[i];
+
+    while z < 2 do
+        let z <- a[i];
+        let i <- i + 2;
+    od;
+
+    let z <- a[i];
+}.

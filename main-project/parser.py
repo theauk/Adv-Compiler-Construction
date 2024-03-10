@@ -279,7 +279,7 @@ class Parser:
             while self.token == Tokens.OPEN_BRACKET_TOKEN:
                 self.check_token(Tokens.OPEN_BRACKET_TOKEN)
                 exp, exp_var = self.expression()
-                indices.append(exp)
+                indices.append((exp, exp_var))
                 self.check_token(Tokens.CLOSE_BRACKET_TOKEN)
 
             dimensions = self.arrayTable[designator]
@@ -303,28 +303,25 @@ class Parser:
                     last_multiplier = new_multiplier
 
                 mul_by_index = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
-                                                         self.baseSSA.get_new_instr_id(), Operations.MUL, x=indices[i],
-                                                         x_var=designator,
-                                                         y=last_multiplier)
+                                                         self.baseSSA.get_new_instr_id(), Operations.MUL, x=indices[i][0],
+                                                         x_var=indices[i][0][1], y=last_multiplier)
                 to_add.append(mul_by_index)
 
             to_add.append(indices[-1])
 
             # Add the above
-            last_add = to_add[0]
-            for i in range(1, len(to_add)):
+            last_add, last_add_var = to_add[0]
+            for i, i_var in range(1, len(to_add)):
                 new_add = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                     self.baseSSA.get_new_instr_id(), Operations.ADD, x=last_add,
-                                                    x_var=designator,
-                                                    y=to_add[i])
+                                                    x_var=last_add_var, y=to_add[i], y_var=i_var)
                 last_add = new_add
+                last_add_var = new_add.x_var
 
             # Multiply it all by 4
             multiplied_by_four_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                                  self.baseSSA.get_new_instr_id(), Operations.MUL,
-                                                                 x=last_add, x_var=designator,
-                                                                 y=self.blocks.add_constant(4),
-                                                                 )
+                                                                 x=last_add, x_var=last_add_var, y=self.blocks.add_constant(4))
 
             # Base add instruction
             array_base = self.blocks.add_constant(f"{self.symbolTable[designator]}_addr")

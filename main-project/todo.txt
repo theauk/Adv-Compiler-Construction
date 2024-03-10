@@ -1,3 +1,70 @@
+- Figure out why that number is wrong
+- Check while cases below
+- Figure out how to deal with if
+    i.e. the case that something "might" have been updated
+    maybe look at the then and else block and see their array tree and whether something should be "copied over" into the next block
+
+
+Should I eliminate the a[i] for z since I has not been changed?
+Det tror jeg ikke fordi det er jo ikke givet at jeg går ind i while. Så vil sige at det er korrekt som det er nu
+main
+array[2] a, b;
+var i, j, x, y, z, m;
+{
+    let i <- 2;
+    let j <- 3;
+    let x <- 4;
+    let z <- 5;
+
+    while z < 2 do
+        let x <- a[i];
+    od;
+
+    let z <- a[i];
+}.
+
+There should be new load in while (and not cse) since i is updated
+main
+array[2] a, b;
+var i, j, x, y, z, m;
+{
+    let i <- 2;
+    let j <- 3;
+    let x <- 4;
+    let z <- 5;
+
+    let z <- a[i];
+
+    while z < 2 do
+        let z <- a[i];
+        let i <- i + 2;
+    od;
+
+    let z <- a[i];
+}.
+
+main
+array[10] a,b;
+var i, j, k;
+{
+    let i <- 8;
+    let j <- call InputNum();
+    let k <- i + 1;
+
+    let a[i + 1] <- 1;
+    call OutputNum(a[i+1]);
+    call OutputNum(a[k]);
+
+    if j < 10 then
+        let a[j] <- 2;
+    fi;
+
+    call OutputNum(a[i+1]);
+    call OutputNum(a[k]);
+
+}.
+
+
 
 
 Stuff now:

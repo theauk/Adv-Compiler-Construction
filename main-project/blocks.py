@@ -156,7 +156,7 @@ class BasicBlock(Block):
                 self.updated_vars.add(var)
 
     def copy_vars(self, new_vars: dict):
-        self.vars = copy.deepcopy(new_vars)
+        self.vars = new_vars.copy()
 
     def add_parent(self, parent_block, parent_type: BlockRelation):
         self.parents[parent_block] = parent_type
@@ -216,7 +216,7 @@ class BasicBlock(Block):
             self.copy_dom_instructions(dom_parent)
 
         dom_parent_array_instructions = dom_parent.array_instructions
-        self.array_instructions = copy.deepcopy(dom_parent_array_instructions)
+        self.array_instructions = dom_parent_array_instructions.copy()
 
     def copy_dom_instructions(self, dom_parent):
         dom_parent_instructions = dom_parent.dom_instructions

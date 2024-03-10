@@ -190,6 +190,28 @@ class TestInterpreter(unittest.TestCase):
 
         self.assertEqual(output_text, expected_output)
 
+    def test_array_while_i_index_gets_updated_below_load(self):
+        parser = Parser('tests/my_tests/array_while_i_index_gets_updated_below_load.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/my_tests/array_while_i_index_gets_updated_below_load.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    def test_array_with_indices_i_equals_j(self):
+        parser = Parser('tests/my_tests/array_with_indices_i_equals_j.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/my_tests/array_with_indices_i_equals_j.dot')
+
+        self.assertEqual(output_text, expected_output)
+
     # CLASS TESTS -------------------------------------
     def test_complex_while(self):
         parser = Parser('tests/class_tests/complex_while.txt')

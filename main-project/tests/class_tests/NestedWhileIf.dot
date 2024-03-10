@@ -8,8 +8,8 @@ bb5 [shape=record, label="<b>join BB5 | {18: phi (14) (17)|15: cmp (18) (12)|16:
 bb6 [shape=record, label="<b>BB6 | {17: add (18) (1)|19: bra (18)}| {i: 17}"];
 bb7 [shape=record, label="<b>BB7 | {21: bra (11)}"];
 bb8 [shape=record, label="<b>BB8 | {20: \<empty\>}"];
-bb9 [shape=record, label="<b>join BB9 | {11: phi (10) (24)|13: phi (12) (25)|14: phi (19) (23)|22: bra (23)}| {i: 14 | x: 11 | y: 13}"];
-bb10 [shape=record, label="<b>BB10 | {26: write (25)|27: write (26)|28: write (24)|29: write (1)|30: end}"];
+bb9 [shape=record, label="<b>join BB9 | {11: phi (10) (24)|13: phi (12) (25)|14: phi (18) (23)|22: bra (23)}| {i: 14 | x: 11 | y: 13}"];
+bb10 [shape=record, label="<b>BB10 | {26: write (24)|27: write (25)|28: write (23)|29: write (1)|30: end}"];
 bb0:s -> bb1:n ;
 bb1:s -> bb2:n ;
 bb4:s -> bb5:n ;

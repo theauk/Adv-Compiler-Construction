@@ -28,7 +28,8 @@ class Operations(Enum):
     WRITE = 21
     WRITE_NL = 22
 
-    BASE = 23
+    KILL = 23
+    BASE = 24
 
     def __str__(self) -> str:
         return f'{self.name}'.lower()
@@ -50,6 +51,7 @@ class Operations(Enum):
             Operations.READ,
             Operations.RET,
             Operations.BASE,
+            Operations.KILL,
             Operations.STORE,
             Operations.LOAD,
             Operations.WRITE,

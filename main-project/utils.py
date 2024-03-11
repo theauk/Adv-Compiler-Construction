@@ -149,7 +149,6 @@ class Utils:
 
         # Second pass to do cse
         self.update_while_cse(start_while_block)
-        print()
 
     def update_while_phis_and_bra(self, start_while_block: BasicBlock):
         visited = {start_while_block}
@@ -202,7 +201,6 @@ class Utils:
 
                 if child_block not in visited and child_block not in stack:
                     stack.append(child_block)
-        print("")
 
     def update_while_cse(self, start_while_block):
         visited = set()

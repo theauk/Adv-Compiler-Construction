@@ -248,14 +248,10 @@ class Parser:
                 if current_join_block and designator not in current_join_block.get_phi_vars():
                     self.utils.create_phi_instruction(self.in_while(), current_join_block, designator)
             else:
-                # TODO: check if cse
-                if "cse" == False:
-                    print("")
-                else:
-                    store_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
+                store_instr = self.blocks.add_new_instr(self.in_while(), self.blocks.get_current_block(),
                                                             self.baseSSA.get_new_instr_id(), Operations.STORE, x=idn,
                                                             y=designator, x_var=idn_var)
-                    self.blocks.get_current_block().add_array_instruction(original_designator, store_instr)
+                self.blocks.get_current_block().add_array_instruction(original_designator, store_instr)
 
         return
 

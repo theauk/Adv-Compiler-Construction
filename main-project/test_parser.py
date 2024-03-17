@@ -201,6 +201,17 @@ class TestInterpreter(unittest.TestCase):
 
         self.assertEqual(output_text, expected_output)
 
+    def test_array_do_not_cse(self):
+        parser = Parser('tests/my_tests/array_do_not_cse.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/my_tests/array_do_not_cse.dot')
+
+        self.assertEqual(output_text, expected_output)
+
     # CLASS TESTS -------------------------------------
     def test_complex_while(self):
         parser = Parser('tests/class_tests/complex_while.txt')
@@ -276,6 +287,28 @@ class TestInterpreter(unittest.TestCase):
         output_text = visualizer.make_graph()
 
         expected_output = read_expected_output('tests/class_tests/RedundantLoad.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    def test_cse_test_case(self):
+        parser = Parser('tests/class_tests/cse_test_case.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/class_tests/cse_test_case.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    def test_while_after_if_join(self):
+        parser = Parser('tests/class_tests/while_after_if_join.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/class_tests/while_after_if_join.dot')
 
         self.assertEqual(output_text, expected_output)
 

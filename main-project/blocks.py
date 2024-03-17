@@ -34,7 +34,6 @@ class Block:
 class ConstantBlock(Block):
     def __init__(self, idn: int):
         super().__init__(idn)
-        self.id = idn
         self.constants = {}
 
     def add_constant(self, instr: Instruction, constant):
@@ -47,20 +46,19 @@ class ConstantBlock(Block):
 class BasicBlock(Block):
     def __init__(self, idn: int = None, join: bool = False, while_block: bool = False):
         super().__init__(idn)
-        self.dom_parents = set()
         self.join = join
         self.while_block = while_block
+        self.return_block = False
         self.instructions = {}
         self.instruction_order_list = []
         self.vars: dict = {}
-        self.updated_vars = set()  # Used for adding var info to the graph
-        self.phi_vars = set()
+        self.updated_vars = set()
         self.parents: dict = {}
         self.children: {}
+        self.phi_vars = set()
         self.existing_phis_instructions = {}
+        self.dom_parents = set()
         self.dom_instructions = {}
-        self.return_block = False
-        self.array_assignments = {}  # model multiple dimension array as a single long array
         self.array_instructions = {}
 
     def update_join(self, join: bool):
@@ -87,9 +85,18 @@ class BasicBlock(Block):
             return None
 
     def add_new_instr_block(self, in_while, instr_id: int, op: Operations = None, x: Instruction = None,
-                            y: Instruction = None,
-                            x_var: int = None, y_var: int = None) -> (
-            Instruction, bool):
+                            y: Instruction = None, x_var: int = None, y_var: int = None) -> (Instruction, bool):
+        """
+
+        :param in_while: whether the instruction is in a while
+        :param instr_id: the new instruction id
+        :param op: the operator for the instruction
+        :param x: the x instruction
+        :param y: the y instruction
+        :param x_var: the variable the x instruction manipulates
+        :param y_var: the variable the y instruction manipulates
+        :return: True if cse can be done together with the cse instruction. Otherwise, False and the new instruction.
+        """
         if op == Operations.LOAD:
             for instr in reversed(self.array_instructions[x_var]):
                 if instr.op == Operations.STORE and instr.y.originates_from_read:
@@ -125,12 +132,12 @@ class BasicBlock(Block):
             else:
                 self.instruction_order_list.append(inst)
 
-            # For phis in if the instruction number should be incremented immediately after the assignment so
+            # For phis in if-stmt the instruction number should be incremented immediately after the assignment so
             # make a list of those instructions so that they can be updated with the x and y later
             if op == Operations.PHI and not self.while_block:
                 self.existing_phis_instructions[x_var] = inst
 
-            # Add as a dominating instruction if applicable given the Operation (and not in while since they
+            # Add as a dominating instruction if applicable given the operation (and when not in a while since they
             # will be added later)
             if op and op not in Operations.get_no_cse_instructions() and not in_while:
                 self.add_dom_instruction(inst, op, x, y)
@@ -252,13 +259,12 @@ class BasicBlock(Block):
         return self.array_instructions
 
     def add_array_instruction(self, var: int, instruction: Instruction):
-        # TODO: might have to check here if array has been created initially
         self.array_instructions[var].append(instruction)
 
 
 class Blocks:
-    def __init__(self, baseSSA, initial_block):
-        self.baseSSA = baseSSA
+    def __init__(self, base_ssa, initial_block):
+        self.baseSSA = base_ssa
         self.id_count = 0
         self.constant_block = ConstantBlock(0)
         self.blocks_list: list[BasicBlock] = []
@@ -279,15 +285,15 @@ class Blocks:
                       y: Instruction = None, x_var: int = None, y_var: int = None) -> Instruction:
         """
         Adds a new instruction to the given block unless it is a common subexpression.
-        :param y_var:
-        :param x_var:
         :param in_while:
         :param block: block to add instruction to
         :param instr_id: instruction id
         :param op: operator
         :param x: first instruction parameter
         :param y: second instruction parameter
-        :return: the instruction id of the new instruction or the common subexpression
+        :param y_var: the variable the x instruction manipulates
+        :param x_var: the variable the y instruction manipulates
+        :return: the instruction id of the new instruction or the common subexpression instruction
         """
         if not block.is_return_block() or op == Operations.RET:
             instr, cse = block.add_new_instr_block(in_while, instr_id, op, x, y, x_var, y_var)

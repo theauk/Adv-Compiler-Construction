@@ -47,7 +47,7 @@ class Utils:
                 block2_child = self.blocks.get_constant_instr(0)
             if (block1_child, block2_child) not in already_added_vars:
 
-                if block1_child != block2_child:
+                if block1_child != block2_child:  # TODO update name
                     if join_block.available_exiting_phi_instruction(child):
                         phi_instruction = join_block.get_existing_phi_instruction(child)
                         join_block.update_instruction(instr=phi_instruction, x=block1_child, y=block2_child)

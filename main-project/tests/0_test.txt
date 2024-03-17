@@ -1,14 +1,17 @@
 main
-    var y, z, j ; {
-    let j <- 1;
-    let y <- 2;
-    let z <- 2;
+    var a, b; {
+    let a <- call InputNum();
+    let b <- 2;
 
-    while z < 10 do
-        let y <- j + 1;
-        let z <- j + 1;
+    if a > 2 then
+        while a < 2 do
+            let a <- 2 + 6
+            od;
+        else
+        let a <- 2 + 4
+    fi;
 
-    od;
-    let y <- j + 1;
+    let a <- a + 1;
     call OutputNewLine();
+
     }.

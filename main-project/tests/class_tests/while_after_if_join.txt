@@ -1,0 +1,22 @@
+main
+var x, y;
+{
+    let x <- call InputNum;
+    let y <- 1;
+
+    if x < 0 then
+        while y < 10 do
+            let x <- x + 10;
+            let y <- y + 1;
+        od;
+    else
+        let y <- 10;
+    fi;
+
+    while y > 0 do
+        let x <- x * 10;
+        let y <- y - 1;
+    od;
+
+    call OutputNum (x * 2)
+}.

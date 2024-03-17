@@ -1,0 +1,18 @@
+main
+var i, x, y, z, m, n;
+{
+    let m <- 10;
+    let n <- m;
+    let z <- call InputNum();
+    let i <- 0;
+
+    let x <- m + z;
+    let y <- n + z;
+
+    while i < 5 do
+        let x <- m + z;
+        let y <- n + z;
+        let m <- i + z;
+        let i <- i + 1;
+    od;
+}.

@@ -1,16 +1,15 @@
 main
 array [10] nums, prefix;
-var i, j;
+var i;
 var last;
 
 {
     let i <- 0;
     let last <- 0;
-    let j <- i;
-
     while i < 10 do
-        let prefix[i] <- nums[i];
-        let prefix[i] <- nums[j];
+        let prefix[i] <- nums[i] + last;
+        let last <- prefix[i] + 2;
+        let i <- i + 1;
     od;
 }.
 

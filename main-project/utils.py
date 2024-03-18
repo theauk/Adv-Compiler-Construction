@@ -36,34 +36,34 @@ class Utils:
         phis_lhs = {}
         phis_rhs = {}
 
-        for child in var_set:
-            block1_child = block1.get_vars()[child]
-            if not block1_child:
+        for var_token in var_set:
+            block1_var_val = block1.get_vars()[var_token]
+            if not block1_var_val:
                 self.blocks.add_constant(0)
-                block1_child = self.blocks.get_constant_instr(0)
-            block2_child = block2.get_vars()[child]
-            if not block2_child:
+                block1_var_val = self.blocks.get_constant_instr(0)
+            block2_var_val = block2.get_vars()[var_token]
+            if not block2_var_val:
                 self.blocks.add_constant(0)
-                block2_child = self.blocks.get_constant_instr(0)
-            if (block1_child, block2_child) not in already_added_vars:
+                block2_var_val = self.blocks.get_constant_instr(0)
+            if (block1_var_val, block2_var_val) not in already_added_vars:
 
-                if block1_child != block2_child:  # TODO update name
-                    if join_block.available_exiting_phi_instruction(child):
-                        phi_instruction = join_block.get_existing_phi_instruction(child)
-                        join_block.update_instruction(instr=phi_instruction, x=block1_child, y=block2_child)
-                        join_block.add_var_assignment(var=child, instruction=phi_instruction)
+                if block1_var_val != block2_var_val:
+                    if join_block.available_exiting_phi_instruction(var_token):
+                        phi_instruction = join_block.get_existing_phi_instruction(var_token)
+                        join_block.update_instruction(instr=phi_instruction, x=block1_var_val, y=block2_var_val)
+                        join_block.add_var_assignment(var=var_token, instruction=phi_instruction)
                     else:
-                        phi_instruction = self.create_phi_instruction(in_while, join_block, child, x=block1_child,
-                                                                      y=block2_child)
+                        phi_instruction = self.create_phi_instruction(in_while, join_block, var_token, x=block1_var_val,
+                                                                      y=block2_var_val)
 
-                    var_to_new_phi_idn[child] = phi_instruction
-                    phis.append((phi_instruction, child, block2_child))
+                    var_to_new_phi_idn[var_token] = phi_instruction
+                    phis.append((phi_instruction, var_token, block2_var_val))
 
-                    phis_lhs[block1_child.get_id()] = phi_instruction
-                    phis_rhs[block2_child.get_id()] = phi_instruction
+                    phis_lhs[block1_var_val.get_id()] = phi_instruction
+                    phis_rhs[block2_var_val.get_id()] = phi_instruction
 
-                    join_block.add_var_assignment(var=child, instruction=phi_instruction)
-                    already_added_vars.add((block1_child, block2_child))
+                    join_block.add_var_assignment(var=var_token, instruction=phi_instruction)
+                    already_added_vars.add((block1_var_val, block2_var_val))
 
         # Check if one of the new phis use another phi
         for rhs_instr_idn, phi_idn in phis_rhs.items():

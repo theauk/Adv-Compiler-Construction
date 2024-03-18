@@ -266,7 +266,7 @@ class Utils:
                                     removed_ids.add(instruction.get_id())
                                 all_removed_instructions.append(instruction)
                                 if instruction.id != array_i.id:
-                                    removed_instr_to_cse_idn[instruction.id] = array_i.x  # store instruction y address
+                                    removed_instr_to_cse_idn[instruction.id] = array_i.x  # store instruction x address
 
             # Remove cse instructions
             for (instr, i, cse_instr) in reversed(current_block_removed_instructions):  # to not mess with indices
@@ -280,7 +280,11 @@ class Utils:
                 # Check phis above
                 for phi in phis:
                     if instr == phi.y:
-                        phi.y = cse_instr
+                        # For store we want to do the phi with the stored value and not the store instruction number
+                        if cse_instr.op == Operations.STORE:
+                            phi.y = cse_instr.x
+                        else:
+                            phi.y = cse_instr
 
             visited.add(current_block.get_id())
             for child_block, relationship in current_block.get_children().items():

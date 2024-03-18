@@ -2,8 +2,8 @@ digraph G {
 bb0 [shape=record, label="<b>BB0 | {1: const #1|2: const #11|7: const #4|8: const #nums_addr|13: const #0|16: const #10|20: const #prefix_addr}"];
 bb1 [shape=record, label="<b>join BB1 | {14: phi (1) (11)|3: cmp (14) (2)|4: bge (3) (29)}| {i: 14}"];
 bb2 [shape=record, label="<b>BB2 | {5: sub (14) (1)|6: mul (5) (7)|9: add (BASE) (8)|10: adda (6) (9)|11: add (14) (1)|12: store (11) (10)|15: bra (14)}| {i: 11}"];
-bb3 [shape=record, label="<b>join BB3 | {29: phi (13) (28)|30: phi (13) (27)|17: cmp (29) (16)|18: bge (17) (41)}| {i: 29 | last: 30}"];
-bb4 [shape=record, label="<b>BB4 | {19: mul (29) (7)|21: add (BASE) (20)|22: adda (19) (21)|23: add (BASE) (8)|24: adda (19) (23)|25: load (24)|26: add (25) (30)|27: store (26) (22)|28: add (29) (1)|31: bra (29)}| {i: 28 | last: 27}"];
+bb3 [shape=record, label="<b>join BB3 | {29: phi (13) (28)|30: phi (13) (26)|17: cmp (29) (16)|18: bge (17) (41)}| {i: 29 | last: 30}"];
+bb4 [shape=record, label="<b>BB4 | {19: mul (29) (7)|21: add (BASE) (20)|22: adda (19) (21)|23: add (BASE) (8)|24: adda (19) (23)|25: load (24)|26: add (25) (30)|27: store (26) (22)|28: add (29) (1)|31: bra (29)}| {i: 28 | last: 26}"];
 bb5 [shape=record, label="<b>join BB5 | {41: phi (13) (40)|32: cmp (41) (16)|33: bge (32) (43)}| {i: 41}"];
 bb6 [shape=record, label="<b>BB6 | {34: mul (41) (7)|35: add (BASE) (20)|36: adda (34) (35)|37: load (36)|38: write (37)|39: write_nl|40: add (41) (1)|42: bra (41)}| {i: 40}"];
 bb7 [shape=record, label="<b>BB7 | {43: end}"];

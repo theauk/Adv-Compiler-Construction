@@ -575,6 +575,7 @@ class Parser:
             while_block.set_while(True)
         else:
             while_block = BasicBlock(while_block=True)
+            # Add the inner branch from child to while block
             self.utils.add_relationship(parent_block=self.blocks.get_current_block(), child_block=while_block,
                                         relationship=BlockRelation.NORMAL)
             self.blocks.add_block(while_block)
@@ -610,8 +611,8 @@ class Parser:
                 self.utils.add_relationship(parent_block=leaf_block_parent, child_block=while_block,
                                             relationship=BlockRelation.BRANCH, copy_vars=False)
             elif len(leaf_block.get_children()) == 0:
-                # There are instructions below od. Add a branch from that block to top of the current while. Branch
-                # value will be updated later
+                # There are instructions below od (including e.g. fi).
+                # Add a branch from that block to top of the current while. Branch value will be updated later
                 self.blocks.add_new_instr(self.in_while(), block=leaf_block, instr_id=self.base_ssa.get_new_instr_id(),
                                           op=Operations.BRA)
                 self.utils.add_relationship(parent_block=leaf_block, child_block=while_block,

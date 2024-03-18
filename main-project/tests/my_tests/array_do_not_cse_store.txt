@@ -11,6 +11,7 @@ var last;
     while i < 10 do
         let prefix[i] <- nums[i];
         let prefix[i] <- nums[j];
+        let i <- 2 + 2;
     od;
 }.
 

@@ -212,6 +212,28 @@ class TestInterpreter(unittest.TestCase):
 
         self.assertEqual(output_text, expected_output)
 
+    def test_array_cse_store(self):
+        parser = Parser('tests/my_tests/array_cse_store.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/my_tests/array_cse_store.dot')
+
+        self.assertEqual(output_text, expected_output)
+
+    def test_array_do_not_cse_store(self):
+        parser = Parser('tests/my_tests/array_do_not_cse_store.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/my_tests/array_do_not_cse_store.dot')
+
+        self.assertEqual(output_text, expected_output)
+
     # CLASS TESTS -------------------------------------
     def test_complex_while(self):
         parser = Parser('tests/class_tests/complex_while.txt')

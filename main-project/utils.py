@@ -227,6 +227,7 @@ class Utils:
                 if instruction.y and instruction.y.get_id() in removed_instr_to_cse_idn and instruction.op != Operations.PHI:
                     current_block.update_instruction(instruction, y=removed_instr_to_cse_idn[instruction.y.get_id()])
 
+                # Normal CSE
                 if instruction.op not in Operations.get_no_cse_instructions():
                     if (instruction.op, instruction.x, instruction.y) in current_block.get_dom_instruction():
                         cse_instr = current_block.get_dom_instruction()[(instruction.op, instruction.x, instruction.y)]
@@ -241,6 +242,7 @@ class Utils:
                 elif instruction.op == Operations.PHI:
                     phis.append(instruction)
 
+                # Load CSE
                 if instruction.op == Operations.LOAD:
                     for array_i in reversed(current_block.get_array_instructions()[instruction.x_var]):
                         if array_i.get_id() < instruction.get_id():
@@ -277,10 +279,10 @@ class Utils:
                         # Even though the block might be a return block we still have to update the var assignments in case we do cse
                         current_block.add_var_assignment(var, cse_instr, skip_return_check=True)
 
-                # Check phis above
+                # Check if phis need to be updated
                 for phi in phis:
                     if instr == phi.y:
-                        # For store we want to do the phi with the stored value and not the store instruction number
+                        # For Store we want to do the phi with the stored value and not the store instruction number
                         if cse_instr.op == Operations.STORE:
                             phi.y = cse_instr.x
                         else:
@@ -291,6 +293,7 @@ class Utils:
                 if child_block.get_id() not in visited and child_block not in stack:
                     stack.append(child_block)
 
+        # Used for fixing instruction numbers at the end
         for instr in all_removed_instructions:
             self.blocks.add_removed_instruction(instr)
 

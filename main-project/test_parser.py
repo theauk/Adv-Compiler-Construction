@@ -334,6 +334,17 @@ class TestInterpreter(unittest.TestCase):
 
         self.assertEqual(output_text, expected_output)
 
+    def test_loop_invariance(self):
+        parser = Parser('tests/class_tests/loop_invariance.txt')
+        parser.computation()
+
+        visualizer = Visualizer(parser.blocks, parser.symbolTable, show_vars=True, show_instr_vars=False)
+        output_text = visualizer.make_graph()
+
+        expected_output = read_expected_output('tests/class_tests/loop_invariance.dot')
+
+        self.assertEqual(output_text, expected_output)
+
 
 if __name__ == '__main__':
     unittest.main()

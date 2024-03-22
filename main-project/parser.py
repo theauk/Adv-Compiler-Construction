@@ -253,6 +253,18 @@ class Parser:
                                                         y=designator, x_var=idn_var)
                 self.blocks.get_current_block().add_array_instruction(original_designator, store_instr)
 
+                if self.in_while():
+                    outer_while: BasicBlock = self.while_stack[0]
+                    first_outer_while_instr = outer_while.find_first_instr().get_id()
+
+                    for i in range(len(outer_while.get_array_instructions()[original_designator])):
+                        cur_instr = outer_while.get_array_instructions()[original_designator][i]
+                        if cur_instr.op == Operations.KILL or cur_instr.get_id() <= first_outer_while_instr:
+                            continue
+                        else:
+                            outer_while.add_array_kill_instruction(original_designator, i)
+                            break
+
         return
 
     def return_statement(self):
@@ -566,7 +578,6 @@ class Parser:
         return
 
     def while_statement(self):
-        self.while_stack.append("while")  # To keep track if we are in a (nested) while structure
         initial_current_block = self.blocks.get_current_block()
 
         # Check if there is already a block available to be used for a while block. Otherwise, make a new one.
@@ -581,6 +592,8 @@ class Parser:
             self.blocks.add_block(while_block)
             while_block.add_dom_parent(initial_current_block, self.in_while())
             self.blocks.update_current_join_block(while_block)
+
+        self.while_stack.append(while_block)  # To keep track if we are in a (nested) while structure
 
         # Make the cmp and branch instruction
         left_side, rel_op_instr, right_side, left_side_var, right_side_var = self.relation()

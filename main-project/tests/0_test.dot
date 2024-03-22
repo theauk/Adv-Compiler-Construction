@@ -1,15 +1,25 @@
 digraph G {
-bb0 [shape=record, label="<b>BB0 | {2: const #0|3: const #10|6: const #1}"];
-bb1 [shape=record, label="<b>BB1 | {1: read}| {i: 1 | x: 2 | y: 2 | j: 1}"];
-bb2 [shape=record, label="<b>join BB2 | {9: phi (1) (7)|10: phi (2) (7)|11: phi (2) (8)|4: cmp (10) (3)|5: bge (4) (13)}| {i: 9 | x: 10 | y: 11}"];
-bb3 [shape=record, label="<b>BB3 | {7: add (9) (6)|8: add (1) (6)|12: bra (9)}| {i: 7 | x: 7 | y: 8}"];
-bb4 [shape=record, label="<b>BB4 | {13: write (10)|14: end}"];
+bb0 [shape=record, label="<b>BB0 | {4: const #0|6: const #4|7: const #a_addr|11: const #1|15: const #2|19: const #3}"];
+bb1 [shape=record, label="<b>BB1 | {1: read|2: read|3: read|5: mul (4) (6)|8: add (BASE) (7)|9: adda (5) (8)|10: store (1) (9)|12: mul (11) (6)|13: adda (12) (8)|14: store (1) (13)|16: mul (15) (6)|17: adda (16) (8)|18: store (1) (17)|20: mul (19) (6)|21: adda (20) (8)|22: store (1) (21)|23: mul (1) (6)|24: adda (23) (8)|25: load (24)|26: add (25) (2)|27: add (25) (11)}| {i: 1 | j: 2 | v: 26 | w: 27 | x: 26}"];
+bb2 [shape=record, label="<b>join BB2 | {42: phi (2) (31)|43: phi (26) (34)|44: phi (27) (28)|28: load (24)|29: cmp (28) (11)|30: bge (29) (45)}| {j: 42 | v: 43 | w: 44}"];
+bb3 [shape=record, label="<b>BB3 | {31: add (42) (11)|32: cmp (1) (31)|33: bge (32) (39)}| {j: 31 | w: 28}"];
+bb4 [shape=record, label="<b>BB4 | {33: add (28) (31)|35: mul (31) (6)|36: adda (35) (8)|37: add (28) (11)|38: store (37) (36)|40: bra (34)}| {v: 33}"];
+bb5 [shape=record, label="<b>BB5 | {39: \<empty\>}"];
+bb6 [shape=record, label="<b>join BB6 | {34: phi (33) (43)|41: bra (42)}| {v: 34}"];
+bb7 [shape=record, label="<b>BB7 | {45: end}"];
 bb0:s -> bb1:n ;
 bb1:s -> bb2:n ;
-bb3:s -> bb2:n [label="branch"];
+bb6:s -> bb2:n [label="branch"];
 bb2:s -> bb3:n [label="fall-through"];
-bb2:s -> bb4:n [label="branch"];
+bb3:s -> bb4:n [label="fall-through"];
+bb3:s -> bb5:n [label="branch"];
+bb4:s -> bb6:n [label="branch"];
+bb5:s -> bb6:n [label="fall-through"];
+bb2:s -> bb7:n [label="branch"];
 bb1:b -> bb2:b [color=blue, style=dotted, label="dom"];
 bb2:b -> bb3:b [color=blue, style=dotted, label="dom"];
-bb2:b -> bb4:b [color=blue, style=dotted, label="dom"];
+bb3:b -> bb4:b [color=blue, style=dotted, label="dom"];
+bb3:b -> bb5:b [color=blue, style=dotted, label="dom"];
+bb3:b -> bb6:b [color=blue, style=dotted, label="dom"];
+bb2:b -> bb7:b [color=blue, style=dotted, label="dom"];
 }

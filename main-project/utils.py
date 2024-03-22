@@ -245,7 +245,9 @@ class Utils:
                 # Load CSE
                 if instruction.op == Operations.LOAD:
                     for array_i in reversed(current_block.get_array_instructions()[instruction.x_var]):
-                        if array_i.get_id() < instruction.get_id():
+                        if array_i.op == Operations.KILL:
+                            break
+                        elif array_i.get_id() < instruction.get_id():
                             if array_i.op == Operations.STORE and array_i.y.originates_from_read:
                                 break
                             elif array_i.op == Operations.STORE and (

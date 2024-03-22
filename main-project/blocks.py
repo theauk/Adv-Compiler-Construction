@@ -264,6 +264,9 @@ class BasicBlock(Block):
     def add_array_instruction(self, var: int, instruction: Instruction):
         self.array_instructions[var].append(instruction)
 
+    def add_array_kill_instruction(self, var: int, index: int):
+        self.array_instructions[var].insert(index, Instruction(op=Operations.KILL))
+
 
 class Blocks:
     def __init__(self, base_ssa, initial_block):
